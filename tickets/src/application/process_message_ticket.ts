@@ -1,7 +1,7 @@
 import { type ITicketRepository } from '@domain/repository'
 import { Ticket } from '@domain/ticket'
 import { type IMail } from '@infra/mail/mail'
-import { formatTemplate } from '@infra/mail/template'
+import { intlMail } from '@infra/mail/intl'
 
 interface InputProcessMessageTicket {
   name: string
@@ -10,6 +10,7 @@ interface InputProcessMessageTicket {
   eventName: string
   eventDescription: string
   eventImageUrl: string
+  language: string
 }
 
 export class ProcessMessageTicket {
@@ -22,13 +23,14 @@ export class ProcessMessageTicket {
     const input = JSON.parse(message) as InputProcessMessageTicket
     const ticket = new Ticket(input.email, input.eventId)
     await this.ticketRepository.save(ticket)
-    const template = formatTemplate(
+    const body = intlMail(
       input.name,
       ticket.passport,
       input.eventDescription,
       input.eventName,
       input.eventImageUrl,
+      input.language,
     )
-    await this.mail.sendMail(input.email, 'Your ticket is here =)', template)
+    await this.mail.sendMail(input.email, body.subject, body.html)
   }
 }

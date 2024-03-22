@@ -14,9 +14,11 @@ describe('Process Message Ticket', () => {
       eventName: 'show banana',
       eventDescription: 'show banana',
       eventImageUrl: 'http://image.png',
+      language: 'pt',
     })
     await expect(application.execute(message)).resolves.toBeUndefined()
     expect(mail.mails).toHaveLength(1)
+    expect(mail.mails[0].subject).toEqual('Seu ticket chegou =)')
     expect(database.tickets).toHaveLength(1)
   })
 })
