@@ -6,8 +6,14 @@ import {
   IsNumber,
   MaxLength,
   Min,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+enum language {
+  pt = 'pt',
+  en = 'en',
+}
 
 export class InputRegisterPaymentDto {
   @IsString()
@@ -22,7 +28,6 @@ export class InputRegisterPaymentDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(36)
   @ApiProperty()
   event_id: string;
 
@@ -58,4 +63,9 @@ export class InputRegisterPaymentDto {
   @IsNotEmpty()
   @ApiProperty()
   event_image_url: string;
+
+  @IsEnum(language)
+  @IsNotEmpty()
+  @ApiProperty()
+  language: string;
 }

@@ -50,13 +50,14 @@ describe('Process Payment', () => {
       eventName: 'test',
       eventDescription: 'test description',
       eventImageUrl: 'http://image.png',
+      language: 'pt',
     });
     expect(transactionMock.transactions).toHaveLength(1);
     expect(paymentMock.payments).toHaveLength(1);
     expect(paymentMock.payments[0].transactionId).not.toBeNull();
     expect(producerMock.messages).toHaveLength(1);
     expect(mailMock.mails).toHaveLength(1);
-    expect(mailMock.mails[0].subject).toEqual('Payment Approved =)');
+    expect(mailMock.mails[0].subject).toEqual('Pagamento Aprovado =)');
     expect(spyTransactionSave).toHaveBeenCalledTimes(1);
     expect(spyAddToQueue).toHaveBeenCalledTimes(1);
     expect(spyPaymentUpdate).toHaveBeenCalledTimes(1);
@@ -91,6 +92,7 @@ describe('Process Payment', () => {
       eventName: 'test',
       eventDescription: 'test description',
       eventImageUrl: 'http://image.png',
+      language: 'en',
     });
     expect(transactionMock.transactions).toHaveLength(1);
     expect(paymentMock.payments).toHaveLength(1);

@@ -29,6 +29,7 @@ export class ApiController {
       eventName: body.event_name,
       eventDescription: body.event_description,
       eventImageUrl: body.event_image_url,
+      language: body.language,
     };
     await this.registerPayment.execute(input);
   }

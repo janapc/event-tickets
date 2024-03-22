@@ -1,5 +1,9 @@
 import { IPaymentRepository, ITransactionRepository } from '@domain/repository';
 import { Transaction } from '@domain/transaction';
+import {
+  IntlApprovedPayment,
+  IntlRejectedPayment,
+} from '@infra/mail-service/intl';
 import { IMail } from '@infra/mail-service/mail';
 import { IProducer } from '@infra/message-queue/message_queue';
 import { Injectable } from '@nestjs/common';
@@ -15,6 +19,7 @@ type InputProcessPaymentDto = {
   eventName: string;
   eventDescription: string;
   eventImageUrl: string;
+  language: string;
 };
 
 @Injectable()
@@ -45,19 +50,22 @@ export class ProcessPayment {
           eventName: input.eventName,
           eventDescription: input.eventDescription,
           eventImageUrl: input.eventImageUrl,
+          language: input.language,
         }),
         process.env.QUEUE_SUCCESS_PAYMENT,
       );
+      const email = IntlApprovedPayment(input.language, input.name);
       await this.mailService.sendMail(
         input.email,
-        `Hello ${input.name}.\n Your payment has been approved.`,
-        'Payment Approved =)',
+        email.message,
+        email.subject,
       );
     } else {
+      const email = IntlRejectedPayment(input.language, input.name);
       await this.mailService.sendMail(
         input.email,
-        `Hello ${input.name}.\n Your payment has been rejected, try again in us site`,
-        'Payment Rejected =(',
+        email.message,
+        email.subject,
       );
     }
   }

@@ -17,6 +17,7 @@ describe('Register Payment', () => {
       eventName: 'show banana',
       eventDescription: 'teste ',
       eventImageUrl: 'http://image.png',
+      language: 'pt',
     });
     expect(mockRepository.payments).toHaveLength(1);
     expect(mockProducer.messages).toHaveLength(1);

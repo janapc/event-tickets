@@ -13,6 +13,7 @@ type InputRegisterPaymentDto = {
   eventName: string;
   eventDescription: string;
   eventImageUrl: string;
+  language: string;
 };
 
 @Injectable()

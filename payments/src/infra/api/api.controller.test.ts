@@ -46,6 +46,7 @@ describe('ApiController', () => {
       event_description: 'test description',
       event_image_url: 'http://test.png',
       event_name: 'test',
+      language: 'pt',
     });
     expect(mockRepositoryPayment.payments).toHaveLength(1);
     expect(mockProducer.messages).toHaveLength(1);
@@ -79,6 +80,7 @@ describe('ApiController', () => {
           name: 'banana banana',
         },
         paymentId,
+        language: 'en',
       }),
       mockContext as any,
     );
@@ -117,6 +119,7 @@ describe('ApiController', () => {
           name: 'banana banana',
         },
         paymentId,
+        language: 'pt',
       }),
       mockContext as any,
     );
@@ -125,6 +128,6 @@ describe('ApiController', () => {
     expect(mockRepositoryPayment.payments[0].transactionId).not.toBeNull();
     expect(mockProducer.messages).toHaveLength(0);
     expect(mockMail.mails).toHaveLength(1);
-    expect(mockMail.mails[0].subject).toEqual('Payment Rejected =(');
+    expect(mockMail.mails[0].subject).toEqual('Pagamento Rejeitado =(');
   });
 });
