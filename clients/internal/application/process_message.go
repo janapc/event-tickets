@@ -18,6 +18,7 @@ type InputProcessMessage struct {
 	EventName        string `json:"eventName"`
 	EventDescription string `json:"eventDescription"`
 	EventImageUrl    string `json:"eventImageUrl"`
+	Language         string `json:"language"`
 }
 
 type MessageClientCreated struct {

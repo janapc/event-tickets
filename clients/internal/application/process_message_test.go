@@ -13,8 +13,13 @@ func TestProcessMessage(t *testing.T) {
 	queue := mocks.NewQueueMock()
 	processMessage := NewProcessMessage(repository)
 	input := InputProcessMessage{
-		Name:  "banana",
-		Email: "banana@banana.com",
+		Name:             "banana",
+		Email:            "banana@banana.com",
+		EventId:          "123",
+		EventName:        "test",
+		EventDescription: "description",
+		EventImageUrl:    "http://image.png",
+		Language:         "pt",
 	}
 	err := processMessage.Execute(input, queue)
 	assert.NoError(t, err)
@@ -31,8 +36,13 @@ func TestProcessMessageWithClientExists(t *testing.T) {
 	queue := mocks.NewQueueMock()
 	processMessage := NewProcessMessage(repository)
 	input := InputProcessMessage{
-		Name:  "banana",
-		Email: "banana@banana.com",
+		Name:             "banana",
+		Email:            "banana@banana.com",
+		EventId:          "123",
+		EventName:        "test",
+		EventDescription: "description",
+		EventImageUrl:    "http://image.png",
+		Language:         "pt",
 	}
 	err := processMessage.Execute(input, queue)
 	assert.NoError(t, err)
