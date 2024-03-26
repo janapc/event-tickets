@@ -14,15 +14,16 @@ type Event struct {
 	Description string    `json:"description"`
 	ImageUrl    string    `json:"image_url"`
 	Price       float64   `json:"price"`
-	ExpirateAt  time.Time `json:"expirate_at"`
+	Currency    string    `json:"currency"`
+	EventDate   time.Time `json:"event_date"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 const YYYYMMDD = "2006-01-02"
 
-func NewEvent(name, description, imageUrl string, price float64, expirateAt string) (*Event, error) {
-	if err := IsValidExpirateAt(expirateAt); err != nil {
+func NewEvent(name, description, imageUrl string, price float64, eventDate string, currency string) (*Event, error) {
+	if err := IsValidEventDate(eventDate); err != nil {
 		return nil, err
 	}
 	event := &Event{
@@ -31,10 +32,11 @@ func NewEvent(name, description, imageUrl string, price float64, expirateAt stri
 		Description: description,
 		ImageUrl:    imageUrl,
 		Price:       price,
+		Currency:    currency,
 		CreatedAt:   FormatDate(time.Now(), false),
 		UpdatedAt:   FormatDate(time.Now(), false),
 	}
-	event.ExpirateAt = FormatExpiratedAt(expirateAt)
+	event.EventDate = FormatEventDate(eventDate)
 	if err := event.isValid(); err != nil {
 		return nil, err
 	}
@@ -50,17 +52,17 @@ func FormatDate(d time.Time, finalDate bool) time.Time {
 		d.Day(), d.Hour(), d.Minute(), d.Second(), 00, d.Location()).UTC()
 }
 
-func FormatExpiratedAt(expirateAt string) time.Time {
+func FormatEventDate(eventDate string) time.Time {
 	r := regexp.MustCompile(`(\d{2})\/(\d{2})\/(\d{4})`)
-	expirateAtRaw := r.ReplaceAllString(expirateAt, "${3}-${2}-$1")
-	expirateAtFormatted, _ := time.Parse("2006-01-02", expirateAtRaw)
-	return FormatDate(expirateAtFormatted, true)
+	eventDateRaw := r.ReplaceAllString(eventDate, "${3}-${2}-$1")
+	eventDateFormatted, _ := time.Parse("2006-01-02", eventDateRaw)
+	return FormatDate(eventDateFormatted, true)
 }
 
-func IsValidExpirateAt(expirateAt string) error {
-	match, err := regexp.MatchString(`\d{2}\/\d{2}\/\d{4}`, expirateAt)
+func IsValidEventDate(eventDate string) error {
+	match, err := regexp.MatchString(`\d{2}\/\d{2}\/\d{4}`, eventDate)
 	if !match || err != nil {
-		return errors.New("the field expirate_at is mandatory and should is this format DD/MM/YYYY")
+		return errors.New("the field event_date is mandatory and should is this format DD/MM/YYYY")
 	}
 	return nil
 }
@@ -68,6 +70,9 @@ func IsValidExpirateAt(expirateAt string) error {
 func (p *Event) isValid() error {
 	if p.Name == "" {
 		return errors.New("the name field is mandatory")
+	}
+	if p.Currency == "" {
+		return errors.New("the currency field is mandatory")
 	}
 	if p.Description == "" {
 		return errors.New("the description field is mandatory")
@@ -79,8 +84,8 @@ func (p *Event) isValid() error {
 		return errors.New("the price field cannot be less than or equal to zero")
 	}
 	currentDate := time.Now().UTC()
-	if p.ExpirateAt.Before(currentDate) {
-		return errors.New("the expirate_at field cannot be less than current date")
+	if p.EventDate.Before(currentDate) {
+		return errors.New("the event_date field cannot be less than current date")
 	}
 	return nil
 }

@@ -17,7 +17,8 @@ func TestShouldRemoveAEvent(t *testing.T) {
 		Description: "test",
 		ImageUrl:    "http://test.png",
 		Price:       1.0,
-		ExpirateAt:  time.Now().Add(1 * time.Hour),
+		EventDate:   time.Now().Add(1 * time.Hour),
+		Currency:    "BRL",
 	})
 	assert.NoError(t, err)
 	removeEvent := NewRemoveEvent(repository)

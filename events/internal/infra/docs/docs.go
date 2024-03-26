@@ -215,10 +215,13 @@ const docTemplate = `{
         "application.InputRegisterEventDTO": {
             "type": "object",
             "properties": {
+                "currency": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
-                "expirate_at": {
+                "event_date": {
                     "type": "string"
                 },
                 "image_url": {
@@ -235,10 +238,13 @@ const docTemplate = `{
         "application.InputUpdateEventDTO": {
             "type": "object",
             "properties": {
+                "currency": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
-                "expirate_at": {
+                "event_date": {
                     "type": "string"
                 },
                 "id": {
@@ -261,10 +267,13 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
-                "expirate_at": {
+                "event_date": {
                     "type": "string"
                 },
                 "id": {
@@ -290,10 +299,13 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
-                "expirate_at": {
+                "event_date": {
                     "type": "string"
                 },
                 "id": {

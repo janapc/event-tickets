@@ -17,24 +17,24 @@ func NewPostgresRepository(db *sql.DB) *PostgresRepository {
 }
 
 func (p *PostgresRepository) Register(event *domain.Event) error {
-	stmt, err := p.DB.Prepare("INSERT INTO events(id, name, description, image_url, price, expirate_at, created_at, updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)")
+	stmt, err := p.DB.Prepare("INSERT INTO events(id, name, description, image_url, price, currency, event_date, created_at, updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(event.ID, event.Name, event.Description, event.ImageUrl, event.Price, event.ExpirateAt, event.CreatedAt, event.UpdatedAt)
+	_, err = stmt.Exec(event.ID, event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, event.CreatedAt, event.UpdatedAt)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func (p *PostgresRepository) Update(event *domain.Event) error {
-	stmt, err := p.DB.Prepare("UPDATE events SET name = $1, description = $2, image_url = $3, price = $4, expirate_at = $5, updated_at = $6 WHERE id = $7")
+	stmt, err := p.DB.Prepare("UPDATE events SET name = $1, description = $2, image_url = $3, price = $4, currency = $5, event_date = $6, updated_at = $7 WHERE id = $8")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(event.Name, event.Description, event.ImageUrl, event.Price, event.ExpirateAt, event.UpdatedAt, event.ID)
+	_, err = stmt.Exec(event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, event.UpdatedAt, event.ID)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (p *PostgresRepository) Remove(id string) error {
 }
 
 func (p *PostgresRepository) List() ([]domain.Event, error) {
-	rows, err := p.DB.Query("SELECT id, name, description, image_url, price, expirate_at, created_at, updated_at FROM events")
+	rows, err := p.DB.Query("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events")
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (p *PostgresRepository) List() ([]domain.Event, error) {
 	var events []domain.Event
 	for rows.Next() {
 		var event domain.Event
-		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.ExpirateAt, &event.CreatedAt, &event.UpdatedAt)
+		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.Currency, &event.EventDate, &event.CreatedAt, &event.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -73,13 +73,13 @@ func (p *PostgresRepository) List() ([]domain.Event, error) {
 }
 
 func (p *PostgresRepository) FindById(id string) (*domain.Event, error) {
-	stmt, err := p.DB.Prepare("SELECT id, name, description, image_url, price, expirate_at, created_at, updated_at FROM events WHERE id = $1")
+	stmt, err := p.DB.Prepare("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events WHERE id = $1")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 	var event domain.Event
-	err = stmt.QueryRow(id).Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.ExpirateAt, &event.CreatedAt, &event.UpdatedAt)
+	err = stmt.QueryRow(id).Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.Currency, &event.EventDate, &event.CreatedAt, &event.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

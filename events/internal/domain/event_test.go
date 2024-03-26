@@ -10,8 +10,8 @@ import (
 const DDMMYYYY = "02/01/2006"
 
 func TestCreateEvent(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, err := NewEvent("Show banana", "show banana", "http://test.png", 600.40, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, err := NewEvent("Show banana", "show banana", "http://test.png", 600.40, eventDate, "BRL")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, event.ID)
 	assert.NotEmpty(t, event.CreatedAt)
@@ -19,28 +19,30 @@ func TestCreateEvent(t *testing.T) {
 }
 
 func TestShouldErrorIfTheEventFieldsAreIncorrect(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	expirateAtWrong := time.Now().Add(-48 * time.Hour).Format(DDMMYYYY)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	eventDateWrong := time.Now().Add(-48 * time.Hour).Format(DDMMYYYY)
 
 	type Data struct {
-		name, description, imageUrl string
-		price                       float64
-		expirateAt                  string
+		Name, Description, ImageUrl string
+		Price                       float64
+		EventDate                   string
+		Currency                    string
 		ExpectedError               string
 	}
 
 	data := []Data{
-		{"", "test", "http://test.png", 600.40, expirateAt, "the name field is mandatory"},
-		{"test", "", "http://test.png", 600.40, expirateAt, "the description field is mandatory"},
-		{"test", "test", "http://test.png", 0.0, expirateAt, "the price field cannot be less than or equal to zero"},
-		{"test", "test", "http://test.png", 10.0, "", "the field expirate_at is mandatory and should is this format DD/MM/YYYY"},
-		{"test", "test", "http://test.png", 10.0, expirateAtWrong, "the expirate_at field cannot be less than current date"},
-		{"test", "test", "http://test.png", 10.0, "20/1/10", "the field expirate_at is mandatory and should is this format DD/MM/YYYY"},
-		{"test", "test", "http://test.png", 10.0, "20/1/10", "the field expirate_at is mandatory and should is this format DD/MM/YYYY"},
-		{"test", "test", "", 10.0, expirateAt, "the image_url field is mandatory"},
+		{"", "test", "http://test.png", 600.40, eventDate, "BRL", "the name field is mandatory"},
+		{"test", "", "http://test.png", 600.40, eventDate, "BRL", "the description field is mandatory"},
+		{"test", "test", "http://test.png", 0.0, eventDate, "BRL", "the price field cannot be less than or equal to zero"},
+		{"test", "test", "http://test.png", 10.0, "", "BRL", "the field event_date is mandatory and should is this format DD/MM/YYYY"},
+		{"test", "test", "http://test.png", 10.0, eventDateWrong, "BRL", "the event_date field cannot be less than current date"},
+		{"test", "test", "http://test.png", 10.0, "20/1/10", "BRL", "the field event_date is mandatory and should is this format DD/MM/YYYY"},
+		{"test", "test", "http://test.png", 10.0, "20/1/10", "BRL", "the field event_date is mandatory and should is this format DD/MM/YYYY"},
+		{"test", "test", "", 10.0, eventDate, "BRL", "the image_url field is mandatory"},
+		{"test", "test", "http://test.png", 600.40, eventDate, "", "the currency field is mandatory"},
 	}
 	for _, d := range data {
-		p, err := NewEvent(d.name, d.description, d.imageUrl, d.price, d.expirateAt)
+		p, err := NewEvent(d.Name, d.Description, d.ImageUrl, d.Price, d.EventDate, d.Currency)
 		if assert.Error(t, err) {
 			assert.Equal(t, err.Error(), d.ExpectedError)
 		}

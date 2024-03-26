@@ -11,8 +11,9 @@ type OutputGetEventsDTO struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	ImageUrl    string    `json:"image_url"`
+	Currency    string    `json:"currency"`
 	Price       float64   `json:"price"`
-	ExpirateAt  time.Time `json:"expirate_at"`
+	EventDate   time.Time `json:"event_date"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -39,7 +40,8 @@ func (g *GetEvents) Execute() ([]OutputGetEventsDTO, error) {
 			Name:        event.Name,
 			Description: event.Description,
 			ImageUrl:    event.ImageUrl,
-			ExpirateAt:  event.ExpirateAt,
+			EventDate:   event.EventDate,
+			Currency:    event.Currency,
 			Price:       event.Price,
 			CreatedAt:   event.CreatedAt,
 			UpdatedAt:   event.UpdatedAt,

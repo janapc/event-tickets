@@ -20,7 +20,8 @@ func connectionDatabase() *sql.DB {
 		description TEXT(150) NOT NULL,
 		image_url TEXT(150) NOT NULL,
 		price DECIMAL(10, 2) NOT NULL,
-		expirate_at TIMESTAMP NOT NULL,
+		currency TEXT(150) NOT NULL,
+		event_date TIMESTAMP NOT NULL,
 		created_at TIMESTAMP NOT NULL, 
 		updated_at TIMESTAMP NOT NULL,
 		PRIMARY KEY(id)
@@ -29,8 +30,8 @@ func connectionDatabase() *sql.DB {
 }
 
 func TestRegisterEvent(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
 	assert.NotEmpty(t, event)
 	connection := connectionDatabase()
 	assert.NotEmpty(t, connection)
@@ -44,8 +45,8 @@ func TestRegisterEvent(t *testing.T) {
 }
 
 func TestUpdateEvent(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
 	assert.NotEmpty(t, event)
 	connection := connectionDatabase()
 	assert.NotEmpty(t, connection)
@@ -63,8 +64,8 @@ func TestUpdateEvent(t *testing.T) {
 }
 
 func TestRemoveEvent(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
 	assert.NotEmpty(t, event)
 	connection := connectionDatabase()
 	assert.NotEmpty(t, connection)
@@ -77,8 +78,8 @@ func TestRemoveEvent(t *testing.T) {
 }
 
 func TestListEvent(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
 	assert.NotEmpty(t, event)
 	connection := connectionDatabase()
 	assert.NotEmpty(t, connection)
@@ -91,8 +92,8 @@ func TestListEvent(t *testing.T) {
 }
 
 func TestGetOneEvent(t *testing.T) {
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
 	assert.NotEmpty(t, event)
 	connection := connectionDatabase()
 	assert.NotEmpty(t, connection)
@@ -100,6 +101,6 @@ func TestGetOneEvent(t *testing.T) {
 	_ = database.Register(event)
 	result, err := database.FindById(event.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, result.ExpirateAt, event.ExpirateAt)
+	assert.Equal(t, result.EventDate, event.EventDate)
 	assert.NotEmpty(t, result)
 }

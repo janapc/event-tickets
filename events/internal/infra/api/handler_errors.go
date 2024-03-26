@@ -7,16 +7,17 @@ import (
 )
 
 var MapErrors = map[string]int{
-	"the name field is mandatory":                                             http.StatusBadRequest,
-	"the description field is mandatory":                                      http.StatusBadRequest,
-	"the price field cannot be less than or equal to zero":                    http.StatusBadRequest,
-	"the field expirate_at is mandatory and should is this format DD/MM/YYYY": http.StatusBadRequest,
-	"the expirate_at field cannot be less than current date":                  http.StatusBadRequest,
-	"event is not found":                                                      http.StatusNotFound,
-	"the authorization is mandatory":                                          http.StatusBadRequest,
-	"unauthorized user":                                                       http.StatusUnauthorized,
-	"invalid token":                                                           http.StatusBadRequest,
-	"you don't have permission to access this resource":                       http.StatusForbidden,
+	"the name field is mandatory":                                            http.StatusBadRequest,
+	"the description field is mandatory":                                     http.StatusBadRequest,
+	"the price field cannot be less than or equal to zero":                   http.StatusBadRequest,
+	"the field event_date is mandatory and should is this format DD/MM/YYYY": http.StatusBadRequest,
+	"the event_date field cannot be less than current date":                  http.StatusBadRequest,
+	"the currency field is mandatory":                                        http.StatusBadRequest,
+	"event is not found":                                                     http.StatusNotFound,
+	"the authorization is mandatory":                                         http.StatusBadRequest,
+	"unauthorized user":                                                      http.StatusUnauthorized,
+	"invalid token":                                                          http.StatusBadRequest,
+	"you don't have permission to access this resource":                      http.StatusForbidden,
 }
 
 type OutputError struct {

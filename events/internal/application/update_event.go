@@ -13,7 +13,8 @@ type InputUpdateEventDTO struct {
 	ImageUrl    string  `json:"image_url,omitempty"`
 	Description string  `json:"description,omitempty"`
 	Price       float64 `json:"price,omitempty"`
-	ExpirateAt  string  `json:"expirate_at,omitempty"`
+	Currency    string  `json:"currency,omitempty"`
+	EventDate   string  `json:"event_date,omitempty"`
 }
 
 type UpdateEvent struct {
@@ -40,17 +41,20 @@ func (u *UpdateEvent) Execute(input InputUpdateEventDTO) error {
 	if input.ImageUrl != "" {
 		event.ImageUrl = input.ImageUrl
 	}
+	if input.Currency != "" {
+		event.Currency = input.Currency
+	}
 	if input.Price > 0 {
 		event.Price = input.Price
 	}
 	currentDate := domain.FormatDate(time.Now(), false)
-	if input.ExpirateAt != "" {
-		if err := domain.IsValidExpirateAt(input.ExpirateAt); err != nil {
+	if input.EventDate != "" {
+		if err := domain.IsValidEventDate(input.EventDate); err != nil {
 			return err
 		}
-		expirateAt := domain.FormatExpiratedAt(input.ExpirateAt)
-		if expirateAt.After(currentDate) {
-			event.ExpirateAt = expirateAt
+		eventDate := domain.FormatEventDate(input.EventDate)
+		if eventDate.After(currentDate) {
+			event.EventDate = eventDate
 		}
 	}
 	event.UpdatedAt = currentDate

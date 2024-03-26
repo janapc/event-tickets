@@ -11,7 +11,7 @@ import (
 
 func TestShouldUpdateAEvent(t *testing.T) {
 	DDMMYYYY := "02/01/2006"
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
 	repository, _ := mocks.NewDatabaseMockRepository()
 	updateEvent := NewUpdateEvent(repository)
 	event, _ := domain.NewEvent(
@@ -19,7 +19,8 @@ func TestShouldUpdateAEvent(t *testing.T) {
 		"test",
 		"http://test.png",
 		1.0,
-		expirateAt,
+		eventDate,
+		"BRL",
 	)
 	event.CreatedAt = time.Now().Add(-48 * time.Hour)
 	event.UpdatedAt = time.Now().Add(-48 * time.Hour)
@@ -34,7 +35,7 @@ func TestShouldUpdateAEvent(t *testing.T) {
 	p, _ := repository.List()
 	assert.Equal(t, p[0].Name, input.Name)
 	assert.Equal(t, p[0].Description, event.Description)
-	assert.Equal(t, p[0].ExpirateAt, event.ExpirateAt)
+	assert.Equal(t, p[0].EventDate, event.EventDate)
 	assert.NotEqual(t, p[0].UpdatedAt, event.CreatedAt)
 }
 

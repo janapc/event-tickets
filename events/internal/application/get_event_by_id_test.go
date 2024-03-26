@@ -12,8 +12,8 @@ import (
 func TestShouldGetEventById(t *testing.T) {
 	repository, _ := mocks.NewDatabaseMockRepository()
 	DDMMYYYY := "02/01/2006"
-	expirateAt := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("test", "test", "http://test.png", 10.0, expirateAt)
+	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
+	event, _ := domain.NewEvent("test", "test", "http://test.png", 10.0, eventDate, "BRL")
 	err := repository.Register(event)
 	assert.NoError(t, err)
 	getEventById := NewGetEventById(repository)

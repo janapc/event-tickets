@@ -20,9 +20,10 @@ func NewDatabaseMockRepository() (*DatabaseMockRepository, error) {
 		id CHAR(36) NOT NULL,
 		name TEXT(150) NOT NULL,
 		description TEXT(150) NOT NULL,
+		currency TEXT(150) NOT NULL,
 		image_url TEXT(150) NOT NULL,
 		price DECIMAL(10, 2) NOT NULL,
-		expirate_at TIMESTAMP NOT NULL,
+		event_date TIMESTAMP NOT NULL,
 		created_at TIMESTAMP NOT NULL, 
 		updated_at TIMESTAMP NOT NULL,
 		PRIMARY KEY(id)
@@ -34,34 +35,33 @@ func NewDatabaseMockRepository() (*DatabaseMockRepository, error) {
 		DB: db,
 	}, nil
 }
-
-func (p *DatabaseMockRepository) Register(event *domain.Event) error {
-	stmt, err := p.DB.Prepare("INSERT INTO events(id, name, description, image_url, price, expirate_at, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)")
+func (d *DatabaseMockRepository) Register(event *domain.Event) error {
+	stmt, err := d.DB.Prepare("INSERT INTO events(id, name, description, image_url, price, currency, event_date, created_at, updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(event.ID, event.Name, event.Description, event.ImageUrl, event.Price, event.ExpirateAt, event.CreatedAt, event.UpdatedAt)
+	_, err = stmt.Exec(event.ID, event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, event.CreatedAt, event.UpdatedAt)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (p *DatabaseMockRepository) Update(event *domain.Event) error {
-	stmt, err := p.DB.Prepare("UPDATE events SET name = ?, description = ?, image_url = ?, price = ?, expirate_at = ?, updated_at = ? WHERE id = ?")
+func (d *DatabaseMockRepository) Update(event *domain.Event) error {
+	stmt, err := d.DB.Prepare("UPDATE events SET name = $1, description = $2, image_url = $3, price = $4, currency = $5, event_date = $6, updated_at = $7 WHERE id = $8")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(event.Name, event.Description, event.ImageUrl, event.Price, event.ExpirateAt, event.UpdatedAt, event.ID)
+	_, err = stmt.Exec(event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, event.UpdatedAt, event.ID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *DatabaseMockRepository) Remove(id string) error {
-	stmt, err := p.DB.Prepare("DELETE FROM events where id = ?")
+func (d *DatabaseMockRepository) Remove(id string) error {
+	stmt, err := d.DB.Prepare("DELETE FROM events where id = $1")
 	if err != nil {
 		return err
 	}
@@ -73,8 +73,8 @@ func (p *DatabaseMockRepository) Remove(id string) error {
 	return nil
 }
 
-func (p *DatabaseMockRepository) List() ([]domain.Event, error) {
-	rows, err := p.DB.Query("SELECT id, name, description, image_url, price, expirate_at, created_at, updated_at FROM events")
+func (d *DatabaseMockRepository) List() ([]domain.Event, error) {
+	rows, err := d.DB.Query("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events")
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (p *DatabaseMockRepository) List() ([]domain.Event, error) {
 	var events []domain.Event
 	for rows.Next() {
 		var event domain.Event
-		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.ExpirateAt, &event.CreatedAt, &event.UpdatedAt)
+		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.Currency, &event.EventDate, &event.CreatedAt, &event.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -91,14 +91,14 @@ func (p *DatabaseMockRepository) List() ([]domain.Event, error) {
 	return events, nil
 }
 
-func (p *DatabaseMockRepository) FindById(id string) (*domain.Event, error) {
-	stmt, err := p.DB.Prepare("SELECT id, name, description, image_url, price, expirate_at, created_at, updated_at FROM events WHERE id = ?")
+func (d *DatabaseMockRepository) FindById(id string) (*domain.Event, error) {
+	stmt, err := d.DB.Prepare("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events WHERE id = $1")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 	var event domain.Event
-	err = stmt.QueryRow(id).Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.ExpirateAt, &event.CreatedAt, &event.UpdatedAt)
+	err = stmt.QueryRow(id).Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.Currency, &event.EventDate, &event.CreatedAt, &event.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

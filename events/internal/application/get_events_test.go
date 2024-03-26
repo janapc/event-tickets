@@ -17,7 +17,8 @@ func TestShouldGetEvents(t *testing.T) {
 		ImageUrl:    "http://test.png",
 		Description: "test",
 		Price:       1.0,
-		ExpirateAt:  time.Now().Add(1 * time.Hour),
+		Currency:    "BRL",
+		EventDate:   time.Now().Add(1 * time.Hour),
 	})
 	assert.NoError(t, err)
 	getEvents := NewGetEvents(repository)

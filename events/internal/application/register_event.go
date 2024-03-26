@@ -11,7 +11,8 @@ type InputRegisterEventDTO struct {
 	Description string  `json:"description"`
 	ImageUrl    string  `json:"image_url"`
 	Price       float64 `json:"price"`
-	ExpirateAt  string  `json:"expirate_at"`
+	Currency    string  `json:"currency"`
+	EventDate   string  `json:"event_date"`
 }
 
 type OutputRegisterEventDTO struct {
@@ -19,8 +20,9 @@ type OutputRegisterEventDTO struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	ImageUrl    string    `json:"image_url"`
+	Currency    string    `json:"currency"`
 	Price       float64   `json:"price"`
-	ExpirateAt  time.Time `json:"expirate_at"`
+	EventDate   time.Time `json:"event_date"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -36,7 +38,7 @@ func NewRegisterEvent(repo domain.EventRepository) *RegisterEvent {
 }
 
 func (r *RegisterEvent) Execute(input InputRegisterEventDTO) (*OutputRegisterEventDTO, error) {
-	event, err := domain.NewEvent(input.Name, input.Description, input.ImageUrl, input.Price, input.ExpirateAt)
+	event, err := domain.NewEvent(input.Name, input.Description, input.ImageUrl, input.Price, input.EventDate, input.Currency)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +51,8 @@ func (r *RegisterEvent) Execute(input InputRegisterEventDTO) (*OutputRegisterEve
 		Name:        event.Name,
 		Description: event.Description,
 		ImageUrl:    event.ImageUrl,
-		ExpirateAt:  event.ExpirateAt,
+		Currency:    event.Currency,
+		EventDate:   event.EventDate,
 		Price:       event.Price,
 		CreatedAt:   event.CreatedAt,
 		UpdatedAt:   event.UpdatedAt,
