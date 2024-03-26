@@ -5,7 +5,7 @@ import { Lead } from '../../domain/lead'
 
 describe('Lead Prisma Repository', () => {
   it('Should create a lead', async () => {
-    const lead = new Lead('test@test.com', false)
+    const lead = new Lead('test@test.com', false, 'en')
     prismaMock.lead.create.mockResolvedValue({ ...lead, id: 1 })
     const repository = new LeadPrismaRepository(prismaMock as PrismaClient)
     const result = await repository.save(lead)
@@ -16,15 +16,15 @@ describe('Lead Prisma Repository', () => {
 
   it('Should get all leads', async () => {
     prismaMock.lead.findMany.mockResolvedValue([
-      { email: 'test@test.com', converted: false, id: 1 },
-      { email: 'test2@test.com', converted: true, id: 2 },
+      { email: 'test@test.com', converted: false, id: 1, language: 'pt' },
+      { email: 'test2@test.com', converted: true, id: 2, language: 'en' },
     ])
     const repository = new LeadPrismaRepository(prismaMock as PrismaClient)
     await expect(repository.getAll()).resolves.toHaveLength(2)
   })
 
   it('Should update a lead', async () => {
-    const lead = new Lead('test@test.com', false)
+    const lead = new Lead('test@test.com', false, 'en')
     prismaMock.lead.create.mockResolvedValue({ ...lead, id: 1 })
     prismaMock.lead.update.mockResolvedValue({
       ...lead,
@@ -38,7 +38,7 @@ describe('Lead Prisma Repository', () => {
   })
 
   it('Should get a lead by email', async () => {
-    const lead = new Lead('test@test.com', false)
+    const lead = new Lead('test@test.com', false, 'pt')
     prismaMock.lead.findUnique.mockResolvedValue({ ...lead, id: 1 })
     const repository = new LeadPrismaRepository(prismaMock as PrismaClient)
     const result = await repository.getByEmail('test@test.com')

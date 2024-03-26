@@ -107,6 +107,10 @@
               }
             }
           },
+          "404": {
+            "message": "lead is not found",
+            "description": "Not Found"
+          },
           "500": {
             "message": "internal server error",
             "description": "Internal Server Error"
@@ -127,11 +131,16 @@
           "converted": {
             "type": "boolean",
             "example": true
+          },
+          "language": {
+            "type": "string",
+            "example": "pt"
           }
         },
         "required": [
           "email",
-          "converted"
+          "converted",
+          "language"
         ],
         "xml": {
           "name": "createLeadRequest"
@@ -151,6 +160,10 @@
           "converted": {
             "type": "boolean",
             "example": true
+          },
+          "language": {
+            "type": "string",
+            "example": "pt"
           }
         },
         "required": [

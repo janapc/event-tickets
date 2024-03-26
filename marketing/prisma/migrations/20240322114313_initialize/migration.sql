@@ -3,6 +3,7 @@ CREATE TABLE `Lead` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(191) NOT NULL,
     `converted` BOOLEAN NOT NULL,
+    `language` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `Lead_email_key`(`email`),
     PRIMARY KEY (`id`)

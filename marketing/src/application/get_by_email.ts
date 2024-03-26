@@ -3,6 +3,7 @@ import { type ILeadRepository } from '@domain/repository'
 interface OuputGetByEmail {
   id: number
   email: string
+  language: string
   converted: boolean
 }
 
@@ -17,6 +18,7 @@ export class GetByEmail {
     return {
       id: Number(result.id),
       email: result.email,
+      language: result.language,
       converted: result.converted,
     }
   }

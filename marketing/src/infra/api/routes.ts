@@ -37,13 +37,20 @@ router.get('/search', (async (req, res): Promise<void> => {
   /* #swagger.responses[500] = { message: 'internal server error' }
    */
 
+  /* #swagger.responses[404] = { message: 'lead is not found' }
+   */
+
   try {
     const { email } = req.query as { email: string }
     const application = new GetByEmail(repository)
     const result = await application.execute(email)
     res.status(200).json(result)
   } catch (e) {
-    res.status(500).json({ message: 'internal server error' })
+    if (e instanceof Error && e.message === 'lead is not found') {
+      res.status(404).json({ message: e.message })
+    } else {
+      res.status(500).json({ message: 'internal server error' })
+    }
   }
 }) as RequestHandler)
 

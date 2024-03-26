@@ -5,7 +5,7 @@ import { ConsumeMessagesQueue } from './consume_messages_queue'
 describe('Consume Messages Queue', () => {
   it('should consume message from queue and update lead', async () => {
     const repository = new DatabaseMockRepository()
-    await repository.save(new Lead('test.test@test.com', false))
+    await repository.save(new Lead('test.test@test.com', false, 'en'))
     const application = new ConsumeMessagesQueue(repository)
     await application.execute(
       JSON.stringify({

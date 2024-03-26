@@ -19,11 +19,13 @@ const doc = {
     createLeadRequest: {
       $email: 'test@test.com',
       $converted: true,
+      $language: 'pt',
     },
     lead: {
       $id: 1,
       $email: 'test@test.com',
       $converted: true,
+      language: 'pt',
     },
     getLeadsResponse: [
       {

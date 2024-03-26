@@ -1,5 +1,6 @@
 import type amqplib from 'amqplib'
 import { type IQueue } from './interface'
+import { logger } from '@infra/logger/logger'
 
 export class QueueRabbitmq implements IQueue {
   constructor(private readonly channel: amqplib.Channel) {}
@@ -16,7 +17,7 @@ export class QueueRabbitmq implements IQueue {
             this.channel.ack(msg)
           })
           .catch((e) => {
-            throw new Error(e.message as string)
+            logger.error(`error in consume message: ${e.message as string}`)
           })
       }
     })

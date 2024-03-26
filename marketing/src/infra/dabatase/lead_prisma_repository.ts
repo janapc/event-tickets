@@ -14,6 +14,7 @@ export class LeadPrismaRepository implements ILeadRepository {
     return await this.prisma.lead.create({
       data: {
         email: lead.email,
+        language: lead.language,
         converted: lead.converted,
       },
     })

@@ -1,4 +1,5 @@
 import { type ILeadRepository } from '@domain/repository'
+import { logger } from '@infra/logger/logger'
 
 interface InputConsumerMessageQueue {
   email: string
@@ -9,7 +10,7 @@ export class ConsumeMessagesQueue {
   constructor(private readonly repository: ILeadRepository) {}
 
   async execute(message: string): Promise<void> {
-    console.log(`${new Date().toISOString()} [leads] message - ${message}`)
+    logger.info(`receive message: ${message}`)
     const { email, hasClient: converted } = JSON.parse(
       message,
     ) as InputConsumerMessageQueue
