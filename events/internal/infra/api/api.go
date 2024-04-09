@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/janapc/event-tickets/events/internal/application"
 	"github.com/janapc/event-tickets/events/internal/domain"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -29,6 +30,14 @@ func (a *Api) Init(port string) {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 	r.Use(Authorization)
 	r.Route("/events", func(r chi.Router) {
 		baseUrl := fmt.Sprintf("%s/events/docs/doc.json", "http://localhost"+port)
