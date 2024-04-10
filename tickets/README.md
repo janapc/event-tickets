@@ -29,7 +29,7 @@ Run this commands in your terminal:
 ❯ npm i
 
 ## run this command to start:
-❯ npm run start
+❯ npm run dev
 
 ```
 

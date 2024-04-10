@@ -9,38 +9,33 @@ import { MailService } from '@infra/mail/mail_service'
 import { logger } from '@infra/logger/logger'
 
 async function start(): Promise<void> {
-  try {
-    await connectDatabase()
-    const { channel, conn } = await connectRabbitmq()
-    process.once('SIGINT', () => {
-      channel
-        .close()
-        .catch((error) =>
-          logger.error(
-            `[${process.env.SERVICE}] error channel - ${error.message as string}`,
-          ),
-        )
-      conn
-        .close()
-        .catch((error) =>
-          logger.error(
-            `[${process.env.SERVICE}] error connection - ${error.message as string}`,
-          ),
-        )
-    })
-    const queue = new QueueRabbitmq(channel)
-    const repository = new TicketRepository(ticketModel)
-    const mail = new MailService()
-    const application = new ProcessMessageTicket(repository, mail)
-    await queue.Consumer(
-      process.env.QUEUE_NAME,
-      application.execute.bind(application),
-    )
-  } catch (error) {
-    let message = 'internal server error'
-    if (error instanceof Error) message = error.message
-    logger.error(`[${process.env.SERVICE}] error start - ${message}`)
-  }
+  await connectDatabase()
+  const { channel, conn } = await connectRabbitmq()
+  process.once('SIGINT', () => {
+    channel
+      .close()
+      .catch((error) =>
+        logger.error(
+          `[${process.env.SERVICE}] error channel - ${error.message as string}`,
+        ),
+      )
+    conn
+      .close()
+      .catch((error) =>
+        logger.error(
+          `[${process.env.SERVICE}] error connection - ${error.message as string}`,
+        ),
+      )
+  })
+  const queue = new QueueRabbitmq(channel)
+  const repository = new TicketRepository(ticketModel)
+  const mail = new MailService()
+  const application = new ProcessMessageTicket(repository, mail)
+  logger.info(`[${process.env.SERVICE}] starting message consumption`)
+  await queue.Consumer(
+    process.env.QUEUE_NAME,
+    application.execute.bind(application),
+  )
 }
 
 void start()
