@@ -29,7 +29,7 @@ Start Docker in your machine and run this commands in your terminal:
 ❯ npm i
 
 ## run this command to start api(localhost:3009):
-❯ npm run start
+❯ npm run dev
 
 ```
 
