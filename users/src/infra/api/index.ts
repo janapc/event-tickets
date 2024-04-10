@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import Fastify, { type FastifyError } from 'fastify'
-import { errorsMap } from './error_handler'
+import cors from '@fastify/cors'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
-import { swaggerConfig, swaggerUiConfig } from '@infra/docs/swagger'
+import { swaggerConfig } from '@infra/docs/swagger'
 import { routes } from './routes'
+import { errorsMap } from './error_handler'
+
 const fastify = Fastify({
   logger: true,
 })
+fastify.register(cors)
 
 fastify.setErrorHandler(async (error: FastifyError, request, reply) => {
   console.error(
@@ -21,12 +24,32 @@ fastify.setErrorHandler(async (error: FastifyError, request, reply) => {
 
 fastify.register(fastifySwagger, swaggerConfig)
 
-fastify.register(fastifySwaggerUi, swaggerUiConfig)
+fastify.register(fastifySwaggerUi, {
+  routePrefix: '/users/docs',
+  uiConfig: {
+    docExpansion: 'full',
+    deepLinking: false,
+  },
+  uiHooks: {
+    onRequest: function (_request: any, _reply: any, next: any) {
+      next()
+    },
+    preHandler: function (_request: any, _reply: any, next: any) {
+      next()
+    },
+  },
+  staticCSP: true,
+  transformStaticCSP: (header: any) => header,
+  transformSpecification: (swaggerObject: any) => {
+    return swaggerObject
+  },
+  transformSpecificationClone: true,
+})
 fastify.register(routes)
 
 export async function server(): Promise<void> {
   try {
-    await fastify.listen({ port: process.env.PORT })
+    await fastify.listen({ port: process.env.PORT, host: '0.0.0.0' })
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
