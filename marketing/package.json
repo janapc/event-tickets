@@ -8,8 +8,9 @@
     "linter": "eslint src",
     "generate-docs": "ts-node-dev src/infra/docs/index.ts",
     "prisma-migrate-dev": "prisma migrate dev --name initialize",
-    "start": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
-    "start:queue": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/queue.ts"
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
+    "build": "tsc -p .",
+    "start": "npm run prisma-migrate-dev && node -r ts-node/register/transpile-only -r tsconfig-paths/register build/index.js"
   },
   "keywords": [],
   "author": "",

@@ -1,4 +1,5 @@
 import express from 'express'
+import type * as http from 'http'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import router from './routes'
@@ -11,8 +12,9 @@ app.use(morgan('tiny'))
 app.use(cors())
 app.use('/leads', router)
 
-export function server(): void {
-  app.listen(process.env.PORT, () => {
+export function server(): http.Server {
+  const s = app.listen(process.env.PORT, () => {
     logger.info(`Server running in port ${process.env.PORT}`)
   })
+  return s
 }
