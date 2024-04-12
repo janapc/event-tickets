@@ -11,7 +11,9 @@ export class TransactionsRepository implements ITransactionRepository {
   ) {}
   async save(transaction: Transaction): Promise<string> {
     const data = {
-      cardNumber: transaction.cardNumber,
+      cardNumber: transaction.cardNumber.substring(
+        transaction.cardNumber.length - 4,
+      ),
       amount: transaction.amount,
       errorMessage: transaction.errorMessage,
       status: transaction.status,
