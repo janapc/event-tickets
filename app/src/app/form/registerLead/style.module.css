@@ -1,0 +1,40 @@
+.marketing {
+  width: 100%;
+  display: flex;
+	justify-content: center;
+	align-items: center;
+  flex-direction: column;
+}
+
+.marketing form {
+	width: 50%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.inputEmail {
+  height: 40px;
+  background-color: rgb(var(--input-bg-color));
+  border: none;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+	width: 100%;
+	padding-left: 10px;
+}
+
+.errorMessage {
+  color: rgb(var(--text-error-color));
+  font-size: 0.75rem;
+	text-align: center;
+}
+
+.btnSubmit {
+  border: none;
+  background-color: rgb(var(--primary-color));
+  padding: 8px;
+  font-weight: 600;
+	border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+	display: flex;
+	align-items: center;
+}

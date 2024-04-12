@@ -1,0 +1,16 @@
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+.main header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+  font-size: 2.8rem;
+  color: rgb(var(--primary-color));
+}

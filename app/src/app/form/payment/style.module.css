@@ -1,0 +1,69 @@
+.payment {
+	width: 100%;
+  display: flex;
+	justify-content: center;
+	align-items: center;
+  flex-direction: column;
+}
+
+.payment form {
+	width: 40%;
+	display: flex;
+  flex-direction: column;
+}
+
+.payment form input {
+	height: 40px;
+  background-color: rgb(var(--input-bg-color));
+  border: none;
+  border-radius: 8px;
+	width: 100%;
+	padding-left: 10px;
+	margin-bottom: 20px;
+}
+
+.card {
+	display: flex;
+	height: 95px;
+	margin-bottom: 20px;
+  background-color: #f8f8f8;
+}
+
+.card .description {
+	padding-left: 20px;
+}
+
+.card .description p {
+	font-size: 0.80rem;
+}
+
+.price {
+	color: #A4CE95;
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.card img {
+	object-fit: contain;
+	height: 100%;
+}
+
+.btnSubmit {
+  border: none;
+  background-color: rgb(var(--primary-color));
+  padding: 12px;
+  font-weight: 600;
+  margin-top: 12px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  width: 100%;
+  cursor: pointer;
+}
+.errorMessage {
+  color: rgb(var(--text-error-color));
+  font-size: 0.75rem;
+	text-align: center;
+}
