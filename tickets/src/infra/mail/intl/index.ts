@@ -30,7 +30,7 @@ export function intlMail(
 </head>
 <body>
 	<h3>${eventName}</h3>
-	<img src=${eventImageUrl}/>
+	<img src="${eventImageUrl}"/>
 	<p>${eventDescription}</p>
 	<p>${name} ${body.message}</p>
 	<p class="ticket">${passport}</p>
