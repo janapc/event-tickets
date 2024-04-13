@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
 'use client'
-import axios from 'axios'
-import { type ReactNode, createContext, useState, useEffect } from 'react'
+import { type ReactNode, createContext, useState } from 'react'
 
 interface Event {
   id: string

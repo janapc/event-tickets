@@ -27,15 +27,21 @@ export default function ListEvents (): React.ReactNode {
     setError('')
     async function getEvents (): Promise<void> {
       try {
-        const responseGetToken: { data: { token: string } } = await axios.post(`${process.env.NEXT_PUBLIC_API_USERS}/get-token`, {
-          email: process.env.NEXT_PUBLIC_EMAIL_USERS,
-          password: process.env.NEXT_PUBLIC_PASSWORD_USERS
-        })
-        const responseGetEvents: { data: Event[] } = await axios.get(`${process.env.NEXT_PUBLIC_API_EVENTS}`, {
-          headers: {
-            Authorization: 'Bearer ' + responseGetToken.data.token
+        const responseGetToken: { data: { token: string } } = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_USERS}/get-token`,
+          {
+            email: process.env.NEXT_PUBLIC_EMAIL_USERS,
+            password: process.env.NEXT_PUBLIC_PASSWORD_USERS
           }
-        })
+        )
+        const responseGetEvents: { data: Event[] } = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_EVENTS}`,
+          {
+            headers: {
+              Authorization: 'Bearer ' + responseGetToken.data.token
+            }
+          }
+        )
         setEvents(responseGetEvents.data)
       } catch (error) {
         setError('sorry, we had a problem, please try again later')
@@ -68,7 +74,12 @@ export default function ListEvents (): React.ReactNode {
               )}
             </p>
           </div>
-          <button className={styles.btnNext} onClick={() => { setNextPage(nextPage + 1) }}>
+          <button
+            className={styles.btnNext}
+            onClick={() => {
+              setNextPage(nextPage + 1)
+            }}
+          >
             Next <FiArrowRight />
           </button>
         </div>
@@ -78,17 +89,22 @@ export default function ListEvents (): React.ReactNode {
 
   return (
     <div className={styles.events}>
-      <select
-        value={selectEventId}
-        onChange={(e) => { setSelectEventId(e.target.value) }}
-      >
-        <option value="0">Select event:</option>
-        {(events.length > 0) && events.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </select>
+      {events.length > 0 &&
+        (
+        <select
+          value={selectEventId}
+          onChange={(e) => {
+            setSelectEventId(e.target.value)
+          }}
+        >
+          <option value="0">Select event:</option>
+          {events.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+        )}
       {selectEventId !== '' && cardEvent(selectEventId)}
       <span className={styles.errorMessage}>{error}</span>
     </div>

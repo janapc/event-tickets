@@ -66,23 +66,25 @@ export default function Payment (): React.ReactNode {
             setSecurityCode(e.target.value)
           }}
         />
-       {event !== null && <div className={styles.card}>
-          <img src={event.image_url} />
-          <div className={styles.description}>
-            <b>{event.name}</b>
-            <p>
-              {new Date(event.event_date).toLocaleDateString(
-                navigator.language
-              )}
-            </p>
-            <b className={styles.price}>
-              {new Intl.NumberFormat(navigator.language, {
-                style: 'currency',
-                currency: event.currency
-              }).format(event.price)}
-            </b>
+        {event !== null && (
+          <div className={styles.card}>
+            <img src={event.image_url} />
+            <div className={styles.description}>
+              <b>{event.name}</b>
+              <p>
+                {new Date(event.event_date).toLocaleDateString(
+                  navigator.language
+                )}
+              </p>
+              <b className={styles.price}>
+                {new Intl.NumberFormat(navigator.language, {
+                  style: 'currency',
+                  currency: event.currency
+                }).format(event.price)}
+              </b>
+            </div>
           </div>
-        </div>}
+        )}
         <span className={styles.errorMessage}>{error}</span>
         <button className={styles.btnSubmit} type="submit">
           Next <FiArrowRight />

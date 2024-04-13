@@ -39,7 +39,9 @@ export default function RegisterLead (): React.ReactNode {
           id="email"
           placeholder="E-mail"
           value={email}
-          onChange={(e) => { setEmail(e.target.value) }}
+          onChange={(e) => {
+            setEmail(e.target.value)
+          }}
         />
         <button className={styles.btnSubmit} type="submit">
           Next <FiArrowRight />
