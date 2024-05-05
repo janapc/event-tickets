@@ -17,6 +17,10 @@ type OutputAuth struct {
 	jwt.RegisteredClaims
 }
 
+type ContextKey string
+
+const ContextUserRoleKey ContextKey = "userRole"
+
 func ValidateToken(tokenString string) (*OutputAuth, error) {
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	claims := &OutputAuth{}
@@ -65,14 +69,14 @@ func Authorization(next http.Handler) http.Handler {
 			w.Write(message)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "userRole", data.Role)
+		ctx := context.WithValue(r.Context(), ContextUserRoleKey, data.Role)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		perm, ok := r.Context().Value("userRole").(string)
+		perm, ok := r.Context().Value(ContextUserRoleKey).(string)
 		if !ok || perm != "ADMIN" {
 			message, statusCode := HandlerErrors(errors.New("you don't have permission to access this resource"))
 			w.WriteHeader(statusCode)
