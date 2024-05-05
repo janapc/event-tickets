@@ -22,7 +22,7 @@ You must create a **.env** file with the same information as in **.env_examples*
 
 ## Usage
 
-Run this commands in your terminal:
+Run these commands in your terminal:
 
 ```sh
 ## install dependecies
