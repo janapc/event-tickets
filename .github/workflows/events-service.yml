@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.21.x", "1.22.x"]
+        go: ["1.22.x"]
         dir: ["events"]
     runs-on: ubuntu-latest
     steps:
