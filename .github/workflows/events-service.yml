@@ -4,6 +4,9 @@ on: [push]
 defaults:
   run:
     working-directory: events
+permissions:
+  contents: write
+
 jobs:
   ci:
     strategy:
@@ -37,9 +40,22 @@ jobs:
       - name: Run go lint
         run: golangci-lint run ./...
       - name: Run tests
-        run: go test -race -vet=off ./... -json > TestResults.json
-      - name: Upload Go test results
-        uses: actions/upload-artifact@v4
+        run: go test ./...
+
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          name: Go-results
-          path: TestResults.json
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v4
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
