@@ -8,6 +8,8 @@ on:
       - "events/**"
     tags:
       - "*"
+permissions:
+  contents: write
 
 jobs:
   release:
