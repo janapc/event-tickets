@@ -14,7 +14,7 @@ This API to manage events(concerts, shows, theater) using tokens to access(users
 
 ## Requirement
 
-To this project your need:
+This project your need:
 
 - golang v1.22.1 [golang](https://go.dev/doc/install)
 
