@@ -10,7 +10,7 @@
 
 ## Description
 
-API to manage events(concerts, shows, theater) using tokens to access(users api) routes.
+This API to manage events(concerts, shows, theater) using tokens to access(users api) routes.
 
 ## Requirement
 
