@@ -1,9 +1,9 @@
 name: Events-service
 
 on:
-  branches:
-    - main
   push:
+    branches:
+      - main
     paths:
       - "events/**"
 env:
