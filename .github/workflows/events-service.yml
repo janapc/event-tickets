@@ -32,10 +32,10 @@ jobs:
           version: "latest"
           install-go: false
           working-directory: ${{ matrix.dir }}
-      - name: Install golint
-        run: go install golang.org/x/lint/golint@latest
-      - name: Run golint
-        run: golint ./...
+      - name: Install go lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.58.0
+      - name: Run go lint
+        run: golangci-lint run ./...
       - name: Run tests
         run: go test -race -vet=off ./... -json > TestResults.json
       - name: Upload Go test results

@@ -47,7 +47,9 @@ func (a *Api) Init(port string) {
 		r.Mount("/admin", a.adminRouter())
 	})
 	log.Printf("Server running in port %s", port)
-	http.ListenAndServe(port, r)
+	if err := http.ListenAndServe(port, r); err != nil {
+		log.Panicln(err)
+	}
 }
 
 func (a *Api) adminRouter() http.Handler {
@@ -74,11 +76,15 @@ func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
-		w.Write(message)
+		if _, err := w.Write(message); err != nil {
+			log.Panicln(err)
+		}
 		return
 	}
 	json, _ := json.Marshal(result)
-	w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		log.Panicln(err)
+	}
 }
 
 // GetEventById godoc
@@ -100,11 +106,15 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
-		w.Write(message)
+		if _, err := w.Write(message); err != nil {
+			log.Panicln(err)
+		}
 		return
 	}
 	json, _ := json.Marshal(result)
-	w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		log.Panicln(err)
+	}
 }
 
 // RemoveEvent godoc
@@ -125,7 +135,9 @@ func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
-		w.Write(message)
+		if _, err := w.Write(message); err != nil {
+			log.Panicln(err)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -154,11 +166,15 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
-		w.Write(message)
+		if _, err := w.Write(message); err != nil {
+			log.Panicln(err)
+		}
 		return
 	}
 	json, _ := json.Marshal(result)
-	w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		log.Panicln(err)
+	}
 }
 
 // UpdateEvent godoc
@@ -187,7 +203,9 @@ func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
-		w.Write(message)
+		if _, err := w.Write(message); err != nil {
+			log.Panicln(err)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

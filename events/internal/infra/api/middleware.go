@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -52,7 +53,9 @@ func Authorization(next http.Handler) http.Handler {
 		if auth == "" {
 			message, statusCode := HandlerErrors(errors.New("the authorization is mandatory"))
 			w.WriteHeader(statusCode)
-			w.Write(message)
+			if _, err := w.Write(message); err != nil {
+				log.Panicln(err)
+			}
 			return
 		}
 		token := auth[len("Bearer "):]
@@ -60,13 +63,17 @@ func Authorization(next http.Handler) http.Handler {
 		if err != nil {
 			message, statusCode := HandlerErrors(errors.New("unauthorized user"))
 			w.WriteHeader(statusCode)
-			w.Write(message)
+			if _, err := w.Write(message); err != nil {
+				log.Panicln(err)
+			}
 			return
 		}
 		if !isValidRole(data.Role) {
 			message, statusCode := HandlerErrors(errors.New("unauthorized user"))
 			w.WriteHeader(statusCode)
-			w.Write(message)
+			if _, err := w.Write(message); err != nil {
+				log.Panicln(err)
+			}
 			return
 		}
 		ctx := context.WithValue(r.Context(), ContextUserRoleKey, data.Role)
@@ -80,7 +87,9 @@ func AdminOnly(next http.Handler) http.Handler {
 		if !ok || perm != "ADMIN" {
 			message, statusCode := HandlerErrors(errors.New("you don't have permission to access this resource"))
 			w.WriteHeader(statusCode)
-			w.Write(message)
+			if _, err := w.Write(message); err != nil {
+				log.Panicln(err)
+			}
 			return
 		}
 		next.ServeHTTP(w, r)
