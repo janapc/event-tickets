@@ -1,19 +1,21 @@
 name: Events-service
 
-on: [push]
+on:
+  branches:
+    - main
+  push:
+    paths:
+      - "events/**"
+env:
+  dir: "events"
+  go: "1.22.x"
+
 defaults:
   run:
-    working-directory: events
-permissions:
-  contents: write
+    working-directory: ${{env.dir}}
 
 jobs:
-  ci:
-    strategy:
-      fail-fast: false
-      matrix:
-        go: ["1.22.x"]
-        dir: ["events"]
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +24,11 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache-dependency-path: "**/go.sum"
-
       - name: Verify dependencies
         run: go mod verify
-      - name: Build
+      - name: Build project
         run: go build -v ./...
-      - name: Run go vet
+      - name: Run vet
         run: go vet ./...
       - name: Run staticcheck
         uses: dominikh/staticcheck-action@v1
@@ -37,25 +38,7 @@ jobs:
           working-directory: ${{ matrix.dir }}
       - name: Install go lint
         run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.58.0
-      - name: Run go lint
+      - name: Run lint
         run: golangci-lint run ./...
       - name: Run tests
         run: go test ./...
-
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Go
-        uses: actions/setup-go@v4
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
