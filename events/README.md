@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Events API</h1>
+  <h1>Events Service</h1>
 
 <a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
 <a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
