@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./events
+        working-directory: events
 
     steps:
       - uses: actions/checkout@v4
