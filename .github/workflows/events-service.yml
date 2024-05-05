@@ -6,23 +6,24 @@ on:
       - main
     paths:
       - "events/**"
-env:
-  dir: "events"
-  go: "1.22.x"
 
 defaults:
   run:
-    working-directory: ${{env.dir}}
+    working-directory: "events"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ["1.22.x"]
+        dir: "events"
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ${{ matrix.version }}
           cache-dependency-path: "**/go.sum"
       - name: Verify dependencies
         run: go mod verify
