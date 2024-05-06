@@ -17,10 +17,8 @@ env:
 
 jobs:
   lint:
-    name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v5
