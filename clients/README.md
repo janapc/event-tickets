@@ -18,7 +18,7 @@ produce messages to the client_created queue and send_ticket after the client is
 
 ## Requirement
 
-To this project your need:
+This project your need:
 
 - golang v1.22.1 [golang](https://go.dev/doc/install)
 
