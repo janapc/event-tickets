@@ -10,7 +10,7 @@
 
 ## Description
 
-API to manage clients.
+this API to manage clients.
 consume payment queue for creating customers.
 produce messages to the client_created queue and send_ticket after the client is created.
 
