@@ -31,6 +31,9 @@ Run these commands in your terminal:
 ## run this command to start api(localhost:3000):
 ❯ go run cmd/main.go
 
+## this command run the tests:
+❯ go test -v ./...
+
 ```
 
 API routes are in `http://localhost:3000/events/docs`
