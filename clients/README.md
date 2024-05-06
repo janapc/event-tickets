@@ -1,5 +1,7 @@
 <div align="center">
-  <h1>Events API</h1>
+  <h1>Clients Service</h1>
+
+[![golang-services](https://github.com/janapc/event-tickets/actions/workflows/golang-services.yml/badge.svg?branch=main)](https://github.com/janapc/event-tickets/actions/workflows/golang-services.yml)
 
 <a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
 <a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;

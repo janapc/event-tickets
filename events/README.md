@@ -1,9 +1,13 @@
 <div align="center">
   <h1>Events Service</h1>
-  <a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#usage">Usage</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#resources">Resources</a>
+  
+  [![golang-services](https://github.com/janapc/event-tickets/actions/workflows/golang-services.yml/badge.svg?branch=main)](https://github.com/janapc/event-tickets/actions/workflows/golang-services.yml)
+
+<a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+<a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+<a href="#usage">Usage</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+<a href="#resources">Resources</a>
+
 </div>
 
 ## Description
