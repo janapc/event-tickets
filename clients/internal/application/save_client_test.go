@@ -24,7 +24,7 @@ func TestSaveAClient(t *testing.T) {
 func TestErrorIfClientAlreadyExists(t *testing.T) {
 	repository, _ := mocks.NewDatabaseMockRepository()
 	client, _ := domain.NewClient("test", "test@test.com")
-	repository.Save(client)
+	_ = repository.Save(client)
 	saveClient := NewSaveClient(repository)
 	input := InputSaveClient{
 		Name:  "test2",

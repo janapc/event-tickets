@@ -2,6 +2,7 @@ package application
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
@@ -49,11 +50,17 @@ func (p *ProcessMessage) Execute(input InputProcessMessage, fn domain.IQueue) er
 		}
 		msgQueueClientCreated, _ := json.Marshal(messageClientCreated)
 		queueClientCreated := os.Getenv("QUEUE_CLIENT_CREATED")
-		fn.Producer(queueClientCreated, msgQueueClientCreated)
+		err = fn.Producer(queueClientCreated, msgQueueClientCreated)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	msgQueueSendTicket, _ := json.Marshal(input)
 	queueSendTicket := os.Getenv("QUEUE_SEND_TICKET")
-	fn.Producer(queueSendTicket, msgQueueSendTicket)
+	err = fn.Producer(queueSendTicket, msgQueueSendTicket)
+	if err != nil {
+		log.Println(err)
+	}
 	return nil
 }

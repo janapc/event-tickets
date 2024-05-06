@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -32,7 +33,9 @@ func (s *Server) Init(port string) {
 	app.Post("/clients", s.HandlerSaveClient)
 	app.Get("/clients/docs/*", fiberSwagger.WrapHandler)
 	addr := fmt.Sprintf(":%s", port)
-	app.Listen(addr)
+	if err := app.Listen(addr); err != nil {
+		log.Panicln(err)
+	}
 }
 
 // GetClientByEmail godoc

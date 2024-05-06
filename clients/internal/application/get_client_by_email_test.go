@@ -11,7 +11,7 @@ import (
 func TestGetClientByEmail(t *testing.T) {
 	repository, _ := mocks.NewDatabaseMockRepository()
 	c, _ := domain.NewClient("test", "test@test.com")
-	repository.Save(c)
+	_ = repository.Save(c)
 	getClientByEmail := NewGetClientByEmail(repository)
 	client, err := getClientByEmail.Execute("test@test.com")
 	assert.NoError(t, err)

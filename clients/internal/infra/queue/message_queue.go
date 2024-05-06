@@ -29,30 +29,28 @@ func NewQueue(channel *amqp.Channel, processMessage *application.ProcessMessage,
 	}
 }
 
-func (q *Queue) Consumer(queueName string, workerPoolSize int) error {
+func (q *Queue) Consumer(queueName string, workerPoolSize int) {
 	deliveries, err := q.Channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
 		q.Logger.Error("error get messages of queue", "error", err)
-		return err
 	}
 	q.Logger.Info("initialize queue message capture")
 	for i := 0; i < workerPoolSize; i++ {
 		go q.Worker(deliveries)
 	}
-	return nil
 }
 
 func (q *Queue) Worker(messages <-chan amqp.Delivery) {
 	for delivery := range messages {
 		q.Logger.Info(string(delivery.Body))
 		var input Message
-		json.Unmarshal(delivery.Body, &input)
+		_ = json.Unmarshal(delivery.Body, &input)
 		q.Logger.Info("delivery message", "messageId", delivery.MessageId, "body", input)
 		err := q.ProcessMessage.Execute(input.Data, q)
 		if err != nil {
 			q.Logger.Error("error in save client", "error", err)
 		} else {
-			delivery.Ack(false)
+			_ = delivery.Ack(false)
 		}
 	}
 }

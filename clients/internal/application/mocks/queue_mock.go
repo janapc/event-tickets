@@ -1,5 +1,7 @@
 package mocks
 
+import "log"
+
 type QueueMock struct {
 	Messages []string
 }
@@ -10,8 +12,8 @@ func NewQueueMock() *QueueMock {
 	}
 }
 
-func (q *QueueMock) Consumer(queueName string, workerPoolSize int) error {
-	return nil
+func (q *QueueMock) Consumer(queueName string, workerPoolSize int) {
+	log.Println(queueName)
 }
 
 func (q *QueueMock) Producer(queueName string, message []byte) error {

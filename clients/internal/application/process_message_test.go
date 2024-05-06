@@ -32,7 +32,7 @@ func TestProcessMessage(t *testing.T) {
 func TestProcessMessageWithClientExists(t *testing.T) {
 	repository, _ := mocks.NewDatabaseMockRepository()
 	c, _ := domain.NewClient("banana", "banana@banana.com")
-	repository.Save(c)
+	_ = repository.Save(c)
 	queue := mocks.NewQueueMock()
 	processMessage := NewProcessMessage(repository)
 	input := InputProcessMessage{
