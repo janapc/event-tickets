@@ -20,7 +20,7 @@ This project your need:
 
 - golang v1.22.1 [golang](https://go.dev/doc/install)
 
-You must create a **.env** file with the same information as in **.env_examples**
+You must create a **.env** file with the same information as in **.env_examples**.
 
 ## Run
 
