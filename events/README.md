@@ -5,7 +5,7 @@
 
 <a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
 <a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#usage">Usage</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+<a href="#run">Run</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
 <a href="#resources">Resources</a>
 
 </div>
@@ -22,7 +22,7 @@ This project your need:
 
 You must create a **.env** file with the same information as in **.env_examples**
 
-## Usage
+## Run
 
 Run these commands in your terminal:
 
