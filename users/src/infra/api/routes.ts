@@ -14,6 +14,7 @@ export function routes(
     '/users/get-token',
     {
       schema: {
+        description: 'Generate access token to user',
         body: {
           type: 'object',
           properties: {
@@ -57,6 +58,7 @@ export function routes(
     '/users',
     {
       schema: {
+        description: 'Create a new user',
         body: {
           type: 'object',
           properties: {
@@ -101,6 +103,7 @@ export function routes(
     '/users',
     {
       schema: {
+        description: 'Delete a user',
         querystring: {
           type: 'object',
           properties: {

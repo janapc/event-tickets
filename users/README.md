@@ -33,7 +33,7 @@ Start Docker in your machine and run this commands in your terminal:
 
 ```
 
-API routes are in `http://localhost:3009/users/docs`
+API routes are in `http://localhost:3000/users/docs`
 
 ## Resources
 
