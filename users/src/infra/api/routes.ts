@@ -112,6 +112,12 @@ export function routes(
         },
         response: {
           204: {},
+          404: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+            },
+          },
           500: {
             type: 'object',
             properties: {

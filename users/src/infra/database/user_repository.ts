@@ -23,7 +23,7 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async remove(email: string): Promise<void> {
-    await this.UserModel.findOneAndDelete({ email })
+  async remove(email: string): Promise<IUser | null> {
+    return await this.UserModel.findOneAndDelete({ email })
   }
 }
