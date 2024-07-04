@@ -12,8 +12,11 @@ export class InMemoryRepository implements IUserRepository {
     return user ?? null
   }
 
-  async remove(email: string): Promise<void> {
+  async remove(email: string): Promise<User | null> {
     const userIndex = this.users.findIndex((item) => item.email === email)
+    const user = this.users[userIndex]
+    if (userIndex === -1) return null
     this.users.splice(userIndex, 1)
+    return user
   }
 }

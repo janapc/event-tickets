@@ -58,9 +58,14 @@ describe('User Database', () => {
   it('should remove a user', async () => {
     const spyFindOneAndDelete = jest
       .spyOn(userModel, 'findOneAndDelete')
-      .mockResolvedValue({})
+      .mockResolvedValue({
+        email: 'test@test.com',
+        password: '03a851ff97d17ca7638850a47d4e0146d3b1adb6',
+        role: 'PUBLIC',
+        _id: 'Asd123',
+      })
     const repository = new UserRepository(userModel)
-    await expect(repository.remove('test@test.com')).resolves.toBeUndefined()
+    await expect(repository.remove('test@test.com')).resolves.toBeDefined()
     expect(spyFindOneAndDelete).toHaveBeenCalledTimes(1)
   })
 
