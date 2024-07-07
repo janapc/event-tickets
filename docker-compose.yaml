@@ -1,8 +1,8 @@
 services:
-  mongodb:
+  mongo-database:
     image: mongo:7.0.2
     restart: on-failure
-    container_name: mongodb_event_tickets
+    container_name: event_tickets_mongo_database
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
@@ -10,8 +10,20 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongodb:/data/db
+      - mongo-database:/data/db
     env_file: .env
 
+  users-service:
+    image: users-services
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    command: npm run start
+    depends_on:
+      - mongo-database
+    container_name: event_tickets_users_services
+    ports:
+      - "3000:3000"
+
 volumes:
-  mongodb: {}
+  mongo-database: {}
