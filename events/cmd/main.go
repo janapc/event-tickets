@@ -14,7 +14,7 @@ import (
 // @version 1.0
 // @description api to manager events
 
-// @host localhost:3000/
+// @host localhost:3001/
 // @BasePath events
 // @securityDefinitions.apikey BearerAuth
 // @in header

@@ -36,9 +36,12 @@ Run these commands in your terminal:
 ## this command run the tests:
 ❯ go test -v ./...
 
+## run this command to update documents if necessary
+❯ swag init -g cmd/main.go --output internal/infra/docs
+
 ```
 
-API routes are in `http://localhost:3000/events/docs`
+API routes are in `http://localhost:3001/events/docs`
 
 ## Resources
 
