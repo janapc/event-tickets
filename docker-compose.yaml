@@ -26,9 +26,34 @@ services:
     ports:
       - "5432:5432"
     restart: on-failure
+  
+  mysql-database:
+    image: mysql:9.0.0
+    container_name: mysql_database
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  rabbitmq-queue:
+    image: rabbitmq:3.13.4-management
+    container_name: rabbitmq_queue
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: on-failure
 
   users-service:
-    image: users-services
+    # image: janapc0/users-services
     build:
       context: ./users
       dockerfile: Dockerfile
@@ -40,7 +65,7 @@ services:
       - "3000:3000"
 
   events-service:
-    image: events-services
+    # image: janapc0/events-services
     build:
       context: ./events
       dockerfile: Dockerfile
@@ -49,6 +74,21 @@ services:
     container_name: events_services
     ports:
       - "3001:3001"
+
+  marketing-service:
+    # image: janapc0/marketing-services
+    build:
+      context: ./marketing
+      dockerfile: Dockerfile
+    command: npm run start
+    depends_on:
+      mysql-database: 
+        condition: service_healthy
+      rabbitmq-queue:
+        condition: service_started
+    container_name: marketing_services
+    ports:
+      - "3002:3002"
 
 volumes:
   mongo-database: {}
