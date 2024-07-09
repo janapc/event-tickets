@@ -22,7 +22,7 @@ const doc = {
       $language: 'pt',
     },
     lead: {
-      $id: 1,
+      $id: 'asd-123-asd',
       $email: 'test@test.com',
       $converted: true,
       language: 'pt',

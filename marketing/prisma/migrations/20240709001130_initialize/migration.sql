@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE `Lead` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
     `converted` BOOLEAN NOT NULL,
     `language` VARCHAR(191) NOT NULL,

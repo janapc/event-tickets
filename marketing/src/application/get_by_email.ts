@@ -1,7 +1,7 @@
 import { type ILeadRepository } from '@domain/repository'
 
 interface OuputGetByEmail {
-  id: number
+  id: string
   email: string
   language: string
   converted: boolean
@@ -11,15 +11,15 @@ export class GetByEmail {
   constructor(private readonly repository: ILeadRepository) {}
 
   async execute(email: string): Promise<OuputGetByEmail> {
-    const result = await this.repository.getByEmail(email)
-    if (!result) {
+    const lead = await this.repository.getByEmail(email)
+    if (!lead) {
       throw new Error('lead is not found')
     }
     return {
-      id: Number(result.id),
-      email: result.email,
-      language: result.language,
-      converted: result.converted,
+      id: String(lead.id),
+      email: lead.email,
+      language: lead.language,
+      converted: lead.converted,
     }
   }
 }

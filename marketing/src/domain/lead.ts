@@ -1,5 +1,5 @@
 export class Lead {
-  id?: number
+  id?: string
   email: string
   converted: boolean
   language: string
@@ -8,7 +8,7 @@ export class Lead {
     email: string,
     converted: boolean,
     language: string,
-    id?: number,
+    id?: string,
   ) {
     if (id) this.id = id
     this.email = email

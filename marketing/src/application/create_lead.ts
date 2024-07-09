@@ -8,7 +8,7 @@ export interface InputCreateLead {
 }
 
 interface OuputCreateLead {
-  id: number
+  id: string
   email: string
   language: string
   converted: boolean
@@ -18,22 +18,22 @@ export class CreateLead {
   constructor(private readonly repository: ILeadRepository) {}
 
   async execute(input: InputCreateLead): Promise<OuputCreateLead> {
-    const lead = new Lead(input.email, input.converted, input.language)
-    const getByEmail = await this.repository.getByEmail(input.email)
-    if (!getByEmail) {
-      const save = await this.repository.save(lead)
+    const existsLead = await this.repository.getByEmail(input.email)
+    if (existsLead) {
       return {
-        id: Number(save.id),
-        email: save.email,
-        language: save.language,
-        converted: save.converted,
+        id: String(existsLead.id),
+        email: existsLead.email,
+        language: existsLead.language,
+        converted: existsLead.converted,
       }
     }
+    const lead = new Lead(input.email, input.converted, input.language)
+    const newLead = await this.repository.save(lead)
     return {
-      id: Number(getByEmail.id),
-      email: getByEmail.email,
-      language: getByEmail.language,
-      converted: getByEmail.converted,
+      id: String(newLead.id),
+      email: newLead.email,
+      language: newLead.language,
+      converted: newLead.converted,
     }
   }
 }

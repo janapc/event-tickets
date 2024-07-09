@@ -5,7 +5,7 @@ export class DatabaseMockRepository implements ILeadRepository {
   public leads: Lead[] = []
 
   async save(lead: Lead): Promise<Lead> {
-    const id = new Date().valueOf()
+    const id = new Date().valueOf().toString()
     this.leads.push({ id, ...lead })
     return { ...lead, id }
   }
