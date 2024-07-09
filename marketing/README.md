@@ -31,12 +31,15 @@ Run this commands in your terminal:
 ## run migrate
 ❯ npm run prisma-migrate-dev
 
-## run this command to start queue and api(localhost:3003):
+## run this command to start queue and api(localhost:3002):
 ❯ npm run dev
+
+## run this command to generate docs:
+❯ npm run generate-docs
 
 ```
 
-API routes are in `http://localhost:3003/leads/docs`
+API routes are in `http://localhost:3002/leads/docs`
 
 ## Resources
 
