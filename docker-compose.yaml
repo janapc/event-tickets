@@ -40,6 +40,8 @@ services:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+    volumes:
+      - mysql-database:/var/lib/mysql
 
   rabbitmq-queue:
     image: rabbitmq:3.13.4-management
@@ -51,6 +53,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     restart: on-failure
+    volumes:
+      - rabbitmq-queue:/var/lib/rabbitmq
 
   users-service:
     # image: janapc0/users-services
@@ -93,3 +97,5 @@ services:
 volumes:
   mongo-database: {}
   postgres-database: {}
+  mysql-database: {}
+  rabbitmq-queue: {}
