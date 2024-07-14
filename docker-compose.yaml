@@ -12,6 +12,12 @@ services:
     volumes:
       - mongo-database:/data/db
     env_file: .env
+    healthcheck:
+      test:  echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   postgres-database:
     image: postgres:16.0
@@ -52,9 +58,14 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    restart: on-failure
+    restart: always
     volumes:
       - rabbitmq-queue:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
 
   users-service:
     # image: janapc0/users-services
@@ -93,6 +104,21 @@ services:
     container_name: marketing_services
     ports:
       - "3002:3002"
+
+  payments-service:
+    # image: janapc0/payments-services
+    build:
+      context: ./payments
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    depends_on:
+      mongo-database:
+        condition: service_healthy
+      rabbitmq-queue:
+        condition: service_healthy
+    container_name: payments_services
+    ports:
+      - "3003:3003"
 
 volumes:
   mongo-database: {}
