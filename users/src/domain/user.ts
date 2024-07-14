@@ -41,4 +41,8 @@ export class User {
   #generatePassword(password: string): string {
     return bcrypt.hashSync(password, 12)
   }
+
+  static isValidPassword(password: string, userPassword: string): boolean {
+    return bcrypt.compareSync(password, userPassword)
+  }
 }

@@ -1,6 +1,6 @@
-import bcrypt from 'bcrypt'
 import { sign } from 'jsonwebtoken'
 import { type IUserRepository } from '@domain/repository'
+import { User } from '@domain/user'
 
 export class GetTokenUser {
   constructor(private readonly repository: IUserRepository) {}
@@ -10,7 +10,10 @@ export class GetTokenUser {
     if (!user) {
       throw new Error('we can not find the user.Please try again')
     }
-    const isValidPassword = bcrypt.compareSync(password, String(user.password))
+    const isValidPassword = User.isValidPassword(
+      password,
+      String(user.password),
+    )
     if (!isValidPassword) {
       throw new Error('your email or password is incorrect.Please try again')
     }
