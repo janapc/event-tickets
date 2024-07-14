@@ -13,8 +13,7 @@ app.use(cors())
 app.use('/leads', router)
 
 export function server(): http.Server {
-  const s = app.listen(process.env.PORT, () => {
+  return app.listen(process.env.PORT, () => {
     logger.info(`Server running in port ${process.env.PORT}`)
   })
-  return s
 }

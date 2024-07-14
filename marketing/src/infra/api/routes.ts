@@ -72,7 +72,6 @@ router.post('/', (async (req, res): Promise<void> => {
     const result = await createLead.execute(body)
     res.status(201).json(result)
   } catch (e) {
-    console.log(e)
     res.status(500).json({ message: 'internal server error' })
   }
 }) as RequestHandler)

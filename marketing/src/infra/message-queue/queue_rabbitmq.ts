@@ -17,7 +17,7 @@ export class QueueRabbitmq implements IQueue {
             this.channel.ack(msg)
           })
           .catch((e) => {
-            logger.error(`error in consume message: ${e.message as string}`)
+            logger.error(`consume message: ${e.message as string}`)
           })
       }
     })

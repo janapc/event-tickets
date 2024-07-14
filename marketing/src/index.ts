@@ -30,7 +30,7 @@ export async function start(): Promise<void> {
   } catch (error) {
     let message = 'internal server error'
     if (error instanceof Error) message = error.message
-    logger.error(`error : ${message}`)
+    logger.error(message)
   }
 }
 
