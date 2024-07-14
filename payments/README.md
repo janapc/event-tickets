@@ -28,12 +28,12 @@ Run this commands in your terminal:
 ## install dependecies
 ❯ npm i
 
-## run this command to start api(localhost:3005):
-❯ npm run start
+## run this command to start api(localhost:3003):
+❯ npm run start:dev
 
 ```
 
-API routes are in `http://localhost:3005/payments/docs`
+API routes are in `http://localhost:3003/payments/docs`
 
 ## Resources
 
