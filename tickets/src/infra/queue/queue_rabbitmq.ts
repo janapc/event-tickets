@@ -12,15 +12,13 @@ export class QueueRabbitmq implements IQueue {
     await this.channel.consume(queueName, (msg): void => {
       if (msg !== null) {
         const content = msg.content.toString()
-        logger.info(`[${process.env.SERVICE}] message - ${content}`)
+        logger.info(`consumer message - ${content}`)
         fn(content)
           .then(() => {
             this.channel.ack(msg)
           })
           .catch((error) => {
-            logger.error(
-              `[${process.env.SERVICE}] error consumer - ${error.message as string}`,
-            )
+            logger.error(`consumer message - ${error.message as string}`)
           })
       }
     })

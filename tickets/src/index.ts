@@ -15,25 +15,21 @@ async function start(): Promise<void> {
     channel
       .close()
       .catch((error) =>
-        logger.error(
-          `[${process.env.SERVICE}] error channel - ${error.message as string}`,
-        ),
+        logger.error(`close queue - ${error.message as string}`),
       )
     conn
       .close()
       .catch((error) =>
-        logger.error(
-          `[${process.env.SERVICE}] error connection - ${error.message as string}`,
-        ),
+        logger.error(`close database connection - ${error.message as string}`),
       )
   })
   const queue = new QueueRabbitmq(channel)
   const repository = new TicketRepository(ticketModel)
   const mail = new MailService()
   const application = new ProcessMessageTicket(repository, mail)
-  logger.info(`[${process.env.SERVICE}] starting message consumption`)
+  logger.info(`starting message consumption`)
   await queue.Consumer(
-    process.env.QUEUE_NAME,
+    process.env.QUEUE_SEND_TICKET,
     application.execute.bind(application),
   )
 }

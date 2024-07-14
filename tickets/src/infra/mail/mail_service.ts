@@ -24,6 +24,6 @@ export class MailService implements IMail {
       subject,
       html: message,
     })
-    logger.info(`[${process.env.SERVICE}] sendEmail - ${result.messageId}`)
+    logger.info(`send new mail - ${result.messageId}`)
   }
 }
