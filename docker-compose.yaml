@@ -120,6 +120,20 @@ services:
     ports:
       - "3003:3003"
 
+  clients-service:
+    # image: janapc0/clients-services
+    build:
+      context: ./clients
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-database:
+        condition: service_started
+      rabbitmq-queue:
+        condition: service_healthy
+    container_name: clients_services
+    ports:
+      - "3004:3004" 
+
 volumes:
   mongo-database: {}
   postgres-database: {}

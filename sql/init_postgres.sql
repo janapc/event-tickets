@@ -11,4 +11,12 @@ CREATE TABLE IF NOT EXISTS events(
   created_at TIMESTAMP NOT NULL, 
   updated_at TIMESTAMP NOT NULL,
   PRIMARY KEY(id)
-)
+);
+
+CREATE TABLE IF NOT EXISTS clients(
+  id uuid NOT NULL,
+  name VARCHAR(70) NOT NULL,
+  email VARCHAR(150) NOT NULL,
+  created_at TIMESTAMP NOT NULL, 
+  PRIMARY KEY(id)
+);
