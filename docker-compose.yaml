@@ -132,7 +132,22 @@ services:
         condition: service_healthy
     container_name: clients_services
     ports:
-      - "3004:3004" 
+      - "3004:3004"
+
+  tickets-service:
+    # image: janapc0/tickets-services
+    build:
+      context: ./tickets
+      dockerfile: Dockerfile
+    command: npm run start
+    depends_on:
+      mongo-database:
+        condition: service_started
+      rabbitmq-queue:
+        condition: service_healthy
+    container_name: tickets_services
+    ports:
+      - "3005:3005"
 
 volumes:
   mongo-database: {}
