@@ -16,7 +16,7 @@ func ConnectRabbitMQ() (*amqp.Connection, *amqp.Channel) {
 	if err != nil {
 		panic(err)
 	}
-	amqpQueueName := os.Getenv("QUEUE_PAYMENT")
+	amqpQueueName := os.Getenv("QUEUE_SUCCESS_PAYMENT")
 	_, err = channel.QueueDeclare(
 		amqpQueueName,
 		true,

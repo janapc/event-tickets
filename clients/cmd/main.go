@@ -40,7 +40,7 @@ func main() {
 	processMessage := application.NewProcessMessage(repository)
 	queue := queue.NewQueue(channelRabbitMQ, processMessage, logger)
 
-	queueName := os.Getenv("QUEUE_PAYMENT")
+	queueName := os.Getenv("QUEUE_SUCCESS_PAYMENT")
 	go queue.Consumer(queueName, 10)
 	api.Init(port)
 }
