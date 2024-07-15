@@ -16,7 +16,7 @@ This service consumes messages from the queue to send the ticket by email.
 
 To this project your need:
 
-- nodejs v20.6.0 [Nodejs](https://nodejs.org/en/download)
+- nodejs v22 [Nodejs](https://nodejs.org/en/download)
 
 You must create a **.env** file with the same information as in **.env_examples**
 
