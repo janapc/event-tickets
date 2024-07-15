@@ -6,9 +6,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/swagger"
 	"github.com/janapc/event-tickets/clients/internal/application"
 	"github.com/janapc/event-tickets/clients/internal/domain"
-	fiberSwagger "github.com/swaggo/fiber-swagger"
+	_ "github.com/janapc/event-tickets/clients/internal/infra/docs"
 )
 
 type Server struct {
@@ -31,7 +32,7 @@ func (s *Server) Init(port string) {
 	app.Use(logger.New())
 	app.Get("/clients", s.HandlerGetClientByEmail)
 	app.Post("/clients", s.HandlerSaveClient)
-	app.Get("/clients/docs/*", fiberSwagger.WrapHandler)
+	app.Get("/clients/docs/*", swagger.HandlerDefault)
 	addr := fmt.Sprintf(":%s", port)
 	if err := app.Listen(addr); err != nil {
 		log.Panicln(err)
