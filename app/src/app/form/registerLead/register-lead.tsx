@@ -17,7 +17,8 @@ export default function RegisterLead (): React.ReactNode {
       return
     }
     try {
-      await axios.post(process.env.NEXT_PUBLIC_API_LEAD, {
+      const url = process.env.NEXT_PUBLIC_API_MARKETING
+      await axios.post(url, {
         email,
         language: navigator.language,
         converted: false

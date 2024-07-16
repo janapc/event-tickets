@@ -15,7 +15,8 @@ export default function Payment (): React.ReactNode {
   async function handleSubmit (e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     try {
-      await axios.post(process.env.NEXT_PUBLIC_API_PAYMENT, {
+      const url = process.env.NEXT_PUBLIC_API_PAYMENTS
+      await axios.post(url, {
         name,
         email,
         event_id: event?.id,
