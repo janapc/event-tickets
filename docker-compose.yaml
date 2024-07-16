@@ -148,6 +148,20 @@ services:
     container_name: tickets_services
     ports:
       - "3005:3005"
+  app:
+    # image: janapc0/app
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: npm run start
+    depends_on:
+      - payments-service
+      - marketing-service
+      - events-service
+      - users-service
+    container_name: app
+    ports:
+      - "4000:4000"
 
 volumes:
   mongo-database: {}
