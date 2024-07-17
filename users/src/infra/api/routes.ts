@@ -3,7 +3,12 @@ import { RemoveUser } from '@application/remove_user'
 import { type InputSaveUserDTO, SaveUser } from '@application/save_user'
 import { userModel } from '@infra/database/schema'
 import { UserRepository } from '@infra/database/user_repository'
-import { type FastifyPluginOptions, type FastifyInstance } from 'fastify'
+import {
+  type FastifyPluginOptions,
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest,
+} from 'fastify'
 
 export function routes(
   fastify: FastifyInstance,
@@ -135,5 +140,23 @@ export function routes(
       reply.statusCode = 204
     },
   )
+
+  fastify.get(
+    '/users/healthcheck',
+    async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+      const healthcheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now(),
+      }
+      try {
+        await reply.send(healthcheck)
+      } catch (error) {
+        healthcheck.message = error as string
+        reply.statusCode = 503
+      }
+    },
+  )
+
   done()
 }
