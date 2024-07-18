@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/swagger"
 	"github.com/janapc/event-tickets/clients/internal/application"
@@ -30,6 +31,10 @@ func (s *Server) Init(port string) {
 		},
 	})
 	app.Use(logger.New())
+	app.Use(healthcheck.New(healthcheck.Config{
+		LivenessEndpoint:  "/clients/healthcheck/live",
+		ReadinessEndpoint: "/clients/healthcheck/ready",
+	}))
 	app.Get("/clients", s.HandlerGetClientByEmail)
 	app.Post("/clients", s.HandlerSaveClient)
 	app.Get("/clients/docs/*", swagger.HandlerDefault)
