@@ -76,6 +76,20 @@ router.post('/', (async (req, res): Promise<void> => {
   }
 }) as RequestHandler)
 
+router.get('/healthcheck', (async (req, res): Promise<void> => {
+  const healthcheck = {
+    uptime: process.uptime(),
+    message: 'OK',
+    timestamp: Date.now(),
+  }
+  try {
+    res.status(200).json(healthcheck)
+  } catch (error) {
+    healthcheck.message = error as string
+    res.status(503)
+  }
+}) as RequestHandler)
+
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput))
 
 export default router
