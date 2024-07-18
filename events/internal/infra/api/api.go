@@ -27,6 +27,7 @@ func NewApi(repo domain.EventRepository) *Api {
 func (a *Api) Init(port string) {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
+	r.Use(middleware.Heartbeat("/events/healthcheck"))
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
