@@ -9,9 +9,9 @@ async function init(): Promise<void> {
   try {
     await connectDatabase()
     await server()
-  } catch (error) {
+  } catch (error: any) {
     console.error(
-      `${new Date().toISOString()} [users] error init - ${getErrorMessage(error)}`,
+      `${new Date().toISOString()} [users] error init - ${String(error.message)}`,
     )
   }
 }
@@ -20,12 +20,7 @@ void init()
 process.once('SIGINT', () => {
   closeConnectionDatabase().catch((error) => {
     console.error(
-      `${new Date().toISOString()} [users] error database - ${getErrorMessage(error)}`,
+      `${new Date().toISOString()} [users] error database - ${String(error.message)}`,
     )
   })
 })
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message
-  return String(error)
-}
