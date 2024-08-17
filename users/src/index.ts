@@ -1,13 +1,21 @@
 import 'dotenv/config'
 import { server } from '@infra/api'
 import {
-  closeConnectionDatabase,
-  connectDatabase,
-} from '@infra/database/database'
+  closeDatabase,
+  initDatabase,
+} from '@infra/database/database_connection'
+
+process.once('SIGINT', () => {
+  closeDatabase().catch((error) => {
+    console.error(
+      `${new Date().toISOString()} [users] close database connection - ${String(error.message)}`,
+    )
+  })
+})
 
 async function init(): Promise<void> {
   try {
-    await connectDatabase()
+    await initDatabase()
     await server()
   } catch (error: any) {
     console.error(
@@ -16,11 +24,3 @@ async function init(): Promise<void> {
   }
 }
 void init()
-
-process.once('SIGINT', () => {
-  closeConnectionDatabase().catch((error) => {
-    console.error(
-      `${new Date().toISOString()} [users] error database - ${String(error.message)}`,
-    )
-  })
-})
