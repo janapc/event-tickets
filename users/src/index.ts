@@ -1,7 +1,9 @@
 import 'dotenv/config'
-import mongoose from 'mongoose'
 import { server } from '@infra/api'
-import { connectDatabase } from '@infra/database/connect_database'
+import {
+  closeConnectionDatabase,
+  connectDatabase,
+} from '@infra/database/database'
 
 async function init(): Promise<void> {
   try {
@@ -16,9 +18,9 @@ async function init(): Promise<void> {
 void init()
 
 process.once('SIGINT', () => {
-  mongoose.disconnect().catch((error) => {
+  closeConnectionDatabase().catch((error) => {
     console.error(
-      `${new Date().toISOString()} [users] error - ${getErrorMessage(error)}`,
+      `${new Date().toISOString()} [users] error database - ${getErrorMessage(error)}`,
     )
   })
 })
