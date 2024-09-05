@@ -4,6 +4,7 @@ import cors from '@fastify/cors'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
 import { swaggerConfig } from '@infra/docs/swagger'
+import { requestTotalCounter } from '@infra/metrics/prometheus_metrics'
 import { routes } from './routes'
 import { errorsMap } from './error_handler'
 
@@ -16,9 +17,16 @@ fastify.setErrorHandler(async (error: FastifyError, request, reply) => {
   console.error(
     `${new Date().toISOString()} [users] error api - ${error.message}`,
   )
-  const err = errorsMap.get(error.message)
-  const message = err ? error.message : 'internal server error'
-  const statusCode = err ?? 500
+  const mappedError = errorsMap.get(error.message)
+  const message = mappedError ? error.message : 'internal server error'
+  const statusCode = mappedError ?? 500
+  requestTotalCounter
+    .labels({
+      route: request.routeOptions.url,
+      method: request.method,
+      statusCode,
+    })
+    .inc()
   await reply.status(statusCode).send({ message })
 })
 

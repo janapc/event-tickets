@@ -1,9 +1,14 @@
 import 'dotenv/config'
+import prometheus from 'prom-client'
 import { server } from '@infra/api'
 import {
   closeDatabase,
   initDatabase,
 } from '@infra/database/database_connection'
+
+const collectDefaultMetrics = prometheus.collectDefaultMetrics
+const register = prometheus.register
+collectDefaultMetrics({ register })
 
 process.once('SIGINT', () => {
   closeDatabase().catch((error) => {

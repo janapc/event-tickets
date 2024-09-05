@@ -1,7 +1,9 @@
 import { GetTokenUser } from '@application/get_token_user'
+import { register } from 'prom-client'
 import { RemoveUser } from '@application/remove_user'
 import { type InputSaveUserDTO, SaveUser } from '@application/save_user'
 import { userModel } from '@infra/database/schema'
+import { requestTotalCounter } from '@infra/metrics/prometheus_metrics'
 import { UserRepository } from '@infra/database/user_repository'
 import {
   type FastifyPluginOptions,
@@ -49,13 +51,19 @@ export function routes(
         },
       },
     },
-    async (req, reply) => {
-      const body = req.body as { email: string; password: string }
+    async (request, reply) => {
+      const body = request.body as { email: string; password: string }
       const repository = new UserRepository(userModel)
       const getTokenUser = new GetTokenUser(repository)
       const token = await getTokenUser.execute(body.email, body.password)
-      reply.statusCode = 200
-      await reply.send({ token })
+      requestTotalCounter
+        .labels({
+          route: request.routeOptions.url,
+          method: request.method,
+          statusCode: 200,
+        })
+        .inc()
+      await reply.code(200).send({ token })
     },
   )
 
@@ -101,6 +109,13 @@ export function routes(
       const saveUser = new SaveUser(repository)
       await saveUser.execute(body)
       reply.statusCode = 201
+      requestTotalCounter
+        .labels({
+          route: request.routeOptions.url,
+          method: request.method,
+          statusCode: 201,
+        })
+        .inc()
     },
   )
 
@@ -138,6 +153,13 @@ export function routes(
       const removeUser = new RemoveUser(repository)
       await removeUser.execute(email)
       reply.statusCode = 204
+      requestTotalCounter
+        .labels({
+          route: request.routeOptions.url,
+          method: request.method,
+          statusCode: 204,
+        })
+        .inc()
     },
   )
 
@@ -158,5 +180,12 @@ export function routes(
     },
   )
 
+  fastify.get(
+    '/metrics',
+    async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+      const metrics = await register.metrics()
+      await reply.header('Content-Type', register.contentType).send(metrics)
+    },
+  )
   done()
 }

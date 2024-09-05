@@ -1,0 +1,45 @@
+services:
+  mongo-database:
+    image: mongo:7.0.2
+    restart: on-failure
+    container_name: mongo_database
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-database:/data/db
+    env_file: .env
+
+  users-service:
+    # image: janapc0/users-services
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    command: npm run start
+    depends_on:
+      - mongo-database
+    container_name: users_service
+    ports:
+      - "3000:3000"
+  
+  prometheus:
+    image: prom/prometheus
+    user: root
+    container_name: prometheus
+    hostname: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - 9090:9090
+
+volumes:
+  mongo-database: {}
+  prometheus-data: {}
