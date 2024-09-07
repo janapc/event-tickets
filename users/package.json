@@ -8,6 +8,7 @@
     "linter": "eslint src",
     "build": "tsc -p .",
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
+    "docker:dev": "cd .docker && docker compose up -d",
     "start": "node -r ts-node/register/transpile-only -r tsconfig-paths/register build/index.js"
   },
   "keywords": [
