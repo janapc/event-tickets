@@ -32,7 +32,6 @@ func main() {
 	}
 	defer db.Close()
 	repository := database.NewPostgresRepository(db)
-	api := api.NewApi(repository)
-
-	api.Init(port)
+	server := api.NewApi(repository)
+	server.Init(port)
 }

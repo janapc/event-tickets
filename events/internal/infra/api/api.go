@@ -73,7 +73,7 @@ func (a *Api) adminRouter() http.Handler {
 func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	app := application.NewGetEvents(a.Repository)
-	result, err := app.Execute()
+	events, err := app.Execute()
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -82,8 +82,8 @@ func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	json, _ := json.Marshal(result)
-	if _, err := w.Write(json); err != nil {
+	response, _ := json.Marshal(events)
+	if _, err := w.Write(response); err != nil {
 		log.Panicln(err)
 	}
 }
@@ -103,7 +103,7 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	id := chi.URLParam(r, "eventId")
 	app := application.NewGetEventById(a.Repository)
-	result, err := app.Execute(id)
+	event, err := app.Execute(id)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -112,8 +112,8 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	json, _ := json.Marshal(result)
-	if _, err := w.Write(json); err != nil {
+	response, _ := json.Marshal(event)
+	if _, err := w.Write(response); err != nil {
 		log.Panicln(err)
 	}
 }
@@ -163,7 +163,7 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app := application.NewRegisterEvent(a.Repository)
-	result, err := app.Execute(input)
+	event, err := app.Execute(input)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -172,8 +172,8 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	json, _ := json.Marshal(result)
-	if _, err := w.Write(json); err != nil {
+	response, _ := json.Marshal(event)
+	if _, err := w.Write(response); err != nil {
 		log.Panicln(err)
 	}
 }

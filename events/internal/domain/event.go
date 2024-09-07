@@ -20,8 +20,6 @@ type Event struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-const YYYYMMDD = "2006-01-02"
-
 func NewEvent(name, description, imageUrl string, price float64, eventDate string, currency string) (*Event, error) {
 	if err := IsValidEventDate(eventDate); err != nil {
 		return nil, err
@@ -53,14 +51,14 @@ func FormatDate(d time.Time, finalDate bool) time.Time {
 }
 
 func FormatEventDate(eventDate string) time.Time {
-	r := regexp.MustCompile(`(\d{2})\/(\d{2})\/(\d{4})`)
+	r := regexp.MustCompile(`(\d{2})/(\d{2})/(\d{4})`)
 	eventDateRaw := r.ReplaceAllString(eventDate, "${3}-${2}-$1")
 	eventDateFormatted, _ := time.Parse("2006-01-02", eventDateRaw)
 	return FormatDate(eventDateFormatted, true)
 }
 
 func IsValidEventDate(eventDate string) error {
-	match, err := regexp.MatchString(`\d{2}\/\d{2}\/\d{4}`, eventDate)
+	match, err := regexp.MatchString(`\d{2}/\d{2}/\d{4}`, eventDate)
 	if !match || err != nil {
 		return errors.New("the field event_date is mandatory and should is this format DD/MM/YYYY")
 	}

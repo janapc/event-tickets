@@ -33,6 +33,6 @@ func HandlerErrors(err error) ([]byte, int) {
 		message = "internal server error"
 		statusCode = 500
 	}
-	json, _ := json.Marshal(OutputError{Message: message})
-	return []byte(json), statusCode
+	errorFormatted, _ := json.Marshal(OutputError{Message: message})
+	return []byte(errorFormatted), statusCode
 }
