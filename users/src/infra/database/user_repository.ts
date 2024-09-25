@@ -16,7 +16,7 @@ export class UserRepository implements IUserRepository {
     })
     if (!result) return null
     return {
-      id: String(result._id) ?? '',
+      id: String(result._id) || '',
       email: result.email,
       password: result.password,
       role: result.role,

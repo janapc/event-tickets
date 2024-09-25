@@ -8,6 +8,7 @@ const swaggerConfig = {
     servers: [
       {
         url: 'http://localhost:' + process.env.PORT,
+        description: 'Development server',
       },
     ],
   },

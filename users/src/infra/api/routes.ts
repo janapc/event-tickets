@@ -10,12 +10,13 @@ import {
   type FastifyInstance,
   type FastifyReply,
   type FastifyRequest,
+  type FastifyError,
 } from 'fastify'
 
 export function routes(
   fastify: FastifyInstance,
   opts: FastifyPluginOptions,
-  done: any,
+  done: (err?: FastifyError) => void,
 ): void {
   fastify.post(
     '/users/get-token',

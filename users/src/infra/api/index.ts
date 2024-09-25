@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import Fastify, { type FastifyError } from 'fastify'
 import cors from '@fastify/cors'
 import fastifySwagger from '@fastify/swagger'
@@ -34,24 +33,6 @@ fastify.register(fastifySwagger, swaggerConfig)
 
 fastify.register(fastifySwaggerUi, {
   routePrefix: '/users/docs',
-  uiConfig: {
-    docExpansion: 'full',
-    deepLinking: false,
-  },
-  uiHooks: {
-    onRequest: function (_request: any, _reply: any, next: any) {
-      next()
-    },
-    preHandler: function (_request: any, _reply: any, next: any) {
-      next()
-    },
-  },
-  staticCSP: true,
-  transformStaticCSP: (header: any) => header,
-  transformSpecification: (swaggerObject: any) => {
-    return swaggerObject
-  },
-  transformSpecificationClone: true,
 })
 fastify.register(routes)
 
