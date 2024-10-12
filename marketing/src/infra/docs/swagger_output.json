@@ -8,7 +8,11 @@
   "servers": [
     {
       "url": "http://localhost:3002",
-      "description": "api to create and list leads"
+      "description": "development"
+    },
+    {
+      "url": "http://localhost/marketing",
+      "description": "production"
     }
   ],
   "paths": {

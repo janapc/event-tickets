@@ -9,15 +9,16 @@ export class QueueRabbitmq implements IQueue {
     queueName: string,
     fn: (message: string) => Promise<void>,
   ): Promise<void> {
+    logger.info(`starting message consumption`)
     await this.channel.consume(queueName, (msg): void => {
       if (msg !== null) {
         const content = msg.content.toString()
         fn(content)
-          .then((r) => {
+          .then(() => {
             this.channel.ack(msg)
           })
-          .catch((e) => {
-            logger.error(`consume message: ${e.message as string}`)
+          .catch((error) => {
+            logger.error(`error consume message ${String(error)}`)
           })
       }
     })
