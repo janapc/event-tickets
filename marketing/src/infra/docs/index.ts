@@ -3,7 +3,6 @@ import 'dotenv/config'
 import swaggerAutogen from 'swagger-autogen'
 
 const doc = {
-  host: 'localhost:' + process.env.PORT,
   info: {
     version: 'v1.0.0',
     title: 'Marketing API',
@@ -12,7 +11,11 @@ const doc = {
   servers: [
     {
       url: 'http://localhost:' + process.env.PORT,
-      description: 'api to create and list leads',
+      description: 'development',
+    },
+    {
+      url: 'http://localhost/marketing',
+      description: 'production',
     },
   ],
   definitions: {

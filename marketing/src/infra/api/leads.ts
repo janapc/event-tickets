@@ -3,12 +3,14 @@ import swaggerUi from 'swagger-ui-express'
 import swaggerOutput from '../docs/swagger_output.json'
 import { GetLeads } from '@application/get_leads'
 import { LeadPrismaRepository } from '@infra/dabatase/lead_prisma_repository'
-import prisma from '@infra/dabatase/client'
+import Database from '@infra/dabatase'
 import { CreateLead, type InputCreateLead } from '@application/create_lead'
 import { GetByEmail } from '@application/get_by_email'
+import { requestTotalCounter } from '@infra/metrics/prometheus_metrics'
 
 const router = Router()
-const repository = new LeadPrismaRepository(prisma)
+const database = Database.getInstance()
+const repository = new LeadPrismaRepository(database.connection)
 
 router.get('/', (async (req, res): Promise<void> => {
   /*  #swagger.responses[200] = {
@@ -20,6 +22,13 @@ router.get('/', (async (req, res): Promise<void> => {
     const getLeads = new GetLeads(repository)
     const result = await getLeads.execute()
     res.status(200).json(result)
+    requestTotalCounter
+      .labels({
+        route: req.url,
+        method: req.method,
+        statusCode: 200,
+      })
+      .inc()
   } catch (e) {
     res.status(500).json({ message: 'internal server error' })
   }
@@ -45,6 +54,13 @@ router.get('/search', (async (req, res): Promise<void> => {
     const application = new GetByEmail(repository)
     const result = await application.execute(email)
     res.status(200).json(result)
+    requestTotalCounter
+      .labels({
+        route: req.url,
+        method: req.method,
+        statusCode: 200,
+      })
+      .inc()
   } catch (e) {
     if (e instanceof Error && e.message === 'lead is not found') {
       res.status(404).json({ message: e.message })
@@ -71,22 +87,15 @@ router.post('/', (async (req, res): Promise<void> => {
     const body = req.body as InputCreateLead
     const result = await createLead.execute(body)
     res.status(201).json(result)
+    requestTotalCounter
+      .labels({
+        route: req.url,
+        method: req.method,
+        statusCode: 201,
+      })
+      .inc()
   } catch (e) {
     res.status(500).json({ message: 'internal server error' })
-  }
-}) as RequestHandler)
-
-router.get('/healthcheck', (async (req, res): Promise<void> => {
-  const healthcheck = {
-    uptime: process.uptime(),
-    message: 'OK',
-    timestamp: Date.now(),
-  }
-  try {
-    res.status(200).json(healthcheck)
-  } catch (error) {
-    healthcheck.message = error as string
-    res.status(503)
   }
 }) as RequestHandler)
 
