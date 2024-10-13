@@ -1,40 +1,26 @@
 import 'dotenv/config'
 import * as metrics from '@infra/metrics'
-import * as trace from '@infra/trace'
-import { server } from '@infra/api'
-import {
-  closeDatabase,
-  initDatabase,
-} from '@infra/database/database_connection'
+import * as api from '@infra/api'
+import * as database from '@infra/database/database'
+import { logger } from '@infra/logger'
 
 if (process.env.NODE_ENV !== 'development') {
-  console.log('initialize metrics')
-  trace.init()
+  import('@infra/trace')
   metrics.init()
 }
 
 process.once('SIGINT', (): void => {
-  closeDatabase().catch((error) => {
-    console.error(
-      `${new Date().toISOString()} [users] close database connection - ${String(error.message)}`,
-    )
-  })
-  trace.closeConnection().catch((error) => {
-    console.error(
-      `${new Date().toISOString()} [users] close trace connection - ${String(error.message)}`,
-    )
-  })
+  database.close()
+  api.close()
 })
 
 async function init(): Promise<void> {
   try {
-    await initDatabase()
-    await server()
+    await database.init()
+    await api.init()
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error(
-        `${new Date().toISOString()} [users] error init - ${String(error.message)}`,
-      )
+      logger.error(`init error ${String(error.message)}`)
     }
   }
 }
