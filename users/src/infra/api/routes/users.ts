@@ -13,13 +13,13 @@ import {
   type FastifyError,
 } from 'fastify'
 
-export function routes(
+export default async function (
   fastify: FastifyInstance,
   opts: FastifyPluginOptions,
   done: (err?: FastifyError) => void,
-): void {
+): Promise<void> {
   fastify.post(
-    '/users/get-token',
+    '/get-token',
     {
       schema: {
         description: 'Generate access token to user',
@@ -64,12 +64,12 @@ export function routes(
           statusCode: 200,
         })
         .inc()
-      await reply.code(200).send({ token })
+      reply.code(200).send(token)
     },
   )
 
   fastify.post(
-    '/users',
+    '/',
     {
       schema: {
         description: 'Create a new user',
@@ -121,7 +121,7 @@ export function routes(
   )
 
   fastify.delete(
-    '/users',
+    '/',
     {
       schema: {
         description: 'Delete a user',
@@ -165,7 +165,8 @@ export function routes(
   )
 
   fastify.get(
-    '/users/healthcheck',
+    '/healthcheck',
+    { schema: { hide: true } },
     async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const healthcheck = {
         uptime: process.uptime(),
@@ -183,6 +184,7 @@ export function routes(
 
   fastify.get(
     '/metrics',
+    { schema: { hide: true } },
     async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const metrics = await register.metrics()
       await reply.header('Content-Type', register.contentType).send(metrics)
