@@ -1,0 +1,208 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "v1.0.0",
+    "title": "Marketing API",
+    "description": "api to manager marketing"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3002",
+      "description": "development"
+    },
+    {
+      "url": "http://localhost/marketing",
+      "description": "production"
+    }
+  ],
+  "paths": {
+    "/leads/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getLeadsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/getLeadsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "message": "internal server error",
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/lead"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/lead"
+                }
+              }
+            }
+          },
+          "500": {
+            "message": "internal server error",
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createLeadRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/createLeadRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leads/search": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "description": "email of lead",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getByEmailResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/getByEmailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "message": "lead is not found",
+            "description": "Not Found"
+          },
+          "500": {
+            "message": "internal server error",
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "createLeadRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "test@test.com"
+          },
+          "converted": {
+            "type": "boolean",
+            "example": true
+          },
+          "language": {
+            "type": "string",
+            "example": "pt"
+          }
+        },
+        "required": [
+          "email",
+          "converted",
+          "language"
+        ],
+        "xml": {
+          "name": "createLeadRequest"
+        }
+      },
+      "lead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "asd-123-asd"
+          },
+          "email": {
+            "type": "string",
+            "example": "test@test.com"
+          },
+          "converted": {
+            "type": "boolean",
+            "example": true
+          },
+          "language": {
+            "type": "string",
+            "example": "pt"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "converted"
+        ],
+        "xml": {
+          "name": "lead"
+        }
+      },
+      "getLeadsResponse": {
+        "type": "array",
+        "items": {
+          "xml": {
+            "name": "lead"
+          },
+          "$ref": "#/components/schemas/lead"
+        },
+        "xml": {
+          "name": "getLeadsResponse"
+        }
+      },
+      "getByEmailResponse": {
+        "type": "array",
+        "items": {
+          "xml": {
+            "name": "lead"
+          },
+          "$ref": "#/components/schemas/lead"
+        },
+        "xml": {
+          "name": "getByEmailResponse"
+        }
+      }
+    }
+  }
+}
