@@ -1,0 +1,210 @@
+basePath: events
+definitions:
+  application.InputRegisterEventDTO:
+    properties:
+      currency:
+        type: string
+      description:
+        type: string
+      event_date:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  application.InputUpdateEventDTO:
+    properties:
+      currency:
+        type: string
+      description:
+        type: string
+      event_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  application.OutputGetEventsDTO:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      event_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  domain.Event:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      event_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      updated_at:
+        type: string
+    type: object
+host: localhost:3001/
+info:
+  contact: {}
+  description: api to manager events
+  title: Events API
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      description: list events
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.OutputGetEventsDTO'
+            type: array
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+  /{id}:
+    get:
+      consumes:
+      - application/json
+      description: get a event by id
+      parameters:
+      - description: event id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Event'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+  /admin/:
+    post:
+      consumes:
+      - application/json
+      description: register a new event
+      parameters:
+      - description: event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/application.InputRegisterEventDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+  /admin/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: remove a event by id
+      parameters:
+      - description: event id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+    put:
+      consumes:
+      - application/json
+      description: update a event
+      parameters:
+      - description: event id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/application.InputUpdateEventDTO'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
