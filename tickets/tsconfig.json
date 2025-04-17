@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": "./src",
+    "moduleResolution": "Node",
+    "outDir": "./build",
+    "resolveJsonModule": true,
+    "paths": {
+      "@domain/*": ["domain/*"],
+      "@infra/*": ["infra/*"],
+      "@application/*": ["application/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/infra/docs/swagger-output.json",
+    "process-env.d.ts",
+  ],
+}
