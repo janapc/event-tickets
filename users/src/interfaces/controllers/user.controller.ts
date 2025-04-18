@@ -5,6 +5,7 @@ import {
   Controller,
   Delete,
   HttpCode,
+  HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   Param,
@@ -61,7 +62,7 @@ export class UserController {
   }
 
   @ApiOperation({ summary: 'Remove a user' })
-  @HttpCode(204)
+  @HttpCode(Number(HttpStatus.NO_CONTENT))
   @ApiNoContentResponse({ description: 'user deleted successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
