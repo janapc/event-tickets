@@ -26,7 +26,7 @@ export class GenerateUserTokenHandler
       throw new UserNotFoundException(query.email);
     }
     const token = await this.generateToken(user.id!, user.role, user.email);
-    this.logger.log(`Token generated for user ${user.email}`);
+    this.logger.log(`Token generated for user ${user.id}`);
     return { token, expiresIn: Number(process.env.JWT_EXPIRES_IN) };
   }
 

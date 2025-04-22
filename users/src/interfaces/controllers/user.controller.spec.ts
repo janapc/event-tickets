@@ -12,10 +12,13 @@ import {
 import { Types } from 'mongoose';
 import { RemoveUserCommand, RegisterUserCommand } from '@application/commands';
 import { UserNotFoundException } from '@domain/exceptions/user-not-found.exception';
+import { MetricsService } from '@infra/metrics/metrics.service';
 
 describe('UserController', () => {
   let controller: UserController;
   let commandBus: CommandBus;
+  let service: MetricsService;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,16 +29,24 @@ describe('UserController', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: MetricsService,
+          useValue: {
+            incrementUserCreated: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<UserController>(UserController);
     commandBus = module.get<CommandBus>(CommandBus);
+    service = module.get<MetricsService>(MetricsService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
     expect(commandBus).toBeDefined();
+    expect(service).toBeDefined();
   });
 
   describe('POST /', () => {
@@ -47,6 +58,12 @@ describe('UserController', () => {
           email: 'test@test.com',
           role: USER_ROLES.ADMIN,
         });
+
+      const incrementUserCreatedSpy = jest.spyOn(
+        service,
+        'incrementUserCreated',
+      );
+
       const createUserDto: CreateUserDto = {
         email: 'test@test.com',
         password: 'password',
@@ -62,6 +79,8 @@ describe('UserController', () => {
           createUserDto.role,
         ),
       );
+
+      expect(incrementUserCreatedSpy).toHaveBeenCalled();
 
       expect(result).toEqual({
         id: expect.any(String) as string,

@@ -32,11 +32,15 @@ import {
 import { UserNotFoundException } from '@domain/exceptions/user-not-found.exception';
 import { GenerateUserTokenDto } from '@interfaces/dto/generate-user-token.dto';
 import { HttpExceptionFilter } from '@interfaces/exceptions/http.exception';
+import { MetricsService } from '@infra/metrics/metrics.service';
 
 @Controller('users')
 @UseFilters(new HttpExceptionFilter())
 export class UserController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly metricsService: MetricsService,
+  ) {}
 
   @ApiOperation({ summary: 'Register a new user' })
   @ApiCreatedResponse({ description: 'User registered successfully' })
@@ -52,7 +56,10 @@ export class UserController {
         createUserDto.password,
         createUserDto.role,
       );
-      return await this.commandBus.execute(command);
+      const result: Omit<User, 'password'> =
+        await this.commandBus.execute(command);
+      this.metricsService.incrementUserCreated();
+      return result;
     } catch (err) {
       if (err instanceof UserAlreadyExistsException) {
         throw new ConflictException(err.message);

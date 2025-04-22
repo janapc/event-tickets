@@ -10,6 +10,7 @@ import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core'
 import { MongooseInstrumentation } from '@opentelemetry/instrumentation-mongoose';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Logger } from '@nestjs/common';
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 
 const logger = new Logger('Tracing');
 
@@ -22,6 +23,7 @@ const spanProcessor =
 
 const otelSDK = new NodeSDK({
   spanProcessor,
+  metricReader: new PrometheusExporter(),
   instrumentations: [
     new HttpInstrumentation(),
     new ExpressInstrumentation(),

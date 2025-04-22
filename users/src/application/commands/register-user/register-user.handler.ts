@@ -12,17 +12,17 @@ export class RegisterUserHandler
   constructor(private readonly userRepository: UserAbstractRepository) {}
 
   async execute(command: RegisterUserCommand): Promise<Omit<User, 'password'>> {
-    const user = User.create({
+    const newUser = User.create({
       email: command.email,
       password: command.password,
       role: command.role,
     });
-    const result = await this.userRepository.create(user);
-    this.logger.log(`User ${result.email} registered successfully`);
+    const user = await this.userRepository.create(newUser);
+    this.logger.log(`User ${user.id} registered successfully`);
     return {
-      id: result.id,
-      email: result.email,
-      role: result.role,
+      id: user.id,
+      email: user.email,
+      role: user.role,
     };
   }
 }
