@@ -5,6 +5,7 @@ import { UserNotFoundException } from '@domain/exceptions/user-not-found.excepti
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@domain/user.entity';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @CommandHandler(GenerateUserTokenCommand)
 export class GenerateUserTokenHandler
@@ -14,6 +15,7 @@ export class GenerateUserTokenHandler
   constructor(
     private readonly userRepository: UserAbstractRepository,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
   async execute(
     query: GenerateUserTokenCommand,
@@ -27,7 +29,8 @@ export class GenerateUserTokenHandler
     }
     const token = await this.generateToken(user.id!, user.role, user.email);
     this.logger.log(`Token generated for user ${user.id}`);
-    return { token, expiresIn: Number(process.env.JWT_EXPIRES_IN) };
+    const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN');
+    return { token, expiresIn: Number(expiresIn) };
   }
 
   private async generateToken(

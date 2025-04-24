@@ -4,6 +4,7 @@ import { GenerateUserTokenHandler } from './generate-user-token.handler';
 import { UserNotFoundException } from '@domain/exceptions/user-not-found.exception';
 import { User, USER_ROLES } from '@domain/user.entity';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 const mockUser = User.create({
   email: 'test@test.com',
@@ -31,6 +32,12 @@ describe('GenerateUserTokenHandler', () => {
             signAsync: jest.fn().mockResolvedValue('token'),
           },
         },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue('3600'),
+          },
+        },
       ],
     }).compile();
 
@@ -44,12 +51,10 @@ describe('GenerateUserTokenHandler', () => {
   });
 
   it('should generate a token', async () => {
-    process.env.JWT_EXPIRES_IN = '3600';
     const result: { token: string; expiresIn: number } = await handler.execute({
       email: 'test@test.com',
       password: 'password',
     });
-    delete process.env.JWT_EXPIRES_IN;
     expect(result.token).toEqual(expect.any(String));
     expect(result.expiresIn).toEqual(3600);
   });

@@ -4,11 +4,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ControllerModule } from '@interfaces/controllers/controller.module';
 import { JwtModule } from '@nestjs/jwt';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: process.env.NODE_ENV
+        ? `.env.${process.env.NODE_ENV}`
+        : '.env',
     }),
     CqrsModule.forRoot(),
     MongooseModule.forRootAsync({
