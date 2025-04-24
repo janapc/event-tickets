@@ -1,9 +1,21 @@
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - .docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - users-network
+    depends_on:
+      - app
   app:
     build: .
     container_name: app
     ports:
-      - '3000:3000'
+      - '3000'
     env_file:
       - .env.production
     depends_on:
@@ -19,8 +31,8 @@ services:
     ports:
       - '27017:27017'
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_ROOT_USERNAME=/run/secrets/mongodb_username
+      - MONGO_INITDB_ROOT_PASSWORD=/run/secrets/mongodb_password
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -41,8 +53,8 @@ services:
     ports:
       - '3001:3000'
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=/run/secrets/grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_password
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
@@ -69,3 +81,13 @@ volumes:
 
 networks:
   users-network:
+
+secrets:
+  mongodb_username:
+    file: .docker/secrets/mongodb_username
+  mongodb_password:
+    file: .docker/secrets/mongodb_password
+  grafana_user:
+    file: .docker/secrets/grafana_user
+  grafana_password:
+    file: .docker/secrets/grafana_password

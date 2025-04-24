@@ -2,33 +2,37 @@
 
 A NestJS-based microservice for managing user-related operations in the Event Tickets system. The service implements Clean Architecture principles and includes features like authentication, metrics collection, and distributed tracing.
 
-## Features
-
-- User registration and management
-- JWT-based authentication
-- Role-based access control (ADMIN, PUBLIC)
-- CQRS implementation for better separation of concerns
-- OpenTelemetry integration for observability
-- Prometheus metrics collection
-- Health checks endpoint
-- RESTful API with Swagger documentation
-- MongoDB integration
-- Docker support for local development
-- Unit tests coverage
-
 ## Technical Stack
 
-- NestJS - Node.js framework
-- MongoDB - Database
-- JWT - Authentication
-- OpenTelemetry - Distributed tracing
-- Prometheus - Metrics collection
-- Grafana - Metrics visualization
-- Jaeger - Distributed tracing visualization
-- Jest - Testing framework
-- Swagger - API documentation
+- **Framework**: NestJS
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT
+- **API Documentation**: Swagger/OpenAPI
+- **Observability**:
+  - OpenTelemetry for tracing
+  - Prometheus for metrics
+  - Grafana for visualization
+  - Jaeger for distributed tracing
+- **Testing**: Jest
+- **Infrastructure**:
+  - Docker & Docker Compose
+  - Nginx
+- **Other Tools**:
+  - Class Validator for DTO validation
+  - CQRS for command handling
 
-## Setup
+## API Endpoints
+
+### Users
+- `POST v1/users` - Register a new user
+- `DELETE v1/users/:id` - Remove a user
+- `POST v1/users/token` - Generate authentication token
+
+### Health & Documentation
+- `GET /health` - Service health check
+- `GET /v1/api` - Swagger documentation
+
+## Setup & Configuration
 
 1. Install dependencies:
 ```bash
@@ -40,43 +44,52 @@ npm install
 cp .env.example .env
 ```
 
-Required environment variables:
-- `MONGODB_URL`: MongoDB connection string
-- `JWT_SECRET`: Secret key for JWT token generation
-- `JWT_EXPIRES_IN`: JWT token expiration time
-- `BASE_API_URL`: Base URL for API endpoints (default: v1)
-- `OTEL_SERVICE_NAME`: Service name for OpenTelemetry (default: users-service)
-- `PORT`: Application port (default: 3000)
+### Setting Up Secrets
 
-3. Start the development environment:
+1. Create the secrets directory:
 ```bash
-docker-compose up -d
+mkdir -p .docker/secrets
 ```
 
-4. Start the application:
+2. Create secret files:
 ```bash
+echo "your_mongodb_username" > .docker/secrets/mongodb_username ## mongoDB root username
+echo "your_mongodb_password" > .docker/secrets/mongodb_password ## mongoDB root password
+echo "your_grafana_username" > .docker/secrets/grafana_user ## grafana admin username
+echo "your_grafana_password" > .docker/secrets/grafana_password ## grafana admin password
+```
+
+3. Ensure proper permissions:
+```bash
+chmod 600 .docker/secrets/*
+```
+
+### Required Environment Variables:
+- `MONGODB_URL`: MongoDB connection string
+- `JWT_SECRET`: Secret key for JWT tokens
+- `JWT_EXPIRES_IN`: JWT token expiration time
+- `BASE_API_URL`: Base API URL (default: v1)
+- `OTEL_SERVICE_NAME`: OpenTelemetry service name
+- `PORT`: Application port (default: 3000)
+- `PREFIX`: API prefix for versioning
+
+
+## Development
+
+Start the development environment:
+```bash
+# Start infrastructure services
+docker-compose --env-file .env.production up -d
+
+# Start application in development mode
 npm run start:dev
 ```
 
-## API Endpoints
-
-### Users
-- `POST /users` - Register a new user
-- `DELETE /users/:id` - Remove a user
-- `POST /users/token` - Generate authentication token
-
-### Health
-- `GET /health` - Check service health status
-
 ## Testing
 
-Run the test suite:
 ```bash
 # Unit tests
 npm run test
-
-# E2E tests
-npm run test:e2e
 
 # Test coverage
 npm run test:cov
@@ -86,13 +99,15 @@ npm run test:cov
 
 The included docker-compose.yaml provides:
 
-- MongoDB database
-- Prometheus for metrics collection
-- Grafana for metrics visualization
-- Jaeger for distributed tracing
+- **Nginx**: Reverse proxy (ports: 80, 443)
+- **MongoDB**: Database (port: 27017)
+- **Prometheus**: Metrics collection (port: 9090)
+- **Grafana**: Metrics visualization (port: 3001)
+- **Jaeger**: Distributed tracing (port: 16686)
 
-Access points:
-- Swagger UI: http://localhost:3000/v1/api
-- Grafana: http://localhost:3001 (admin/admin)
+### Access Points:
+- Application: http://localhost/users
+- Swagger UI: http://localhost/users/api
+- Grafana: http://localhost:3001
 - Prometheus: http://localhost:9090
 - Jaeger UI: http://localhost:16686
