@@ -31,12 +31,14 @@ services:
     ports:
       - '27017:27017'
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=/run/secrets/mongodb_username
-      - MONGO_INITDB_ROOT_PASSWORD=/run/secrets/mongodb_password
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongodb_password
     volumes:
       - mongodb_data:/data/db
     networks:
       - users-network
+    secrets:
+      - mongodb_password
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -53,41 +55,51 @@ services:
     ports:
       - '3001:3000'
     environment:
-      - GF_SECURITY_ADMIN_USER=/run/secrets/grafana_user
-      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_password
+      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
       - users-network
-  jaegertracing:
+    secrets:
+      - grafana_user
+      - grafana_password
+  jaeger:
     image: jaegertracing/all-in-one:latest
+    container_name: jaeger
     ports:
-      - 6831:6831/udp
-      - 6832:6832/udp
-      - 5778:5778
-      - 16686:16686
-      - 4317:4317
+      - '16686:16686'
+      - '4317'
+    networks:
+      - users-network
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: collector
+    command: ['--config=/etc/otel-collector-config.yml']
+    volumes:
+      - .docker/otel-collector-config.yaml:/etc/otel-collector-config.yml
+    ports:
       - 4318:4318
-      - 14250:14250
-      - 14268:14268
-      - 14269:14269
-      - 9411:9411
+      - 4317:4317
+    restart: always
+    depends_on:
+      jaeger:
+        condition: service_started
     networks:
       - users-network
 volumes:
   mongodb_data:
   grafana_data:
   prometheus_data:
+  app_logs:
 
 networks:
   users-network:
 
 secrets:
-  mongodb_username:
-    file: .docker/secrets/mongodb_username
   mongodb_password:
-    file: .docker/secrets/mongodb_password
+    file: .docker/secrets/mongodb_password.txt
   grafana_user:
-    file: .docker/secrets/grafana_user
+    file: .docker/secrets/grafana_user.txt
   grafana_password:
-    file: .docker/secrets/grafana_password
+    file: .docker/secrets/grafana_password.txt

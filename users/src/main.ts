@@ -1,4 +1,4 @@
-import { start } from './infra/telemetry/tracing';
+import { start } from './infra/telemetry';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
