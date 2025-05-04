@@ -24,6 +24,7 @@ describe('RegisterUserHandler', () => {
           provide: UserAbstractRepository,
           useValue: {
             create: jest.fn().mockResolvedValue(mockUser),
+            findByEmail: jest.fn().mockResolvedValue(null),
           },
         },
       ],
@@ -51,11 +52,12 @@ describe('RegisterUserHandler', () => {
       role: USER_ROLES.ADMIN,
     });
     expect(repository.create).toHaveBeenCalledTimes(1);
+    expect(repository.findByEmail).toHaveBeenCalledTimes(1);
   });
 
   it('should throw an error if email is already taken', async () => {
     jest
-      .spyOn(repository, 'create')
+      .spyOn(repository, 'findByEmail')
       .mockRejectedValueOnce(
         new UserAlreadyExistsException('test@example.com'),
       );

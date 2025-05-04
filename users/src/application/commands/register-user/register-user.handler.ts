@@ -3,6 +3,7 @@ import { RegisterUserCommand } from './register-user.command';
 import { User } from '@domain/user.entity';
 import { UserAbstractRepository } from '@domain/user-abstract.repository';
 import { Logger } from '@nestjs/common';
+import { UserAlreadyExistsException } from '@domain/exceptions/user-already-exists.exception';
 
 @CommandHandler(RegisterUserCommand)
 export class RegisterUserHandler
@@ -12,6 +13,10 @@ export class RegisterUserHandler
   constructor(private readonly userRepository: UserAbstractRepository) {}
 
   async execute(command: RegisterUserCommand): Promise<Omit<User, 'password'>> {
+    const hasUser = await this.userRepository.findByEmail(command.email);
+    if (hasUser) {
+      throw new UserAlreadyExistsException(command.email);
+    }
     const newUser = User.create({
       email: command.email,
       password: command.password,
