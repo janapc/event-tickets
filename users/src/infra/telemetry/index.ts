@@ -15,6 +15,7 @@ const otelSDK = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter(),
+    exportIntervalMillis: 1000,
   }),
   instrumentations: [
     new HttpInstrumentation(),

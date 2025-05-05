@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserAbstractRepository } from '@domain/user-abstract.repository';
 import { UserRepository } from '@infra/database/user/user.repository';
@@ -13,6 +13,7 @@ import { HealthController } from './health.controller';
 import { TerminusModule } from '@nestjs/terminus';
 import { HttpModule } from '@nestjs/axios';
 import { MetricsService } from '@infra/metrics/metrics.service';
+import { MetricsMiddleware } from '@interfaces/middleware/metrics.middleware';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: UserModel.name, schema: UserSchema }]),
@@ -31,4 +32,8 @@ import { MetricsService } from '@infra/metrics/metrics.service';
     MetricsService,
   ],
 })
-export class ControllerModule {}
+export class ControllerModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes(UserController);
+  }
+}
