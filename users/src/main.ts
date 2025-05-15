@@ -4,10 +4,13 @@ import { AppModule } from './app.module';
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { logger } from '@infra/logger';
 
 async function bootstrap() {
   start();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger,
+  });
   const configService = app.get(ConfigService);
   const prefix = configService.get<string>('PREFIX');
   const port = configService.get<number>('PORT');

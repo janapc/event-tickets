@@ -1,0 +1,21 @@
+filebeat.inputs:
+  - type: filestream
+    id: users-logs
+    enabled: true
+    paths:
+      - /var/logs/*.log
+    json.keys_under_root: true
+    json.add_error_key: true
+
+setup.template.enabled: true
+setup.template.name: 'users-logs'
+setup.template.pattern: 'users-logs-*'
+
+setup.kibana:
+  host: 'http://kibana:5601'
+
+output.elasticsearch:
+  hosts: ['elasticsearch:9200']
+  index: 'users-logs-%{+yyyy.MM.dd}'
+
+setup.dashboards.enabled: true
