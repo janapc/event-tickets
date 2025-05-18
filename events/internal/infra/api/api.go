@@ -5,29 +5,37 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/janapc/event-tickets/events/internal/application"
 	"github.com/janapc/event-tickets/events/internal/domain"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
+const ROUTE_PREFIX = "/events"
+
 type Api struct {
-	Repository domain.EventRepository
+	Repository domain.IEventRepository
 }
 
-func NewApi(repo domain.EventRepository) *Api {
+func NewApi(repo domain.IEventRepository) *Api {
 	return &Api{
 		Repository: repo,
 	}
 }
 
+var tokenAuth *jwtauth.JWTAuth
+
 func (a *Api) Init(port string) {
 	r := chi.NewRouter()
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+	tokenAuth = jwtauth.New("HS256", jwtSecret, nil)
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Heartbeat("/events/healthcheck"))
+	r.Use(middleware.Heartbeat("/healthcheck"))
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -39,10 +47,13 @@ func (a *Api) Init(port string) {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
-	r.Use(Authorization)
-	r.Route("/events", func(r chi.Router) {
-		baseUrl := fmt.Sprintf("%s/events/docs/doc.json", "http://localhost"+port)
-		r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL(baseUrl)))
+	baseUrlDocs := fmt.Sprintf("%s/docs/doc.json", os.Getenv("BASE_API_URL"))
+	r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL(baseUrlDocs)))
+	r.Route(ROUTE_PREFIX, func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+		r.Use(WithJWTAuth(tokenAuth))
+
 		r.Get("/", a.GetEvents)
 		r.Get("/{eventId}", a.GetEventById)
 		r.Mount("/admin", a.adminRouter())
@@ -55,7 +66,7 @@ func (a *Api) Init(port string) {
 
 func (a *Api) adminRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(AdminOnly)
+	r.Use(OnlyAdmin)
 	r.Post("/", a.RegisterEvent)
 	r.Put("/{eventId}", a.UpdateEvent)
 	r.Delete("/{eventId}", a.RemoveEvent)
