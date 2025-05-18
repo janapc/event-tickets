@@ -1,6 +1,6 @@
 package domain
 
-type EventRepository interface {
+type IEventRepository interface {
 	Register(event *Event) error
 	Update(event *Event) error
 	Remove(id string) error

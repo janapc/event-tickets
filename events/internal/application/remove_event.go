@@ -7,10 +7,10 @@ import (
 )
 
 type RemoveEvent struct {
-	Repository domain.EventRepository
+	Repository domain.IEventRepository
 }
 
-func NewRemoveEvent(repo domain.EventRepository) *RemoveEvent {
+func NewRemoveEvent(repo domain.IEventRepository) *RemoveEvent {
 	return &RemoveEvent{
 		Repository: repo,
 	}

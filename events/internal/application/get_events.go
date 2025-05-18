@@ -19,10 +19,10 @@ type OutputGetEventsDTO struct {
 }
 
 type GetEvents struct {
-	Repository domain.EventRepository
+	Repository domain.IEventRepository
 }
 
-func NewGetEvents(repo domain.EventRepository) *GetEvents {
+func NewGetEvents(repo domain.IEventRepository) *GetEvents {
 	return &GetEvents{
 		Repository: repo,
 	}

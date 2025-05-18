@@ -18,10 +18,10 @@ type InputUpdateEventDTO struct {
 }
 
 type UpdateEvent struct {
-	Repository domain.EventRepository
+	Repository domain.IEventRepository
 }
 
-func NewUpdateEvent(repo domain.EventRepository) *UpdateEvent {
+func NewUpdateEvent(repo domain.IEventRepository) *UpdateEvent {
 	return &UpdateEvent{
 		Repository: repo,
 	}

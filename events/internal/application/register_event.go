@@ -28,10 +28,10 @@ type OutputRegisterEventDTO struct {
 }
 
 type RegisterEvent struct {
-	Repository domain.EventRepository
+	Repository domain.IEventRepository
 }
 
-func NewRegisterEvent(repo domain.EventRepository) *RegisterEvent {
+func NewRegisterEvent(repo domain.IEventRepository) *RegisterEvent {
 	return &RegisterEvent{
 		Repository: repo,
 	}
