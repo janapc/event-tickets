@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:14.18
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: event_tickets
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - .docker/events.sql:/docker-entrypoint-initdb.d/events.sql
+    networks:
+      - events_network
+    secrets:
+      - postgres_password
+      - postgres_user
+
+volumes:
+  postgres_data:
+
+networks:
+  events_network:
+
+secrets:
+  postgres_password:
+    file: .docker/postgres_password.txt
+  postgres_user:
+    file: .docker/postgres_user.txt

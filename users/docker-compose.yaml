@@ -1,33 +1,33 @@
 services:
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - .docker/nginx.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - users-network
-    depends_on:
-      - app
-  app:
-    build: .
-    container_name: app
-    ports:
-      - '3000'
-    env_file:
-      - .env.production
-    volumes:
-      - app_logs:/app/logs
-    depends_on:
-      - mongodb
-      - elasticsearch
-      - prometheus
-      - grafana
-      - jaeger
-    networks:
-      - users-network
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: nginx
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #   volumes:
+  #     - .docker/nginx.conf:/etc/nginx/conf.d/default.conf
+  #   networks:
+  #     - users-network
+  #   depends_on:
+  #     - app
+  # app:
+  #   build: .
+  #   container_name: app
+  #   ports:
+  #     - '3000'
+  #   env_file:
+  #     - .env.production
+  #   volumes:
+  #     - app_logs:/app/logs
+  #   depends_on:
+  #     - mongodb
+  #     - elasticsearch
+  #     - prometheus
+  #     - grafana
+  #     - jaeger
+  #   networks:
+  #     - users-network
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -42,125 +42,125 @@ services:
       - users-network
     secrets:
       - mongodb_password
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - '9090:9090'
-    volumes:
-      - prometheus_data:/prometheus
-      - .docker/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - users-network
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - '3001:3000'
-    environment:
-      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
-      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
-    volumes:
-      - grafana_data:/var/lib/grafana
-    networks:
-      - users-network
-    secrets:
-      - grafana_user
-      - grafana_password
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: jaeger
-    ports:
-      - '16686:16686'
-      - '4317'
-    networks:
-      - users-network
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - '9090:9090'
+  #   volumes:
+  #     - prometheus_data:/prometheus
+  #     - .docker/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   networks:
+  #     - users-network
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   ports:
+  #     - '3001:3000'
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
+  #     - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   networks:
+  #     - users-network
+  #   secrets:
+  #     - grafana_user
+  #     - grafana_password
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   container_name: jaeger
+  #   ports:
+  #     - '16686:16686'
+  #     - '4317'
+  #   networks:
+  #     - users-network
 
-  collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: collector
-    command: ['--config=/etc/otel-collector-config.yml']
-    volumes:
-      - .docker/otel-collector-config.yaml:/etc/otel-collector-config.yml
-    ports:
-      - 4318:4318
-      - 4317:4317
-    restart: always
-    depends_on:
-      - apm-server
-      - jaeger
-      - prometheus
-    networks:
-      - users-network
+  # collector:
+  #   image: otel/opentelemetry-collector-contrib:latest
+  #   container_name: collector
+  #   command: ['--config=/etc/otel-collector-config.yml']
+  #   volumes:
+  #     - .docker/otel-collector-config.yaml:/etc/otel-collector-config.yml
+  #   ports:
+  #     - 4318:4318
+  #     - 4317:4317
+  #   restart: always
+  #   depends_on:
+  #     - apm-server
+  #     - jaeger
+  #     - prometheus
+  #   networks:
+  #     - users-network
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
-    container_name: elasticsearch
-    ports:
-      - '9200:9200'
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.security.http.ssl.enabled=false
-    networks:
-      - users-network
-    healthcheck:
-      test: curl -s http://localhost:9200 | grep -q "You Know, for Search"
-      interval: 10s
-      timeout: 5s
-      retries: 10
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+  #   container_name: elasticsearch
+  #   ports:
+  #     - '9200:9200'
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false
+  #     - xpack.security.http.ssl.enabled=false
+  #   networks:
+  #     - users-network
+  #   healthcheck:
+  #     test: curl -s http://localhost:9200 | grep -q "You Know, for Search"
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
 
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:9.0.0
-    container_name: filebeat
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    volumes:
-      - app_logs:/var/logs
-      - .docker/filebeat.yml:/usr/share/filebeat/filebeat.yml
-    networks:
-      - users-network
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
+  # filebeat:
+  #   image: docker.elastic.co/beats/filebeat:9.0.0
+  #   container_name: filebeat
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   volumes:
+  #     - app_logs:/var/logs
+  #     - .docker/filebeat.yml:/usr/share/filebeat/filebeat.yml
+  #   networks:
+  #     - users-network
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #     kibana:
+  #       condition: service_healthy
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:9.0.0
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - '5601:5601'
-    networks:
-      - users-network
-    depends_on:
-      - elasticsearch
-    healthcheck:
-      test: curl -f http://localhost:5601/api/status || exit 1
-      interval: 10s
-      timeout: 10s
-      retries: 20
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:9.0.0
+  #   container_name: kibana
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   ports:
+  #     - '5601:5601'
+  #   networks:
+  #     - users-network
+  #   depends_on:
+  #     - elasticsearch
+  #   healthcheck:
+  #     test: curl -f http://localhost:5601/api/status || exit 1
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 20
 
-  apm-server:
-    image: docker.elastic.co/apm/apm-server:9.0.1
-    container_name: apm-server
-    depends_on:
-      - elasticsearch
-      - kibana
-    environment:
-      - output.elasticsearch.hosts=["http://elasticsearch:9200"]
-      - apm-server.auth.anonymous.enabled=true
-      - apm-server.auth.anonymous.allow_agent=["opentelemetry"]
-      - apm-server.auth.anonymous.allow_service=["app"]
-      - apm-server.kibana.enabled=true
-      - apm-server.kibana.host=http://kibana:5601
-      - setup.kibana.host=http://kibana:5601
-    ports:
-      - '8200:8200'
-    networks:
-      - users-network
+  # apm-server:
+  #   image: docker.elastic.co/apm/apm-server:9.0.1
+  #   container_name: apm-server
+  #   depends_on:
+  #     - elasticsearch
+  #     - kibana
+  #   environment:
+  #     - output.elasticsearch.hosts=["http://elasticsearch:9200"]
+  #     - apm-server.auth.anonymous.enabled=true
+  #     - apm-server.auth.anonymous.allow_agent=["opentelemetry"]
+  #     - apm-server.auth.anonymous.allow_service=["app"]
+  #     - apm-server.kibana.enabled=true
+  #     - apm-server.kibana.host=http://kibana:5601
+  #     - setup.kibana.host=http://kibana:5601
+  #   ports:
+  #     - '8200:8200'
+  #   networks:
+  #     - users-network
 
 volumes:
   mongodb_data:

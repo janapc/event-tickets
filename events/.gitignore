@@ -1,1 +1,3 @@
 .env
+.docker/postgres_user.txt
+.docker/postgres_password.txt
