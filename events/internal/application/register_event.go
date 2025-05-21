@@ -16,7 +16,7 @@ type InputRegisterEventDTO struct {
 }
 
 type OutputRegisterEventDTO struct {
-	ID          string    `json:"id"`
+	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	ImageUrl    string    `json:"image_url"`
@@ -28,33 +28,35 @@ type OutputRegisterEventDTO struct {
 }
 
 type RegisterEvent struct {
-	Repository domain.IEventRepository
+	Repository domain.EventRepository
 }
 
-func NewRegisterEvent(repo domain.IEventRepository) *RegisterEvent {
+func NewRegisterEvent(repo domain.EventRepository) *RegisterEvent {
 	return &RegisterEvent{
 		Repository: repo,
 	}
 }
 
 func (r *RegisterEvent) Execute(input InputRegisterEventDTO) (*OutputRegisterEventDTO, error) {
-	event, err := domain.NewEvent(input.Name, input.Description, input.ImageUrl, input.Price, input.EventDate, input.Currency)
+	event, err := domain.NewEvent(domain.EventParams{
+		Name: input.Name, Description: input.Description, ImageUrl: input.ImageUrl, Price: input.Price, EventDate: input.EventDate, Currency: input.Currency,
+	})
 	if err != nil {
 		return nil, err
 	}
-	err = r.Repository.Register(event)
+	newEvent, err := r.Repository.Register(event)
 	if err != nil {
 		return nil, err
 	}
 	return &OutputRegisterEventDTO{
-		ID:          event.ID,
-		Name:        event.Name,
-		Description: event.Description,
-		ImageUrl:    event.ImageUrl,
-		Currency:    event.Currency,
-		EventDate:   event.EventDate,
-		Price:       event.Price,
-		CreatedAt:   event.CreatedAt,
-		UpdatedAt:   event.UpdatedAt,
+		ID:          newEvent.ID,
+		Name:        newEvent.Name,
+		Description: newEvent.Description,
+		ImageUrl:    newEvent.ImageUrl,
+		Currency:    newEvent.Currency,
+		EventDate:   newEvent.EventDate,
+		Price:       newEvent.Price,
+		CreatedAt:   newEvent.CreatedAt,
+		UpdatedAt:   newEvent.UpdatedAt,
 	}, err
 }
