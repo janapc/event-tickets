@@ -1,9 +1,9 @@
 package domain
 
-type IEventRepository interface {
-	Register(event *Event) error
+type EventRepository interface {
+	Register(event *Event) (*Event, error)
 	Update(event *Event) error
 	Remove(id string) error
-	List() ([]Event, error)
-	FindById(id string) (*Event, error)
+	List() ([]*Event, error)
+	FindByID(id string) (*Event, error)
 }
