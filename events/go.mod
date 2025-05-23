@@ -3,6 +3,7 @@ module github.com/janapc/event-tickets/events
 go 1.22.1
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/go-chi/jwtauth/v5 v5.3.3

@@ -16,8 +16,8 @@ func NewRemoveEvent(repo domain.IEventRepository) *RemoveEvent {
 	}
 }
 
-func (r *RemoveEvent) Execute(id string) error {
-	_, err := r.Repository.FindById(id)
+func (r *RemoveEvent) Execute(id int64) error {
+	_, err := r.Repository.FindByID(id)
 	if err != nil {
 		return errors.New("event is not found")
 	}

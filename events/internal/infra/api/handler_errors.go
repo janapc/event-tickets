@@ -11,13 +11,12 @@ var MapErrors = map[string]int{
 	"the description field is mandatory":                                     http.StatusBadRequest,
 	"the price field cannot be less than or equal to zero":                   http.StatusBadRequest,
 	"the field event_date is mandatory and should is this format DD/MM/YYYY": http.StatusBadRequest,
-	"the event_date field cannot be less than current date":                  http.StatusBadRequest,
+	"the event_date field cannot be less than the current date":              http.StatusBadRequest,
+	"the event_date field is mandatory":                                      http.StatusBadRequest,
+	"the event_date field must have this format '2024-09-25T00:00:00.000Z'":  http.StatusBadRequest,
 	"the currency field is mandatory":                                        http.StatusBadRequest,
+	"the image_url field is mandatory":                                       http.StatusBadRequest,
 	"event is not found":                                                     http.StatusNotFound,
-	"the authorization is mandatory":                                         http.StatusBadRequest,
-	"unauthorized user":                                                      http.StatusUnauthorized,
-	"invalid token":                                                          http.StatusBadRequest,
-	"you don't have permission to access this resource":                      http.StatusForbidden,
 }
 
 type OutputError struct {

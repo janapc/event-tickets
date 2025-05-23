@@ -242,7 +242,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "image_url": {
                     "type": "string"
@@ -271,7 +271,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "image_url": {
                     "type": "string"
@@ -303,7 +303,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "image_url": {
                     "type": "string"

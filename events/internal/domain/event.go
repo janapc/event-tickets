@@ -27,7 +27,7 @@ type EventParams struct {
 }
 
 func NewEvent(params EventParams) (*Event, error) {
-	eventDate, err := formatDate(params.EventDate)
+	eventDate, err := FormatDate(params.EventDate)
 	if err != nil {
 		return &Event{}, err
 	}
@@ -45,7 +45,7 @@ func NewEvent(params EventParams) (*Event, error) {
 	return event, nil
 }
 
-func formatDate(eventDate string) (time.Time, error) {
+func FormatDate(eventDate string) (time.Time, error) {
 	if eventDate == "" {
 		return time.Time{}, errors.New("the event_date field is mandatory")
 	}

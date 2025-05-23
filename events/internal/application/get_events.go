@@ -7,7 +7,7 @@ import (
 )
 
 type OutputGetEventsDTO struct {
-	ID          string    `json:"id"`
+	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	ImageUrl    string    `json:"image_url"`
@@ -33,6 +33,9 @@ func (g *GetEvents) Execute() ([]OutputGetEventsDTO, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(events) == 0 {
+		return []OutputGetEventsDTO{}, nil
+	}
 	var output []OutputGetEventsDTO
 	for _, event := range events {
 		output = append(output, OutputGetEventsDTO{
@@ -46,9 +49,6 @@ func (g *GetEvents) Execute() ([]OutputGetEventsDTO, error) {
 			CreatedAt:   event.CreatedAt,
 			UpdatedAt:   event.UpdatedAt,
 		})
-	}
-	if len(output) == 0 {
-		output = []OutputGetEventsDTO{}
 	}
 	return output, nil
 }

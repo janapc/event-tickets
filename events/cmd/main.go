@@ -31,7 +31,7 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-	repository := database.NewPostgresRepository(db)
+	repository := database.NewEventRepository(db)
 	server := api.NewApi(repository)
 	server.Init(port)
 }

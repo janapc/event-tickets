@@ -8,7 +8,6 @@ import (
 )
 
 type InputUpdateEventDTO struct {
-	ID          string  `json:"id"`
 	Name        string  `json:"name,omitempty"`
 	ImageUrl    string  `json:"image_url,omitempty"`
 	Description string  `json:"description,omitempty"`
@@ -27,8 +26,8 @@ func NewUpdateEvent(repo domain.IEventRepository) *UpdateEvent {
 	}
 }
 
-func (u *UpdateEvent) Execute(input InputUpdateEventDTO) error {
-	event, err := u.Repository.FindById(input.ID)
+func (u *UpdateEvent) Execute(id int64, input InputUpdateEventDTO) error {
+	event, err := u.Repository.FindByID(id)
 	if err != nil {
 		return errors.New("event is not found")
 	}
@@ -47,17 +46,18 @@ func (u *UpdateEvent) Execute(input InputUpdateEventDTO) error {
 	if input.Price > 0 {
 		event.Price = input.Price
 	}
-	currentDate := domain.FormatDate(time.Now(), false)
 	if input.EventDate != "" {
-		if err := domain.IsValidEventDate(input.EventDate); err != nil {
+		eventDate, err := domain.FormatDate(input.EventDate)
+		if err != nil {
 			return err
 		}
-		eventDate := domain.FormatEventDate(input.EventDate)
-		if eventDate.After(currentDate) {
-			event.EventDate = eventDate
+		currentDate := time.Now().UTC()
+		if eventDate.Before(currentDate) {
+			return errors.New("the event_date field cannot be less than the current date")
 		}
+		event.EventDate = eventDate
 	}
-	event.UpdatedAt = currentDate
+	event.UpdatedAt = time.Now()
 	err = u.Repository.Update(event)
 	if err != nil {
 		return err

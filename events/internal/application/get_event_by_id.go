@@ -8,7 +8,7 @@ import (
 )
 
 type OutputGetEventByIdDTO struct {
-	ID          string    `json:"id"`
+	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	ImageUrl    string    `json:"image_url"`
@@ -29,8 +29,8 @@ func NewGetEventById(repo domain.IEventRepository) *GetEventById {
 	}
 }
 
-func (g *GetEventById) Execute(id string) (*OutputGetEventByIdDTO, error) {
-	event, err := g.Repository.FindById(id)
+func (g *GetEventById) Execute(id int64) (*OutputGetEventByIdDTO, error) {
+	event, err := g.Repository.FindByID(id)
 	if err != nil {
 		return nil, errors.New("event is not found")
 	}

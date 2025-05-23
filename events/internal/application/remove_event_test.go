@@ -4,34 +4,42 @@ import (
 	"testing"
 	"time"
 
-	"github.com/janapc/event-tickets/events/internal/application/mocks"
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/internal/mock"
 	"github.com/stretchr/testify/assert"
+	testMock "github.com/stretchr/testify/mock"
 )
 
-func TestShouldRemoveAEvent(t *testing.T) {
-	repository, _ := mocks.NewDatabaseMockRepository()
-	err := repository.Register(&domain.Event{
-		ID:          "1",
-		Name:        "test",
-		Description: "test",
-		ImageUrl:    "http://test.png",
-		Price:       1.0,
-		EventDate:   time.Now().Add(1 * time.Hour),
-		Currency:    "BRL",
-	})
+func TestRemoveEvent(t *testing.T) {
+	mockRepo := new(mock.EventRepositoryMock)
+	mockEvent := &domain.Event{
+		ID:          1,
+		Name:        "Test Event",
+		Description: "Test Description",
+		ImageUrl:    "http://test.com/image.jpg",
+		Price:       99.99,
+		EventDate:   time.Now().Add(48 * time.Hour),
+		Currency:    "USD",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	mockRepo.On("FindByID", testMock.AnythingOfType("int64")).Return(mockEvent, nil)
+	mockRepo.On("Remove", testMock.AnythingOfType("int64")).Return(nil)
+	removeEvent := NewRemoveEvent(mockRepo)
+	id := int64(1)
+	err := removeEvent.Execute(id)
 	assert.NoError(t, err)
-	removeEvent := NewRemoveEvent(repository)
-	err = removeEvent.Execute("1")
-	assert.NoError(t, err)
-	event, _ := repository.List()
-	assert.Len(t, event, 0)
+	mockRepo.AssertNumberOfCalls(t, "Remove", 1)
+	mockRepo.AssertNumberOfCalls(t, "FindByID", 1)
+	mockRepo.AssertCalled(t, "Remove", id)
+	mockRepo.AssertCalled(t, "FindByID", id)
 }
 
-func TestShouldErrorIfEventIsNotFound(t *testing.T) {
-	repository, _ := mocks.NewDatabaseMockRepository()
-	removeEvent := NewRemoveEvent(repository)
-	err := removeEvent.Execute("1")
+func TestReturnErrorIfEventIsNotFound(t *testing.T) {
+	mockRepo := new(mock.EventRepositoryMock)
+	mockRepo.On("FindByID", testMock.AnythingOfType("int64")).Return(&domain.Event{}, assert.AnError)
+	removeEvent := NewRemoveEvent(mockRepo)
+	err := removeEvent.Execute(1)
 	if assert.Error(t, err) {
 		assert.Equal(t, err.Error(), "event is not found")
 	}

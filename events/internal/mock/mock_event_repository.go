@@ -19,7 +19,7 @@ func (m *EventRepositoryMock) Update(event *domain.Event) error {
 	return args.Error(0)
 }
 
-func (m *EventRepositoryMock) Remove(id string) error {
+func (m *EventRepositoryMock) Remove(id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
@@ -29,7 +29,7 @@ func (m *EventRepositoryMock) List() ([]*domain.Event, error) {
 	return args.Get(0).([]*domain.Event), args.Error(1)
 }
 
-func (m *EventRepositoryMock) FindByID(id string) (*domain.Event, error) {
+func (m *EventRepositoryMock) FindByID(id int64) (*domain.Event, error) {
 	args := m.Called(id)
 	return args.Get(0).(*domain.Event), args.Error(1)
 }

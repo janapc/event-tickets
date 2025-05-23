@@ -1,106 +1,136 @@
 package database
 
 import (
-	"database/sql"
+	"regexp"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/janapc/event-tickets/events/internal/domain"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 
-const DDMMYYYY = "02/01/2006"
-
-func connectionDatabase() *sql.DB {
-	db, _ := sql.Open("sqlite3", ":memory:")
-	_, _ = db.Exec(`CREATE TABLE events(
-		id CHAR(36) NOT NULL,
-		name TEXT(150) NOT NULL,
-		description TEXT(150) NOT NULL,
-		image_url TEXT(150) NOT NULL,
-		price DECIMAL(10, 2) NOT NULL,
-		currency TEXT(150) NOT NULL,
-		event_date TIMESTAMP NOT NULL,
-		created_at TIMESTAMP NOT NULL, 
-		updated_at TIMESTAMP NOT NULL,
-		PRIMARY KEY(id)
-		)`)
-	return db
-}
-
 func TestRegisterEvent(t *testing.T) {
-	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	query := regexp.QuoteMeta("INSERT INTO events(name, description, image_url, price, currency, event_date) VALUES($1,$2,$3,$4,$5,$6) RETURNING *")
+	eventDate := time.Now().Add(48 * time.Hour).Format(time.RFC3339)
+	params := domain.EventParams{
+		Name:        "GoConf",
+		Description: "Go conference",
+		ImageUrl:    "http://image",
+		Price:       99.99,
+		EventDate:   eventDate,
+		Currency:    "USD",
+	}
+	event, _ := domain.NewEvent(params)
+	mock.ExpectPrepare(query).WillBeClosed().ExpectQuery().WithArgs(event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate).WillReturnRows(sqlmock.NewRows([]string{
+		"id", "name", "description", "image_url", "price", "currency", "event_date", "created_at", "update_at",
+	}).AddRow(1, event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, time.Now(), time.Now()))
+
 	assert.NotEmpty(t, event)
-	connection := connectionDatabase()
-	assert.NotEmpty(t, connection)
-	database := NewPostgresRepository(connection)
-	err := database.Register(event)
+	repository := NewEventRepository(db)
+	result, err := repository.Register(event)
 	assert.NoError(t, err)
-	p, err := database.FindById(event.ID)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, p)
-	assert.Equal(t, p.Name, event.Name)
+	assert.NotEmpty(t, result)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }
 
 func TestUpdateEvent(t *testing.T) {
-	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
-	assert.NotEmpty(t, event)
-	connection := connectionDatabase()
-	assert.NotEmpty(t, connection)
-	database := NewPostgresRepository(connection)
-	_ = database.Register(event)
-	event.Name = "teste"
-	event.UpdatedAt = time.Now().Add(30 * time.Minute)
-	err := database.Update(event)
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	query := regexp.QuoteMeta("UPDATE events SET name = $1, description = $2, image_url = $3, price = $4, currency = $5, event_date = $6, updated_at = $7 WHERE id = $8")
+	eventDate := time.Now().Add(48 * time.Hour)
+	event := &domain.Event{
+		ID:          int64(1),
+		Name:        "GoConf",
+		Description: "Go conference",
+		ImageUrl:    "http://image",
+		Price:       99.99,
+		EventDate:   eventDate,
+		Currency:    "USD",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	mock.ExpectPrepare(query).ExpectExec().WithArgs(event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, event.UpdatedAt, event.ID).WillReturnResult((sqlmock.NewResult(0, 1)))
+	repository := NewEventRepository(db)
+	err = repository.Update(event)
 	assert.NoError(t, err)
-	p, err := database.FindById(event.ID)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, p)
-	assert.Equal(t, p.Name, event.Name)
-	assert.NotEqual(t, p.UpdatedAt, p.CreatedAt)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }
 
 func TestRemoveEvent(t *testing.T) {
-	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
-	assert.NotEmpty(t, event)
-	connection := connectionDatabase()
-	assert.NotEmpty(t, connection)
-	database := NewPostgresRepository(connection)
-	_ = database.Register(event)
-	err := database.Remove(event.ID)
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	query := regexp.QuoteMeta("DELETE FROM events where id = $1")
+	id := int64(1)
+	mock.ExpectPrepare(query).WillBeClosed().ExpectExec().WithArgs(id).WillReturnResult(sqlmock.NewResult(0, 1))
+	repository := NewEventRepository(db)
+	err = repository.Remove(id)
 	assert.NoError(t, err)
-	_, err = database.FindById(event.ID)
-	assert.Error(t, err, "sql: no rows in result set")
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }
 
 func TestListEvent(t *testing.T) {
-	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
-	assert.NotEmpty(t, event)
-	connection := connectionDatabase()
-	assert.NotEmpty(t, connection)
-	database := NewPostgresRepository(connection)
-	_ = database.Register(event)
-	events, err := database.List()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	query := regexp.QuoteMeta("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events")
+	now := time.Now()
+	rows := sqlmock.NewRows([]string{
+		"id", "name", "description", "image_url", "price", "currency", "event_date", "created_at", "updated_at",
+	}).AddRow(
+		1, "GoConf", "Go conference", "http://image", 99.99, "USD", now, now, now,
+	)
+	mock.ExpectQuery(query).WillReturnRows(rows)
+	repository := NewEventRepository(db)
+	events, err := repository.List()
 	assert.NoError(t, err)
 	assert.Len(t, events, 1)
-	assert.Equal(t, events[0].Name, "show banana")
+	assert.Equal(t, events[0].Name, "GoConf")
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }
 
 func TestGetOneEvent(t *testing.T) {
-	eventDate := time.Now().Add(48 * time.Hour).Format(DDMMYYYY)
-	event, _ := domain.NewEvent("show banana", "description", "http:test.png", 600.40, eventDate, "BRL")
-	assert.NotEmpty(t, event)
-	connection := connectionDatabase()
-	assert.NotEmpty(t, connection)
-	database := NewPostgresRepository(connection)
-	_ = database.Register(event)
-	result, err := database.FindById(event.ID)
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	id := int64(1)
+	query := regexp.QuoteMeta("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events WHERE id = $1")
+	now := time.Now()
+	rows := sqlmock.NewRows([]string{
+		"id", "name", "description", "image_url", "price", "currency", "event_date", "created_at", "updated_at",
+	}).AddRow(
+		1, "GoConf", "Go conference", "http://image", 99.99, "USD", now, now, now,
+	)
+	mock.ExpectPrepare(query).ExpectQuery().WithArgs(id).WillReturnRows(rows)
+	repository := NewEventRepository(db)
+	result, err := repository.FindByID(id)
 	assert.NoError(t, err)
-	assert.Equal(t, result.EventDate, event.EventDate)
 	assert.NotEmpty(t, result)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }

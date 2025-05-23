@@ -24,7 +24,7 @@ definitions:
       event_date:
         type: string
       id:
-        type: string
+        type: integer
       image_url:
         type: string
       name:
@@ -43,7 +43,7 @@ definitions:
       event_date:
         type: string
       id:
-        type: string
+        type: integer
       image_url:
         type: string
       name:
@@ -64,7 +64,7 @@ definitions:
       event_date:
         type: string
       id:
-        type: string
+        type: integer
       image_url:
         type: string
       name:

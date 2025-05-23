@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -112,9 +113,9 @@ func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	id := chi.URLParam(r, "eventId")
 	app := application.NewGetEventById(a.Repository)
-	event, err := app.Execute(id)
+	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
+	event, err := app.Execute(int64(id))
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -141,9 +142,9 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	id := chi.URLParam(r, "eventId")
 	app := application.NewRemoveEvent(a.Repository)
-	err := app.Execute(id)
+	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
+	err := app.Execute(int64(id))
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -209,9 +210,9 @@ func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Body is invalid", http.StatusBadRequest)
 		return
 	}
-	input.ID = chi.URLParam(r, "eventId")
+	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
 	app := application.NewUpdateEvent(a.Repository)
-	err = app.Execute(input)
+	err = app.Execute(int64(id), input)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
