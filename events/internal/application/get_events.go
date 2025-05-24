@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"time"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
@@ -28,8 +29,8 @@ func NewGetEvents(repo domain.IEventRepository) *GetEvents {
 	}
 }
 
-func (g *GetEvents) Execute() ([]OutputGetEventsDTO, error) {
-	events, err := g.Repository.List()
+func (g *GetEvents) Execute(ctx context.Context) ([]OutputGetEventsDTO, error) {
+	events, err := g.Repository.List(ctx)
 	if err != nil {
 		return nil, err
 	}

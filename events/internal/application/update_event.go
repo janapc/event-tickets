@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -26,8 +27,8 @@ func NewUpdateEvent(repo domain.IEventRepository) *UpdateEvent {
 	}
 }
 
-func (u *UpdateEvent) Execute(id int64, input InputUpdateEventDTO) error {
-	event, err := u.Repository.FindByID(id)
+func (u *UpdateEvent) Execute(ctx context.Context, id int64, input InputUpdateEventDTO) error {
+	event, err := u.Repository.FindByID(ctx, id)
 	if err != nil {
 		return errors.New("event is not found")
 	}
@@ -58,7 +59,7 @@ func (u *UpdateEvent) Execute(id int64, input InputUpdateEventDTO) error {
 		event.EventDate = eventDate
 	}
 	event.UpdatedAt = time.Now()
-	err = u.Repository.Update(event)
+	err = u.Repository.Update(ctx, event)
 	if err != nil {
 		return err
 	}

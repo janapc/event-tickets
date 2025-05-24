@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -23,23 +24,26 @@ func TestRemoveEvent(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	mockRepo.On("FindByID", testMock.AnythingOfType("int64")).Return(mockEvent, nil)
-	mockRepo.On("Remove", testMock.AnythingOfType("int64")).Return(nil)
+	mockRepo.On("FindByID", testMock.Anything, testMock.AnythingOfType("int64")).Return(mockEvent, nil)
+	mockRepo.On("Remove", testMock.Anything, testMock.AnythingOfType("int64")).Return(nil)
 	removeEvent := NewRemoveEvent(mockRepo)
 	id := int64(1)
-	err := removeEvent.Execute(id)
+	ctx := context.Background()
+	err := removeEvent.Execute(ctx, id)
 	assert.NoError(t, err)
 	mockRepo.AssertNumberOfCalls(t, "Remove", 1)
 	mockRepo.AssertNumberOfCalls(t, "FindByID", 1)
-	mockRepo.AssertCalled(t, "Remove", id)
-	mockRepo.AssertCalled(t, "FindByID", id)
+	mockRepo.AssertCalled(t, "Remove", ctx, id)
+	mockRepo.AssertCalled(t, "FindByID", ctx, id)
+
 }
 
 func TestReturnErrorIfEventIsNotFound(t *testing.T) {
 	mockRepo := new(mock.EventRepositoryMock)
-	mockRepo.On("FindByID", testMock.AnythingOfType("int64")).Return(&domain.Event{}, assert.AnError)
+	mockRepo.On("FindByID", testMock.Anything, testMock.AnythingOfType("int64")).Return(&domain.Event{}, assert.AnError)
 	removeEvent := NewRemoveEvent(mockRepo)
-	err := removeEvent.Execute(1)
+	ctx := context.Background()
+	err := removeEvent.Execute(ctx, int64(1))
 	if assert.Error(t, err) {
 		assert.Equal(t, err.Error(), "event is not found")
 	}

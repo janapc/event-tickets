@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/janapc/event-tickets/events/internal/infra/api"
 	"github.com/janapc/event-tickets/events/internal/infra/database"
+	"github.com/janapc/event-tickets/events/internal/infra/telemetry"
 	"github.com/joho/godotenv"
 
 	_ "github.com/janapc/event-tickets/events/internal/infra/docs"
@@ -20,6 +22,9 @@ import (
 // @in header
 // @name Authorization
 func main() {
+	ctx := context.Background()
+	shutdown := telemetry.InitTracer(ctx)
+	defer shutdown()
 	err := godotenv.Load("./.env")
 	if err != nil {
 		panic(err)

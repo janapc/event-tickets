@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -29,8 +30,8 @@ func NewGetEventById(repo domain.IEventRepository) *GetEventById {
 	}
 }
 
-func (g *GetEventById) Execute(id int64) (*OutputGetEventByIdDTO, error) {
-	event, err := g.Repository.FindByID(id)
+func (g *GetEventById) Execute(ctx context.Context, id int64) (*OutputGetEventByIdDTO, error) {
+	event, err := g.Repository.FindByID(ctx, id)
 	if err != nil {
 		return nil, errors.New("event is not found")
 	}

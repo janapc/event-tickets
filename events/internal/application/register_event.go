@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"time"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
@@ -37,14 +38,14 @@ func NewRegisterEvent(repo domain.IEventRepository) *RegisterEvent {
 	}
 }
 
-func (r *RegisterEvent) Execute(input InputRegisterEventDTO) (*OutputRegisterEventDTO, error) {
+func (r *RegisterEvent) Execute(ctx context.Context, input InputRegisterEventDTO) (*OutputRegisterEventDTO, error) {
 	event, err := domain.NewEvent(domain.EventParams{
 		Name: input.Name, Description: input.Description, ImageUrl: input.ImageUrl, Price: input.Price, EventDate: input.EventDate, Currency: input.Currency,
 	})
 	if err != nil {
 		return nil, err
 	}
-	newEvent, err := r.Repository.Register(event)
+	newEvent, err := r.Repository.Register(ctx, event)
 	if err != nil {
 		return nil, err
 	}

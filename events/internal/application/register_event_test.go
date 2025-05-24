@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ func TestCreateEvent(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	mockRepo.On("Register", testMock.AnythingOfType("*domain.Event")).Return(mockEvent, nil)
+	mockRepo.On("Register", testMock.Anything, testMock.AnythingOfType("*domain.Event")).Return(mockEvent, nil)
 	registerEvent := NewRegisterEvent(mockRepo)
 	input := InputRegisterEventDTO{
 		Name:        "Test Event",
@@ -34,7 +35,8 @@ func TestCreateEvent(t *testing.T) {
 		EventDate:   eventDate.Format(time.RFC3339),
 		Currency:    "USD",
 	}
-	event, err := registerEvent.Execute(input)
+	ctx := context.Background()
+	event, err := registerEvent.Execute(ctx, input)
 	assert.Nil(t, err)
 	assert.NotNil(t, event)
 	assert.Equal(t, input.Name, event.Name)
@@ -43,6 +45,8 @@ func TestCreateEvent(t *testing.T) {
 	assert.Equal(t, input.Price, event.Price)
 	assert.Equal(t, input.Currency, event.Currency)
 	mockRepo.AssertExpectations(t)
+	mockRepo.AssertCalled(t, "Register", ctx, testMock.AnythingOfType("*domain.Event"))
+
 }
 
 func TestReturnErrorIfFieldsAreInvalid(t *testing.T) {
@@ -57,7 +61,8 @@ func TestReturnErrorIfFieldsAreInvalid(t *testing.T) {
 		EventDate:   eventDate.Format(time.RFC3339),
 		Currency:    "BRL",
 	}
-	event, err := registerEvent.Execute(input)
+	ctx := context.Background()
+	event, err := registerEvent.Execute(ctx, input)
 	if assert.Error(t, err) {
 		assert.Equal(t, err.Error(), "the event_date field cannot be less than the current date")
 	}
@@ -67,7 +72,7 @@ func TestReturnErrorIfFieldsAreInvalid(t *testing.T) {
 func TestRegistrationFailure(t *testing.T) {
 	mockRepo := new(mock.EventRepositoryMock)
 	eventDate := time.Now().Add(24 * time.Hour)
-	mockRepo.On("Register", testMock.AnythingOfType("*domain.Event")).Return(&domain.Event{}, assert.AnError)
+	mockRepo.On("Register", testMock.Anything, testMock.AnythingOfType("*domain.Event")).Return(&domain.Event{}, assert.AnError)
 	registerEvent := NewRegisterEvent(mockRepo)
 	input := InputRegisterEventDTO{
 		Name:        "Test Event",
@@ -77,8 +82,10 @@ func TestRegistrationFailure(t *testing.T) {
 		EventDate:   eventDate.Format(time.RFC3339),
 		Currency:    "USD",
 	}
-	event, err := registerEvent.Execute(input)
+	ctx := context.Background()
+	event, err := registerEvent.Execute(ctx, input)
 	assert.Error(t, err)
 	assert.Empty(t, event)
 	mockRepo.AssertExpectations(t)
+	mockRepo.AssertCalled(t, "Register", ctx, testMock.AnythingOfType("*domain.Event"))
 }

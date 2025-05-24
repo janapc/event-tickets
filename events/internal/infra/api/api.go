@@ -14,6 +14,8 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/janapc/event-tickets/events/internal/application"
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/riandyrn/otelchi"
+
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -35,6 +37,7 @@ func (a *Api) Init(port string) {
 	r := chi.NewRouter()
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	tokenAuth = jwtauth.New("HS256", jwtSecret, nil)
+	r.Use(otelchi.Middleware("go-otel-postgres", otelchi.WithChiRoutes(r)))
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Heartbeat("/healthcheck"))
 	r.Use(middleware.RealIP)
@@ -84,8 +87,9 @@ func (a *Api) adminRouter() http.Handler {
 // @Security BearerAuth
 func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
+	ctx := r.Context()
 	app := application.NewGetEvents(a.Repository)
-	events, err := app.Execute()
+	events, err := app.Execute(ctx)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -115,7 +119,8 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	app := application.NewGetEventById(a.Repository)
 	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
-	event, err := app.Execute(int64(id))
+	ctx := r.Context()
+	event, err := app.Execute(ctx, int64(id))
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -144,7 +149,8 @@ func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	app := application.NewRemoveEvent(a.Repository)
 	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
-	err := app.Execute(int64(id))
+	ctx := r.Context()
+	err := app.Execute(ctx, int64(id))
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -175,7 +181,8 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app := application.NewRegisterEvent(a.Repository)
-	event, err := app.Execute(input)
+	ctx := r.Context()
+	event, err := app.Execute(ctx, input)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
@@ -210,9 +217,10 @@ func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Body is invalid", http.StatusBadRequest)
 		return
 	}
+	ctx := r.Context()
 	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
 	app := application.NewUpdateEvent(a.Repository)
-	err = app.Execute(int64(id), input)
+	err = app.Execute(ctx, int64(id), input)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)

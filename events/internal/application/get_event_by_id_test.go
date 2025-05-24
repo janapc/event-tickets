@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -23,24 +24,27 @@ func TestGetEventById(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	mockRepo.On("FindByID", testMock.AnythingOfType("int64")).Return(mockEvent, nil)
+	mockRepo.On("FindByID", testMock.Anything, testMock.AnythingOfType("int64")).Return(mockEvent, nil)
 	getEventById := NewGetEventById(mockRepo)
 	id := int64(1)
-	result, err := getEventById.Execute(id)
+	ctx := context.Background()
+	result, err := getEventById.Execute(ctx, id)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
 	assert.NotEmpty(t, result.ID)
 	mockRepo.AssertExpectations(t)
-	mockRepo.AssertCalled(t, "FindByID", id)
+	mockRepo.AssertCalled(t, "FindByID", ctx, id)
 }
 func TestReturnErrorIfRepositoryFindByIDCallFails(t *testing.T) {
 	mockRepo := new(mock.EventRepositoryMock)
-	mockRepo.On("FindByID", testMock.AnythingOfType("int64")).Return(&domain.Event{}, assert.AnError)
+	mockRepo.On("FindByID", testMock.Anything, testMock.AnythingOfType("int64")).Return(&domain.Event{}, assert.AnError)
 	getEventById := NewGetEventById(mockRepo)
 	id := int64(1)
-	event, err := getEventById.Execute(id)
+	ctx := context.Background()
+	event, err := getEventById.Execute(ctx, id)
 	if assert.Error(t, err) {
 		assert.Equal(t, err.Error(), "event is not found")
 	}
 	assert.Empty(t, event)
+	mockRepo.AssertCalled(t, "FindByID", ctx, id)
 }

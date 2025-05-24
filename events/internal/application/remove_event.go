@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
@@ -16,12 +17,12 @@ func NewRemoveEvent(repo domain.IEventRepository) *RemoveEvent {
 	}
 }
 
-func (r *RemoveEvent) Execute(id int64) error {
-	_, err := r.Repository.FindByID(id)
+func (r *RemoveEvent) Execute(ctx context.Context, id int64) error {
+	_, err := r.Repository.FindByID(ctx, id)
 	if err != nil {
 		return errors.New("event is not found")
 	}
-	err = r.Repository.Remove(id)
+	err = r.Repository.Remove(ctx, id)
 	if err != nil {
 		return err
 	}
