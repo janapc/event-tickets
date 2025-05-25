@@ -23,13 +23,12 @@ import (
 // @name Authorization
 func main() {
 	ctx := context.Background()
-	shutdown := telemetry.InitTracer(ctx)
-	defer shutdown()
 	err := godotenv.Load("./.env")
 	if err != nil {
 		panic(err)
 	}
-	port := os.Getenv("PORT")
+	shutdown := telemetry.InitOpenTelemetry(ctx)
+	defer shutdown()
 
 	db, err := database.PostgresConnect()
 	if err != nil {
@@ -38,5 +37,6 @@ func main() {
 	defer db.Close()
 	repository := database.NewEventRepository(db)
 	server := api.NewApi(repository)
+	port := os.Getenv("PORT")
 	server.Init(port)
 }

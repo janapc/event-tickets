@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/janapc/event-tickets/events/internal/application"
 	"github.com/janapc/event-tickets/events/internal/domain"
+	md "github.com/janapc/event-tickets/events/internal/infra/api/middleware"
 	"github.com/riandyrn/otelchi"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -33,11 +34,16 @@ func NewApi(repo domain.IEventRepository) *Api {
 
 var tokenAuth *jwtauth.JWTAuth
 
+const (
+	serverName = "events-service"
+)
+
 func (a *Api) Init(port string) {
 	r := chi.NewRouter()
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	tokenAuth = jwtauth.New("HS256", jwtSecret, nil)
-	r.Use(otelchi.Middleware("go-otel-postgres", otelchi.WithChiRoutes(r)))
+	r.Use(md.Metrics)
+	r.Use(otelchi.Middleware(serverName, otelchi.WithChiRoutes(r)))
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Heartbeat("/healthcheck"))
 	r.Use(middleware.RealIP)
@@ -56,7 +62,7 @@ func (a *Api) Init(port string) {
 	r.Route(ROUTE_PREFIX, func(r chi.Router) {
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
-		r.Use(WithJWTAuth(tokenAuth))
+		r.Use(md.WithJWTAuth(tokenAuth))
 
 		r.Get("/", a.GetEvents)
 		r.Get("/{eventId}", a.GetEventById)
@@ -70,7 +76,7 @@ func (a *Api) Init(port string) {
 
 func (a *Api) adminRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(OnlyAdmin)
+	r.Use(md.OnlyAdmin)
 	r.Post("/", a.RegisterEvent)
 	r.Put("/{eventId}", a.UpdateEvent)
 	r.Delete("/{eventId}", a.RemoveEvent)
