@@ -1,0 +1,19 @@
+filebeat.inputs:
+  - type: filestream
+    id: otel-logs
+    enabled: true
+    paths:
+      - /tmp/otel-logs/*.log
+    json.keys_under_root: true
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  index: "otel-logs-%{+yyyy.MM.dd}"
+
+setup.ilm.enabled: false
+setup.template.enabled: true
+setup.template.name: "otel-logs"
+setup.template.pattern: "otel-logs-*"
+
+setup.kibana:
+  host: "http://kibana:5601"

@@ -6,6 +6,7 @@ import (
 
 	"github.com/janapc/event-tickets/events/internal/infra/api"
 	"github.com/janapc/event-tickets/events/internal/infra/database"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/janapc/event-tickets/events/internal/infra/telemetry"
 	"github.com/joho/godotenv"
 
@@ -23,12 +24,16 @@ import (
 // @name Authorization
 func main() {
 	ctx := context.Background()
+	logger.SetupLogger()
 	err := godotenv.Load("./.env")
 	if err != nil {
 		panic(err)
 	}
-	shutdown := telemetry.InitOpenTelemetry(ctx)
-	defer shutdown()
+	env := os.Getenv("ENV")
+	if env == "PROD" {
+		shutdown := telemetry.InitOpenTelemetry(ctx)
+		defer shutdown()
+	}
 
 	db, err := database.PostgresConnect()
 	if err != nil {

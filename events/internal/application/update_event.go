@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
@@ -28,6 +29,7 @@ func NewUpdateEvent(repo domain.IEventRepository) *UpdateEvent {
 }
 
 func (u *UpdateEvent) Execute(ctx context.Context, id int64, input InputUpdateEventDTO) error {
+	slog.InfoContext(ctx, "starting handling of update an event", "id", id)
 	event, err := u.Repository.FindByID(ctx, id)
 	if err != nil {
 		return errors.New("event is not found")
@@ -63,5 +65,6 @@ func (u *UpdateEvent) Execute(ctx context.Context, id int64, input InputUpdateEv
 	if err != nil {
 		return err
 	}
+	slog.InfoContext(ctx, "finished handling of update an event", "id", id)
 	return nil
 }

@@ -7,12 +7,21 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 exporters:
+  debug:
+    verbosity: detailed
+  file:
+    path: /tmp/otel-logs/otel-collector-logs.log
+    format: json
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
       insecure: true
   prometheus:
     endpoint: 0.0.0.0:8889
+
+processors:
+  batch:
+
 service:
   pipelines:
     traces:
@@ -21,3 +30,7 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, file]

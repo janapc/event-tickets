@@ -53,27 +53,84 @@ services:
     networks:
       - events_network
 
+  fix-perms:
+    image: alpine
+    command: ["sh", "-c", "chown -R 10001:10001 /otel-logs"]
+    volumes:
+      - otel_logs:/otel-logs
+    entrypoint: ""
+    user: "0:0" # Run as root to be allowed to chown files
+    restart: "no"
+
   collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: collector
-    command: ["--config=/etc/otel-collector-config.yml"]
     volumes:
-      - .docker/otel-collector-config.yaml:/etc/otel-collector-config.yml
+      - .docker/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - otel_logs:/tmp/otel-logs
+    command: --config /etc/otelcol-contrib/config.yaml
     ports:
       - 4318:4318
       - 4317:4317
       - 8889:8889 # Prometheus exporter metrics
     restart: always
     depends_on:
+      - fix-perms
       - jaeger
       - prometheus
     networks:
       - events_network
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    networks:
+      - events_network
+    healthcheck:
+      test: curl -s http://localhost:9200 | grep -q "You Know, for Search"
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.0.0
+    container_name: filebeat
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - otel_logs:/tmp/otel-logs
+      - .docker/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    networks:
+      - events_network
+    depends_on:
+      - elasticsearch
+      - collector
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - events_network
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: curl -f http://localhost:5601/api/status || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 20
 volumes:
   postgres_data:
   grafana_data:
   prometheus_data:
+  otel_logs:
 
 networks:
   events_network:

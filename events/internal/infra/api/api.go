@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,8 +15,10 @@ import (
 	"github.com/janapc/event-tickets/events/internal/application"
 	"github.com/janapc/event-tickets/events/internal/domain"
 	md "github.com/janapc/event-tickets/events/internal/infra/api/middleware"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/riandyrn/otelchi"
 
+	slogchi "github.com/samber/slog-chi"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -42,12 +44,20 @@ func (a *Api) Init(port string) {
 	r := chi.NewRouter()
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	tokenAuth = jwtauth.New("HS256", jwtSecret, nil)
-	r.Use(md.Metrics)
-	r.Use(otelchi.Middleware(serverName, otelchi.WithChiRoutes(r)))
-	r.Use(middleware.RequestID)
+	env := os.Getenv("ENV")
+	if env == "PROD" {
+		r.Use(md.Metrics)
+		r.Use(otelchi.Middleware(serverName, otelchi.WithChiRoutes(r)))
+		config := slogchi.Config{
+			DefaultLevel:     slog.LevelInfo,
+			ClientErrorLevel: slog.LevelWarn,
+			ServerErrorLevel: slog.LevelError,
+			WithTraceID:      true,
+			WithSpanID:       true,
+		}
+		r.Use(slogchi.NewWithConfig(&logger.Logger, config))
+	}
 	r.Use(middleware.Heartbeat("/healthcheck"))
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -63,14 +73,15 @@ func (a *Api) Init(port string) {
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
 		r.Use(md.WithJWTAuth(tokenAuth))
+		r.Use(md.RegisterLog)
 
 		r.Get("/", a.GetEvents)
 		r.Get("/{eventId}", a.GetEventById)
 		r.Mount("/admin", a.adminRouter())
 	})
-	log.Printf("Server running in port %s", port)
+	slog.Info("Server running", "port", port)
 	if err := http.ListenAndServe(port, r); err != nil {
-		log.Panicln(err)
+		slog.Error(err.Error())
 	}
 }
 
@@ -100,13 +111,13 @@ func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			log.Panicln(err)
+			slog.ErrorContext(ctx, err.Error())
 		}
 		return
 	}
 	response, _ := json.Marshal(events)
 	if _, err := w.Write(response); err != nil {
-		log.Panicln(err)
+		slog.ErrorContext(ctx, err.Error())
 	}
 }
 
@@ -131,13 +142,13 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			log.Panicln(err)
+			slog.ErrorContext(ctx, err.Error())
 		}
 		return
 	}
 	response, _ := json.Marshal(event)
 	if _, err := w.Write(response); err != nil {
-		log.Panicln(err)
+		slog.ErrorContext(ctx, err.Error())
 	}
 }
 
@@ -161,7 +172,7 @@ func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			log.Panicln(err)
+			slog.ErrorContext(ctx, err.Error())
 		}
 		return
 	}
@@ -193,13 +204,13 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			log.Panicln(err)
+			slog.ErrorContext(ctx, err.Error())
 		}
 		return
 	}
 	response, _ := json.Marshal(event)
 	if _, err := w.Write(response); err != nil {
-		log.Panicln(err)
+		slog.ErrorContext(ctx, err.Error())
 	}
 }
 
@@ -231,7 +242,7 @@ func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			log.Panicln(err)
+			slog.ErrorContext(ctx, err.Error())
 		}
 		return
 	}
