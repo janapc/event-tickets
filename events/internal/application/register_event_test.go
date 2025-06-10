@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/janapc/event-tickets/events/internal/mock"
 	"github.com/stretchr/testify/assert"
 	testMock "github.com/stretchr/testify/mock"
 )
 
 func TestCreateEvent(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.EventRepositoryMock)
 	eventDate := time.Now().Add(24 * time.Hour)
 	mockEvent := &domain.Event{

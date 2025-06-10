@@ -2,86 +2,83 @@ package telemetry
 
 import (
 	"context"
-	"log/slog"
-	"time"
+	"fmt"
 
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
-
-	"go.opentelemetry.io/otel/log/global"
-
-	sdklog "go.opentelemetry.io/otel/sdk/log"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func InitOpenTelemetry(ctx context.Context) func() {
+var MeterProvider *metric.MeterProvider
+var TracerProvider *sdktrace.TracerProvider
+var Tracer trace.Tracer
+
+func Init(ctx context.Context) error {
 	res, err := resource.New(ctx, resource.WithFromEnv())
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create resource", "error", err.Error())
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	// Tracer
-	tp := initTracer(res, ctx)
-	otel.SetTracerProvider(tp)
-	// Metrics
-	mp := initMetrics(res, ctx)
-	otel.SetMeterProvider(mp)
-	// Logs
-	lg := initLogs(res, ctx)
-	global.SetLoggerProvider(lg)
-
-	return func() {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := tp.Shutdown(shutdownCtx); err != nil {
-			slog.ErrorContext(ctx, "error shutting down tracer provider", "error", err.Error())
-		}
-		if err := mp.Shutdown(shutdownCtx); err != nil {
-			slog.ErrorContext(ctx, "error shutting down meter provider", "error", err.Error())
-		}
+	err = initTracer(res, ctx)
+	if err != nil {
+		return err
 	}
+	otel.SetTracerProvider(TracerProvider)
+	// Metrics
+	err = initMetrics(res, ctx)
+	if err != nil {
+		return err
+	}
+	otel.SetMeterProvider(MeterProvider)
+	logger.Logger.WithContext(ctx).Info("OpenTelemetry initialized successfully.")
+	return nil
 }
 
-func initTracer(res *resource.Resource, ctx context.Context) *trace.TracerProvider {
+func initTracer(res *resource.Resource, ctx context.Context) error {
 	tracerExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure())
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create tracer exporter", "error", err.Error())
+		return fmt.Errorf("failed to create tracer exporter: %w", err)
 	}
-	tp := trace.NewTracerProvider(
-		trace.WithBatcher(tracerExporter),
-		trace.WithResource(res),
+	TracerProvider = sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(tracerExporter),
+		sdktrace.WithResource(res),
 	)
-	return tp
+	Tracer = otel.Tracer("events-service")
+	return nil
 }
 
-func initMetrics(res *resource.Resource, ctx context.Context) *metric.MeterProvider {
+func initMetrics(res *resource.Resource, ctx context.Context) error {
 	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithInsecure())
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create metric exporter", "error", err.Error())
+		return fmt.Errorf("failed to create metric exporter: %w", err)
 	}
-	mp := metric.NewMeterProvider(
+	MeterProvider = metric.NewMeterProvider(
 		metric.WithReader(metric.NewPeriodicReader(metricExporter)),
 		metric.WithResource(res),
 	)
-	return mp
+	return nil
 }
 
-func initLogs(res *resource.Resource, ctx context.Context) *sdklog.LoggerProvider {
-	exporter, err := otlploggrpc.New(ctx)
-
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to create logs exporter", "error", err.Error())
+func Shutdown(ctx context.Context) error {
+	if TracerProvider != nil {
+		if err := TracerProvider.Shutdown(ctx); err != nil {
+			logger.Logger.WithContext(ctx).WithError(err).Error("Failed to shutdown OpenTelemetry TracerProvider")
+			return fmt.Errorf("failed to shutdown TracerProvider: %w", err)
+		}
+		logger.Logger.WithContext(ctx).Info("OpenTelemetry TracerProvider shut down.")
 	}
-	procesor := sdklog.NewBatchProcessor(exporter)
-	provider := sdklog.NewLoggerProvider(
-		sdklog.WithProcessor(procesor),
-		sdklog.WithResource(res),
-	)
-
-	return provider
+	if MeterProvider != nil {
+		if err := MeterProvider.Shutdown(ctx); err != nil {
+			logger.Logger.WithContext(ctx).WithError(err).Error("Failed to shutdown OpenTelemetry MeterProvider")
+			return fmt.Errorf("failed to shutdown MeterProvider: %w", err)
+		}
+		logger.Logger.WithContext(ctx).Info("OpenTelemetry MeterProvider shut down.")
+	}
+	return nil
 }

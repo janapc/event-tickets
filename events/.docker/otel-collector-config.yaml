@@ -9,9 +9,6 @@ receivers:
 exporters:
   debug:
     verbosity: detailed
-  file:
-    path: /tmp/otel-logs/otel-collector-logs.log
-    format: json
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
@@ -30,7 +27,3 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [prometheus]
-    logs:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug, file]

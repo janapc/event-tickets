@@ -3,9 +3,9 @@ package application
 import (
 	"context"
 	"errors"
-	"log/slog"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 )
 
 type RemoveEvent struct {
@@ -19,7 +19,7 @@ func NewRemoveEvent(repo domain.IEventRepository) *RemoveEvent {
 }
 
 func (r *RemoveEvent) Execute(ctx context.Context, id int64) error {
-	slog.InfoContext(ctx, "starting handling of remove an event", "id", id)
+	logger.Logger.WithContext(ctx).Infof("removing event with id: %d", id)
 	_, err := r.Repository.FindByID(ctx, id)
 	if err != nil {
 		return errors.New("event is not found")
@@ -28,6 +28,6 @@ func (r *RemoveEvent) Execute(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	slog.InfoContext(ctx, "finished handling of remove an event", "id", id)
+	logger.Logger.WithContext(ctx).Infof("event with id %d removed successfully", id)
 	return nil
 }

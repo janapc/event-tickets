@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/janapc/event-tickets/events/internal/mock"
 	"github.com/stretchr/testify/assert"
 	testMock "github.com/stretchr/testify/mock"
 )
 
 func TestUpdateEvent(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.EventRepositoryMock)
 	mockEvent := &domain.Event{
 		ID:          1,

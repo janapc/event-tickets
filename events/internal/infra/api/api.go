@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,7 +17,6 @@ import (
 	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/riandyrn/otelchi"
 
-	slogchi "github.com/samber/slog-chi"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -48,16 +46,10 @@ func (a *Api) Init(port string) {
 	if env == "PROD" {
 		r.Use(md.Metrics)
 		r.Use(otelchi.Middleware(serverName, otelchi.WithChiRoutes(r)))
-		config := slogchi.Config{
-			DefaultLevel:     slog.LevelInfo,
-			ClientErrorLevel: slog.LevelWarn,
-			ServerErrorLevel: slog.LevelError,
-			WithTraceID:      true,
-			WithSpanID:       true,
-		}
-		r.Use(slogchi.NewWithConfig(&logger.Logger, config))
 	}
 	r.Use(middleware.Heartbeat("/healthcheck"))
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -70,18 +62,17 @@ func (a *Api) Init(port string) {
 	baseUrlDocs := fmt.Sprintf("%s/docs/doc.json", os.Getenv("BASE_API_URL"))
 	r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL(baseUrlDocs)))
 	r.Route(ROUTE_PREFIX, func(r chi.Router) {
+		r.Use(md.RequestTracerMiddleware)
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
 		r.Use(md.WithJWTAuth(tokenAuth))
-		r.Use(md.RegisterLog)
-
 		r.Get("/", a.GetEvents)
 		r.Get("/{eventId}", a.GetEventById)
 		r.Mount("/admin", a.adminRouter())
 	})
-	slog.Info("Server running", "port", port)
+	logger.Logger.Infof("Server running port: %s", port)
 	if err := http.ListenAndServe(port, r); err != nil {
-		slog.Error(err.Error())
+		logger.Logger.Fatalf("Error starting server: %v", err)
 	}
 }
 
@@ -111,13 +102,14 @@ func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			slog.ErrorContext(ctx, err.Error())
+			logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
 		}
 		return
 	}
 	response, _ := json.Marshal(events)
 	if _, err := w.Write(response); err != nil {
-		slog.ErrorContext(ctx, err.Error())
+		logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
+		return
 	}
 }
 
@@ -142,13 +134,14 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			slog.ErrorContext(ctx, err.Error())
+			logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
 		}
 		return
 	}
 	response, _ := json.Marshal(event)
 	if _, err := w.Write(response); err != nil {
-		slog.ErrorContext(ctx, err.Error())
+		logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
+		return
 	}
 }
 
@@ -172,7 +165,7 @@ func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			slog.ErrorContext(ctx, err.Error())
+			logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
 		}
 		return
 	}
@@ -204,13 +197,14 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			slog.ErrorContext(ctx, err.Error())
+			logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
 		}
 		return
 	}
 	response, _ := json.Marshal(event)
 	if _, err := w.Write(response); err != nil {
-		slog.ErrorContext(ctx, err.Error())
+		logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
+		return
 	}
 }
 
@@ -230,11 +224,11 @@ func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	var input application.InputUpdateEventDTO
 	err := json.NewDecoder(r.Body).Decode(&input)
+	ctx := r.Context()
 	if err != nil {
 		http.Error(w, "Body is invalid", http.StatusBadRequest)
 		return
 	}
-	ctx := r.Context()
 	id, _ := strconv.Atoi(chi.URLParam(r, "eventId"))
 	app := application.NewUpdateEvent(a.Repository)
 	err = app.Execute(ctx, int64(id), input)
@@ -242,7 +236,7 @@ func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)
 		if _, err := w.Write(message); err != nil {
-			slog.ErrorContext(ctx, err.Error())
+			logger.Logger.WithContext(ctx).Errorf("Error writing response: %v", err.Error())
 		}
 		return
 	}

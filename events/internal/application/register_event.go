@@ -2,10 +2,10 @@ package application
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 )
 
 type InputRegisterEventDTO struct {
@@ -40,7 +40,7 @@ func NewRegisterEvent(repo domain.IEventRepository) *RegisterEvent {
 }
 
 func (r *RegisterEvent) Execute(ctx context.Context, input InputRegisterEventDTO) (*OutputRegisterEventDTO, error) {
-	slog.InfoContext(ctx, "starting handling of register an event")
+	logger.Logger.WithContext(ctx).Infof("starting handling of register an event")
 	event, err := domain.NewEvent(domain.EventParams{
 		Name: input.Name, Description: input.Description, ImageUrl: input.ImageUrl, Price: input.Price, EventDate: input.EventDate, Currency: input.Currency,
 	})
@@ -51,7 +51,7 @@ func (r *RegisterEvent) Execute(ctx context.Context, input InputRegisterEventDTO
 	if err != nil {
 		return nil, err
 	}
-	slog.InfoContext(ctx, "event created successfully", "id", event.ID)
+	logger.Logger.WithContext(ctx).Infof("event registered successfully: %d", newEvent.ID)
 	return &OutputRegisterEventDTO{
 		ID:          newEvent.ID,
 		Name:        newEvent.Name,

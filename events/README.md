@@ -1,31 +1,29 @@
-# Events Service
+# Getting Started
 
-A secure REST API service for managing events (concerts, shows, theater) with JWT-based authentication and role-based access control.
+This project is a secure REST API service designed to manage events such as concerts, shows, and theater performances. It includes features like JWT-based authentication, role-based access control, and comprehensive monitoring and logging.
 
-## Features
+## Prerequisites
 
-- **Event Management**: Full CRUD operations for events
-- **Authentication**: JWT-based authentication for API access
-- **Role-Based Access**: Support for ADMIN and PUBLIC roles
-- **API Documentation**: Swagger/OpenAPI integration
-- **Database**: PostgreSQL persistence with migrations
-- **Testing**: Comprehensive test suite with mocking
-- **Containerization**: Docker and docker-compose support
+Before running the project, ensure you have the following installed:
 
-## Technical Requirements
-
-- Go 1.22.1
+- Go 1.22.1 or higher
 - PostgreSQL 14.18
-- Docker and docker-compose (optional)
+- Docker and Docker Compose (optional, for containerized setup)
 
-## Environment Setup
+## Installation
 
-1. Copy the example environment file:
+1. Clone the repository:
+```sh
+git clone https://github.com/janapc/event-tickets.git
+cd event-tickets/events
+```
+
+2. Copy the example environment file and configure it:
 ```sh
 cp .env_example .env
 ```
 
-2. Configure the following environment variables in `.env`:
+Edit the `.env` file with your preferred configuration:
 ```
 PORT=:3001
 DB_HOST=localhost       # Use postgres-database for Docker
@@ -37,56 +35,64 @@ JWT_SECRET=secret
 BASE_API_URL=http://localhost:3001
 ```
 
-## Running the Application
-
-### Local Development
-
-1. Install dependencies:
+3. Install dependencies:
 ```sh
 go mod tidy
 ```
 
-2. Start the server:
+## Running the Application
+
+### Local Development
+
+1. Start the PostgreSQL database and ensure it matches the configuration in `.env`.
+
+2. Run the application:
 ```sh
 go run cmd/main.go
 ```
 
+The API will be available at `http://localhost:3001`.
+
 ### Using Docker
 
-1. Build and start services:
+1. Build and start the services using Docker Compose:
 ```sh
 docker-compose up -d
 ```
 
-2. The API will be available at `http://localhost:3001`
-
-## API Endpoints
-
-The API documentation is available at `http://localhost:3001/events/docs`
+2. Access the API at `http://localhost:3001`.
 
 ## Testing
 
-Run the test suite:
-
+Run the test suite to ensure everything is working correctly:
 ```sh
 go test -v ./...
 ```
 
+## Monitoring and Logging
+
+This project includes integrated monitoring and logging tools:
+
+- **Prometheus**: Metrics available at `http://localhost:9090`
+- **Grafana**: Dashboards available at `http://localhost:3006` (default credentials: admin/admin)
+- **Jaeger**: Tracing available at `http://localhost:16686`
+- **Kibana**: Logs available at `http://localhost:5601`
+
 ## API Documentation
 
 Swagger documentation is automatically generated and available at:
-
 ```
-http://localhost:3001/docs
+http://localhost:3001/docs/index.html
 ```
 
 ## Development
 
 To update the Swagger documentation after making API changes:
-
 ```sh
 swag init -g cmd/main.go --output internal/infra/docs
 ```
+
+For containerized development, ensure all services are running via Docker Compose.
 
 ## Author
 

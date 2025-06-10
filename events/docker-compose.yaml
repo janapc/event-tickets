@@ -1,4 +1,62 @@
 services:
+  events-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: events-service
+    ports:
+      - "3001:3001"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    depends_on:
+      - collector
+      - postgres
+    networks:
+      - events_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - events_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - events_network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.0.0
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./.docker/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - events_network
+
   postgres:
     image: postgres:14.18
     container_name: postgres
@@ -53,21 +111,11 @@ services:
     networks:
       - events_network
 
-  fix-perms:
-    image: alpine
-    command: ["sh", "-c", "chown -R 10001:10001 /otel-logs"]
-    volumes:
-      - otel_logs:/otel-logs
-    entrypoint: ""
-    user: "0:0" # Run as root to be allowed to chown files
-    restart: "no"
-
   collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: collector
     volumes:
       - .docker/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-      - otel_logs:/tmp/otel-logs
     command: --config /etc/otelcol-contrib/config.yaml
     ports:
       - 4318:4318
@@ -75,62 +123,16 @@ services:
       - 8889:8889 # Prometheus exporter metrics
     restart: always
     depends_on:
-      - fix-perms
       - jaeger
       - prometheus
     networks:
       - events_network
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
-    container_name: elasticsearch
-    ports:
-      - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.security.http.ssl.enabled=false
-    networks:
-      - events_network
-    healthcheck:
-      test: curl -s http://localhost:9200 | grep -q "You Know, for Search"
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:9.0.0
-    container_name: filebeat
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    volumes:
-      - otel_logs:/tmp/otel-logs
-      - .docker/filebeat.yml:/usr/share/filebeat/filebeat.yml
-    networks:
-      - events_network
-    depends_on:
-      - elasticsearch
-      - collector
-  kibana:
-    image: docker.elastic.co/kibana/kibana:9.0.0
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    networks:
-      - events_network
-    depends_on:
-      - elasticsearch
-    healthcheck:
-      test: curl -f http://localhost:5601/api/status || exit 1
-      interval: 10s
-      timeout: 10s
-      retries: 20
 volumes:
   postgres_data:
   grafana_data:
   prometheus_data:
-  otel_logs:
+  es_data:
 
 networks:
   events_network:

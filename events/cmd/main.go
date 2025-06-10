@@ -13,6 +13,26 @@ import (
 	_ "github.com/janapc/event-tickets/events/internal/infra/docs"
 )
 
+func init() {
+	logger.Init()
+	ctx := context.Background()
+	err := godotenv.Load("./.env")
+	if err != nil {
+		logger.Logger.Panic(err)
+	}
+	env := os.Getenv("ENV")
+	if env == "PROD" {
+		err := telemetry.Init(ctx)
+		if err != nil {
+			logger.Logger.Panic(err)
+		}
+	}
+	err = database.Init(ctx)
+	if err != nil {
+		logger.Logger.Panic(err)
+	}
+}
+
 // @title Events API
 // @version 1.0
 // @description api to manager events
@@ -23,24 +43,13 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	ctx := context.Background()
-	logger.SetupLogger()
-	err := godotenv.Load("./.env")
-	if err != nil {
-		panic(err)
-	}
-	env := os.Getenv("ENV")
-	if env == "PROD" {
-		shutdown := telemetry.InitOpenTelemetry(ctx)
-		defer shutdown()
-	}
-
-	db, err := database.PostgresConnect()
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-	repository := database.NewEventRepository(db)
+	defer database.Close(context.Background())
+	defer func() {
+		if err := telemetry.Shutdown(context.Background()); err != nil {
+			logger.Logger.WithError(err).Error("Error shutting down telemetry")
+		}
+	}()
+	repository := database.NewEventRepository(database.DB)
 	server := api.NewApi(repository)
 	port := os.Getenv("PORT")
 	server.Init(port)
