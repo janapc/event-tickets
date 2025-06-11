@@ -57,7 +57,7 @@ The API will be available at `http://localhost:3001`.
 
 1. Build and start the services using Docker Compose:
 ```sh
-docker-compose up -d
+docker-compose up --build -d
 ```
 
 2. Access the API at `http://localhost:3001`.

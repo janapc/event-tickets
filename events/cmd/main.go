@@ -16,9 +16,10 @@ import (
 func init() {
 	logger.Init()
 	ctx := context.Background()
-	err := godotenv.Load("./.env")
-	if err != nil {
-		logger.Logger.Panic(err)
+	if os.Getenv("ENV") != "PROD" {
+		if err := godotenv.Load(); err != nil {
+			logger.Logger.Panic(err)
+		}
 	}
 	env := os.Getenv("ENV")
 	if env == "PROD" {
@@ -27,7 +28,7 @@ func init() {
 			logger.Logger.Panic(err)
 		}
 	}
-	err = database.Init(ctx)
+	err := database.Init(ctx)
 	if err != nil {
 		logger.Logger.Panic(err)
 	}

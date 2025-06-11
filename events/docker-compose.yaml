@@ -12,8 +12,10 @@ services:
         max-size: "10m"
         max-file: "5"
     depends_on:
-      - collector
-      - postgres
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
     networks:
       - events_network
 
@@ -66,6 +68,11 @@ services:
       POSTGRES_USER_FILE: /run/secrets/postgres_user
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: event_tickets
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$(cat /run/secrets/postgres_user)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - .docker/events.sql:/docker-entrypoint-initdb.d/events.sql

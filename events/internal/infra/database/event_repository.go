@@ -75,7 +75,7 @@ func (e *EventRepository) List(ctx context.Context, page, size int) ([]domain.Ev
 		events = append(events, event)
 	}
 	var total int
-	err = e.DB.QueryRow("SELECT COUNT(*) FROM events").Scan(&total)
+	err = e.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM events").Scan(&total)
 	if err != nil {
 		return nil, pagination.Pagination{}, err
 	}
