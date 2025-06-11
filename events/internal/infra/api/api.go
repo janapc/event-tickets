@@ -62,7 +62,7 @@ func (a *Api) Init(port string) {
 	baseUrlDocs := fmt.Sprintf("%s/docs/doc.json", os.Getenv("BASE_API_URL"))
 	r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL(baseUrlDocs)))
 	r.Route(ROUTE_PREFIX, func(r chi.Router) {
-		r.Use(md.RequestTracerMiddleware)
+		r.Use(md.LoggingMiddleware)
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
 		r.Use(md.WithJWTAuth(tokenAuth))
