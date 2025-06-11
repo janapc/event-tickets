@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/pkg/pagination"
 )
 
 type EventRepository struct {
@@ -57,22 +58,30 @@ func (e *EventRepository) Remove(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (e *EventRepository) List(ctx context.Context) ([]*domain.Event, error) {
-	rows, err := e.DB.QueryContext(ctx, "SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events")
+func (e *EventRepository) List(ctx context.Context, page, size int) ([]domain.Event, pagination.Pagination, error) {
+	offset := (page - 1) * size
+	rows, err := e.DB.QueryContext(ctx, "SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events ORDER BY created_at DESC LIMIT $1 OFFSET $2", size, offset)
 	if err != nil {
-		return nil, err
+		return nil, pagination.Pagination{}, err
 	}
 	defer rows.Close()
-	var events []*domain.Event
+	var events []domain.Event
 	for rows.Next() {
-		event := &domain.Event{}
+		event := domain.Event{}
 		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.Currency, &event.EventDate, &event.CreatedAt, &event.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, pagination.Pagination{}, err
 		}
 		events = append(events, event)
 	}
-	return events, nil
+	var total int
+	err = e.DB.QueryRow("SELECT COUNT(*) FROM events").Scan(&total)
+	if err != nil {
+		return nil, pagination.Pagination{}, err
+	}
+
+	pagination := pagination.NewPagination(page, size, total)
+	return events, pagination, nil
 }
 
 func (e *EventRepository) FindByID(ctx context.Context, id int64) (*domain.Event, error) {

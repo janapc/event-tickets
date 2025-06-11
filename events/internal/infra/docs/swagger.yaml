@@ -1,5 +1,26 @@
 basePath: events
 definitions:
+  application.EventsOutputDTO:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      event_date:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      updated_at:
+        type: string
+    type: object
   application.InputRegisterEventDTO:
     properties:
       currency:
@@ -23,8 +44,6 @@ definitions:
         type: string
       event_date:
         type: string
-      id:
-        type: integer
       image_url:
         type: string
       name:
@@ -34,24 +53,12 @@ definitions:
     type: object
   application.OutputGetEventsDTO:
     properties:
-      created_at:
-        type: string
-      currency:
-        type: string
-      description:
-        type: string
-      event_date:
-        type: string
-      id:
-        type: integer
-      image_url:
-        type: string
-      name:
-        type: string
-      price:
-        type: number
-      updated_at:
-        type: string
+      events:
+        items:
+          $ref: '#/definitions/application.EventsOutputDTO'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
     type: object
   domain.Event:
     properties:
@@ -74,6 +81,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  pagination.Pagination:
+    properties:
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
 host: localhost:3001/
 info:
   contact: {}
@@ -86,15 +104,24 @@ paths:
       consumes:
       - application/json
       description: list events
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: size
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/application.OutputGetEventsDTO'
-            type: array
+            $ref: '#/definitions/application.OutputGetEventsDTO'
         "500":
           description: Internal Server Error
       security:

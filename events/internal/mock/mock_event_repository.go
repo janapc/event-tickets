@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/pkg/pagination"
 	testMock "github.com/stretchr/testify/mock"
 )
 
@@ -26,9 +27,9 @@ func (m *EventRepositoryMock) Remove(ctx context.Context, id int64) error {
 	return args.Error(0)
 }
 
-func (m *EventRepositoryMock) List(ctx context.Context) ([]*domain.Event, error) {
-	args := m.Called(ctx)
-	return args.Get(0).([]*domain.Event), args.Error(1)
+func (m *EventRepositoryMock) List(ctx context.Context, page, size int) ([]domain.Event, pagination.Pagination, error) {
+	args := m.Called(ctx, page, size)
+	return args.Get(0).([]domain.Event), args.Get(1).(pagination.Pagination), args.Error(2)
 }
 
 func (m *EventRepositoryMock) FindByID(ctx context.Context, id int64) (*domain.Event, error) {

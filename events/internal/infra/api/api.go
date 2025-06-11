@@ -89,15 +89,19 @@ func (a *Api) adminRouter() http.Handler {
 // @Description list events
 // @Accept json
 // @Produce json
-// @Success 200 {array} application.OutputGetEventsDTO
+// @Param page query int false "Page number" default(1)
+// @Param size query int false "Page size" default(10)
+// @Success 200 {object} application.OutputGetEventsDTO
 // @Failure 500
 // @Router / [get]
 // @Security BearerAuth
 func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	ctx := r.Context()
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	size, _ := strconv.Atoi(r.URL.Query().Get("size"))
 	app := application.NewGetEvents(a.Repository)
-	events, err := app.Execute(ctx)
+	events, err := app.Execute(ctx, page, size)
 	if err != nil {
 		message, statusCode := HandlerErrors(err)
 		w.WriteHeader(statusCode)

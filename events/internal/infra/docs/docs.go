@@ -29,14 +29,27 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/application.OutputGetEventsDTO"
-                            }
+                            "$ref": "#/definitions/application.OutputGetEventsDTO"
                         }
                     },
                     "500": {
@@ -212,6 +225,38 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "application.EventsOutputDTO": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "event_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "application.InputRegisterEventDTO": {
             "type": "object",
             "properties": {
@@ -247,9 +292,6 @@ const docTemplate = `{
                 "event_date": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "image_url": {
                     "type": "string"
                 },
@@ -264,32 +306,14 @@ const docTemplate = `{
         "application.OutputGetEventsDTO": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/application.EventsOutputDTO"
+                    }
                 },
-                "currency": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "event_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
                 }
             }
         },
@@ -322,6 +346,23 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "pagination.Pagination": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
                 }
             }
         }

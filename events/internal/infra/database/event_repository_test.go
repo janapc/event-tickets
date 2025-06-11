@@ -98,17 +98,20 @@ func TestListEvent(t *testing.T) {
 	}
 	defer db.Close()
 	ctx := context.Background()
-	query := regexp.QuoteMeta("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events")
+	query := regexp.QuoteMeta("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events ORDER BY created_at DESC LIMIT $1 OFFSET $2")
 	now := time.Now()
 	rows := sqlmock.NewRows([]string{
 		"id", "name", "description", "image_url", "price", "currency", "event_date", "created_at", "updated_at",
 	}).AddRow(
 		1, "GoConf", "Go conference", "http://image", 99.99, "USD", now, now, now,
 	)
-	mock.ExpectQuery(query).WillReturnRows(rows)
+	mock.ExpectQuery(query).WithArgs(10, 0).WillReturnRows(rows)
+	queryPagination := regexp.QuoteMeta("SELECT COUNT(*) FROM events")
+	mock.ExpectQuery(queryPagination).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 	repository := NewEventRepository(db)
-	events, err := repository.List(ctx)
+	events, pagination, err := repository.List(ctx, 1, 10)
 	assert.NoError(t, err)
+	assert.NotEmpty(t, pagination)
 	assert.Len(t, events, 1)
 	assert.Equal(t, events[0].Name, "GoConf")
 	if err := mock.ExpectationsWereMet(); err != nil {
