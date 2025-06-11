@@ -1,9 +1,9 @@
 services:
-  events-service:
+  events_service:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: events-service
+    container_name: events_service
     ports:
       - "3001:3001"
     logging:

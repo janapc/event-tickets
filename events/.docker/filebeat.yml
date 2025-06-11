@@ -4,7 +4,7 @@ filebeat.inputs:
     paths:
       - /var/lib/docker/containers/*/*.log
     fields:
-      app_name: "events-service"
+      app_name: "events_service"
       log_type: "application"
       env: "production"
     parsers:
@@ -22,7 +22,7 @@ filebeat.inputs:
           when:
             not:
               equals:
-                container.name: "events-service"
+                container.name: "events_service"
 
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
