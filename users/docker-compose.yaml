@@ -10,12 +10,13 @@ services:
       - app_logs:/app/logs
     depends_on:
       - mongodb
-      - elasticsearch
-      - prometheus
-      - grafana
-      - jaeger
     networks:
       - users_network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -92,27 +93,19 @@ services:
       - xpack.security.http.ssl.enabled=false
     networks:
       - users_network
-    healthcheck:
-      test: curl -s http://localhost:9200 | grep -q "You Know, for Search"
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:9.0.0
     container_name: filebeat
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    user: root
     volumes:
-      - app_logs:/var/logs
-      - .docker/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./.docker/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - users_network
     depends_on:
-      elasticsearch:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
+      - elasticsearch
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.0.0
@@ -125,11 +118,6 @@ services:
       - users_network
     depends_on:
       - elasticsearch
-    healthcheck:
-      test: curl -f http://localhost:5601/api/status || exit 1
-      interval: 10s
-      timeout: 10s
-      retries: 20
 
   apm-server:
     image: docker.elastic.co/apm/apm-server:9.0.1

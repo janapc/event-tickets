@@ -14,6 +14,8 @@ import { TerminusModule } from '@nestjs/terminus';
 import { HttpModule } from '@nestjs/axios';
 import { MetricsService } from '@infra/metrics/metrics.service';
 import { MetricsMiddleware } from '@interfaces/middleware/metrics.middleware';
+import { LoggingMiddleware } from '@interfaces/middleware/logging.middleware';
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: UserModel.name, schema: UserSchema }]),
@@ -35,5 +37,6 @@ import { MetricsMiddleware } from '@interfaces/middleware/metrics.middleware';
 export class ControllerModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(MetricsMiddleware).forRoutes(UserController);
+    consumer.apply(LoggingMiddleware).forRoutes(UserController);
   }
 }

@@ -6,8 +6,8 @@ export const traceContextFormat = winston.format((info) => {
   const span = trace.getSpan(context.active());
   const spanContext = span?.spanContext();
   if (spanContext) {
-    info.traceId = spanContext.traceId;
-    info.spanId = spanContext.spanId;
+    info['trace.id'] = spanContext.traceId;
+    info['span.id'] = spanContext.spanId;
   }
   return info;
 });
@@ -18,12 +18,5 @@ export const logger = WinstonModule.createLogger({
     traceContextFormat(),
     winston.format.json(),
   ),
-  transports: [
-    new winston.transports.File({
-      filename: 'logs/app.log',
-      maxsize: 5_000_000,
-      maxFiles: 5,
-    }),
-    new winston.transports.Console(),
-  ],
+  transports: [new winston.transports.Console()],
 });

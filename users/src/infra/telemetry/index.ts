@@ -36,10 +36,12 @@ process.on('SIGTERM', () => {
 });
 
 export function start() {
-  try {
-    otelSDK.start();
-    logger.log('OpenTelemetry initialized');
-  } catch (err) {
-    logger.error('OpenTelemetry init failed', err);
+  if (process.env.ENV === 'PROD') {
+    try {
+      otelSDK.start();
+      logger.log('OpenTelemetry initialized');
+    } catch (err) {
+      logger.error('OpenTelemetry init failed', err);
+    }
   }
 }
