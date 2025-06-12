@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
@@ -40,8 +40,9 @@ func (s *Server) Init(port string) {
 	app.Get("/clients/docs/*", swagger.HandlerDefault)
 	addr := fmt.Sprintf(":%s", port)
 	if err := app.Listen(addr); err != nil {
-		log.Panicln(err)
+		slog.Error("Failed to start server", "error", err)
 	}
+	slog.Info("Server is running", "address", addr)
 }
 
 // GetClientByEmail godoc

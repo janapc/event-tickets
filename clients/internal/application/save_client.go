@@ -1,7 +1,6 @@
 package application
 
 import (
-	"errors"
 	"time"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
@@ -30,21 +29,21 @@ func NewSaveClient(repo domain.IClientRepository) *SaveClient {
 }
 
 func (s *SaveClient) Execute(input InputSaveClient) (*OutputSaveClient, error) {
-	client, err := domain.NewClient(input.Name, input.Email)
+	client, err := domain.NewClient(domain.ClientParams{
+		Name:  input.Name,
+		Email: input.Email,
+	})
 	if err != nil {
 		return nil, err
 	}
-	if c, _ := s.Repository.GetByEmail(input.Email); c != nil {
-		return nil, errors.New("client already exists")
-	}
-	err = s.Repository.Save(client)
+	newClient, err := s.Repository.Save(client)
 	if err != nil {
 		return nil, err
 	}
 	return &OutputSaveClient{
-		ID:        client.ID,
-		Name:      client.Name,
-		Email:     client.Email,
-		CreatedAt: client.CreatedAt,
+		ID:        newClient.ID,
+		Name:      newClient.Name,
+		Email:     newClient.Email,
+		CreatedAt: newClient.CreatedAt,
 	}, nil
 }

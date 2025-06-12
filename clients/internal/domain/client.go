@@ -3,9 +3,12 @@ package domain
 import (
 	"errors"
 	"time"
-
-	"github.com/google/uuid"
 )
+
+type ClientParams struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
 
 type Client struct {
 	ID        string    `json:"id"`
@@ -14,17 +17,15 @@ type Client struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func NewClient(name string, email string) (*Client, error) {
-	c := &Client{
-		ID:        uuid.New().String(),
-		Name:      name,
-		Email:     email,
-		CreatedAt: time.Now().UTC(),
+func NewClient(params ClientParams) (*Client, error) {
+	client := &Client{
+		Name:  params.Name,
+		Email: params.Email,
 	}
-	if err := c.isValid(); err != nil {
+	if err := client.isValid(); err != nil {
 		return nil, err
 	}
-	return c, nil
+	return client, nil
 }
 
 func (c *Client) isValid() error {

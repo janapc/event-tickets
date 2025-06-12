@@ -1,54 +1,102 @@
-<div align="center">
-  <h1>Clients Service</h1>
+# Event Tickets - Clients Service
 
-[![golang-services](https://github.com/janapc/event-tickets/actions/workflows/golang-services.yml/badge.svg?branch=main)](https://github.com/janapc/event-tickets/actions/workflows/golang-services.yml)
+This project is a microservice for managing clients in an event ticketing system. It provides APIs to register new clients, retrieve client information by email, and integrates with Kafka for messaging.
 
-<a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#usage">Usage</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#resources">Resources</a>
+## Features
 
-</div>
+- **Client Management**: Create and retrieve client information.
+- **Kafka Integration**: Processes messages from Kafka topics and produces messages to other topics.
+- **PostgreSQL Database**: Stores client data.
+- **Swagger Documentation**: API documentation available at `/clients/docs`.
 
-## Description
+## Prerequisites
 
-this API to manage clients.
-consume payment queue for creating customers.
-produce messages to the client_created queue and send_ticket after the client is created.
+Before running the project, ensure you have the following installed:
 
-## Requirement
+- Docker and Docker Compose
+- Go (version 1.22.1 or later)
+- PostgreSQL (if running without Docker)
+- Kafka (if running without Docker)
 
-This project your need:
+## Environment Variables
 
-- golang v1.22.1 [golang](https://go.dev/doc/install)
+The project uses environment variables for configuration. You can find an example in the `.env_example` file. Copy it to `.env` and update the values as needed:
 
-You must create a **.env** file with the same information as in **.env_examples**
-
-## Usage
-
-Run this commands in your terminal:
-
-```sh
-## install dependecies
-❯ go mod tidy
-
-## run this command to start api(localhost:3004):
-❯ go run cmd/main.go
-
+```bash
+cp clients/.env_example clients/.env
 ```
 
-API routes are in `http://localhost:3004/clients/docs`
+### Key Environment Variables
 
-## Resources
+- `PORT`: The port on which the service will run (default: `3004`).
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Database connection details.
+- `KAFKA_BROKERS`: Kafka broker addresses.
+- `SUCCESS_PAYMENT_TOPIC`, `CLIENT_CREATED_TOPIC`, `SEND_TICKET_TOPIC`: Kafka topic names.
 
-- golang
-- postgres
-- swagger
-- fiber
-- rabbitmq
+## Running the Project
 
-<div align="center">
+### Using Docker Compose
 
-Made by Janapc 🤘 [Get in touch!](https://www.linkedin.com/in/janaina-pedrina/)
+1. Build and start the services:
 
-</div>
+   ```bash
+   docker-compose up --build
+   ```
+
+2. The service will be available at `http://localhost:3004`.
+
+3. Swagger documentation can be accessed at `http://localhost:3004/clients/docs`.
+
+### Running Locally
+
+1. Start PostgreSQL and Kafka services.
+
+2. Set up the database:
+
+   - Create a database named `event_tickets`.
+   - Run the SQL script located at `clients/.docker/clients.sql` to create the `clients` table.
+
+3. Export the required environment variables or use the `.env` file.
+
+4. Run the application:
+
+   ```bash
+   go run clients/cmd/main.go
+   ```
+
+5. The service will be available at `http://localhost:3004`.
+
+### Testing
+
+The project includes unit tests for the application logic and database interactions. To run the tests:
+
+```bash
+go test ./...
+```
+
+## Kafka Topics
+
+The service interacts with the following Kafka topics:
+
+- **`SUCCESS_PAYMENT_TOPIC`**: Consumes messages about successful payments.
+- **`CLIENT_CREATED_TOPIC`**: Produces messages when a new client is created.
+- **`SEND_TICKET_TOPIC`**: Produces messages to send tickets to clients.
+
+## API Endpoints
+
+### Health Check
+
+- **Liveness**: `GET /clients/healthcheck/live`
+- **Readiness**: `GET /clients/healthcheck/ready`
+
+### Client Management
+
+- **Get Client by Email**: `GET /clients?email={email}`
+- **Create Client**: `POST /clients`
+
+### Swagger Documentation
+
+Access the API documentation at `/clients/docs`.
+
+## Author
+Made by Janapc 🤘 [Get in touch](https://www.linkedin.com/in/janaina-pedrina/)!

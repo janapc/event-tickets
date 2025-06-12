@@ -2,31 +2,58 @@ package domain
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateAClient(t *testing.T) {
-	client, err := NewClient("test", "test@test.com")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, client)
-	assert.NotEmpty(t, client.ID)
+func TestNewClient_ValidParams(t *testing.T) {
+	params := ClientParams{
+		Name:  "John Doe",
+		Email: "john.doe@example.com",
+	}
+
+	client, err := NewClient(params)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if client.Name != params.Name {
+		t.Errorf("expected name %v, got %v", params.Name, client.Name)
+	}
+
+	if client.Email != params.Email {
+		t.Errorf("expected email %v, got %v", params.Email, client.Email)
+	}
 }
 
-func TestErrorIfParametersAreWrong(t *testing.T) {
-	type Data struct {
-		name, email, expectedError string
+func TestNewClient_MissingName(t *testing.T) {
+	params := ClientParams{
+		Name:  "",
+		Email: "john.doe@example.com",
 	}
 
-	data := []Data{
-		{name: "", email: "test@test.com", expectedError: "the name field is mandatory"},
-		{name: "test", email: "", expectedError: "the email field is mandatory"},
+	_, err := NewClient(params)
+	if err == nil {
+		t.Fatal("expected an error, got nil")
 	}
-	for _, d := range data {
-		client, err := NewClient(d.name, d.email)
-		if assert.Error(t, err) {
-			assert.Equal(t, d.expectedError, err.Error())
-		}
-		assert.Empty(t, client)
+
+	expectedErr := "the name field is mandatory"
+	if err.Error() != expectedErr {
+		t.Errorf("expected error %v, got %v", expectedErr, err.Error())
+	}
+}
+
+func TestNewClient_MissingEmail(t *testing.T) {
+	params := ClientParams{
+		Name:  "John Doe",
+		Email: "",
+	}
+
+	_, err := NewClient(params)
+	if err == nil {
+		t.Fatal("expected an error, got nil")
+	}
+
+	expectedErr := "the email field is mandatory"
+	if err.Error() != expectedErr {
+		t.Errorf("expected error %v, got %v", expectedErr, err.Error())
 	}
 }

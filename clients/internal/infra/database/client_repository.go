@@ -16,17 +16,20 @@ func NewClientRepository(db *sql.DB) *ClientRepository {
 	}
 }
 
-func (p *ClientRepository) Save(client *domain.Client) error {
-	stmt, err := p.DB.Prepare("INSERT INTO clients(id, name, email, created_at) VALUES($1,$2,$3,$4)")
+func (p *ClientRepository) Save(client *domain.Client) (*domain.Client, error) {
+	stmt, err := p.DB.Prepare("INSERT INTO clients(name, email) VALUES($1,$2) RETURNING *")
 	if err != nil {
-		return err
+		return &domain.Client{}, err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(client.ID, client.Name, client.Email, client.CreatedAt)
+	var newClient domain.Client
+	err = stmt.QueryRow(client.Name, client.Email).Scan(&newClient.ID, &newClient.Name, &newClient.Email, &newClient.CreatedAt)
 	if err != nil {
-		return err
+		return &domain.Client{}, err
 	}
-	return nil
+
+	return &newClient, nil
+
 }
 
 func (p *ClientRepository) GetByEmail(email string) (*domain.Client, error) {

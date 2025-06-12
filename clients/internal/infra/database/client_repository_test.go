@@ -1,41 +1,67 @@
 package database
 
 import (
-	"database/sql"
+	"regexp"
 	"testing"
+	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/janapc/event-tickets/clients/internal/domain"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 
-func connectionDatabase() *sql.DB {
-	db, _ := sql.Open("sqlite3", ":memory:")
-	_, _ = db.Exec(`CREATE TABLE clients(
-		id CHAR(36) NOT NULL,
-		name TEXT(150) NOT NULL,
-		email TEXT(150) NOT NULL,
-		created_at TIMESTAMP NOT NULL, 
-		PRIMARY KEY(id)
-		)`)
-	return db
+func TestSaveClient(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	query := regexp.QuoteMeta("INSERT INTO clients(name, email) VALUES($1,$2) RETURNING *")
+	input, _ := domain.NewClient(domain.ClientParams{
+		Name:  "Test Client",
+		Email: "test@test.com",
+	})
+	mock.ExpectPrepare(query).WillBeClosed().ExpectQuery().WithArgs(input.Name, input.Email).WillReturnRows(sqlmock.NewRows([]string{
+		"id", "name", "email", "created_at",
+	}).AddRow(1, input.Name, input.Email, time.Now()))
+	repository := NewClientRepository(db)
+	result, err := repository.Save(input)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+	assert.NotEmpty(t, result.ID)
+	assert.NotEmpty(t, result.CreatedAt)
+	assert.Equal(t, input.Name, result.Name)
+	assert.Equal(t, input.Email, result.Email)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }
 
-func TestSaveAClient(t *testing.T) {
-	conn := connectionDatabase()
-	repository := NewClientRepository(conn)
-	c, _ := domain.NewClient("test", "test@test.com")
-	err := repository.Save(c)
+func TestGetOneClient(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	email := "test@test.com"
+	defer db.Close()
+	query := regexp.QuoteMeta("SELECT id, name, email, created_at FROM clients WHERE email = $1")
+	now := time.Now()
+	rows := sqlmock.NewRows([]string{
+		"id", "name", "email", "created_at",
+	}).AddRow(
+		1, "Test Client", email, now,
+	)
+	mock.ExpectPrepare(query).ExpectQuery().WithArgs(email).WillReturnRows(rows)
+	repository := NewClientRepository(db)
+	result, err := repository.GetByEmail(email)
 	assert.NoError(t, err)
-}
-
-func TestGetAClientByEmail(t *testing.T) {
-	conn := connectionDatabase()
-	repository := NewClientRepository(conn)
-	c, _ := domain.NewClient("test", "test@test.com")
-	_ = repository.Save(c)
-	client, err := repository.GetByEmail(c.Email)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, client)
-	assert.Equal(t, client.ID, c.ID)
+	assert.NotEmpty(t, result)
+	assert.NotEmpty(t, result.ID)
+	assert.NotEmpty(t, result.CreatedAt)
+	assert.Equal(t, "Test Client", result.Name)
+	assert.Equal(t, email, result.Email)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unmet sqlmock expectations: %v", err)
+	}
 }
