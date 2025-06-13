@@ -6,14 +6,19 @@ import (
 	"log/slog"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	m "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
+var MeterProvider *metric.MeterProvider
 var TracerProvider *sdktrace.TracerProvider
 var Tracer trace.Tracer
+var Meter m.Meter
 
 func Init(ctx context.Context) error {
 	res, err := resource.New(ctx, resource.WithFromEnv())
@@ -27,6 +32,12 @@ func Init(ctx context.Context) error {
 		return err
 	}
 	otel.SetTracerProvider(TracerProvider)
+	// Metrics
+	err = initMetrics(res, ctx)
+	if err != nil {
+		return err
+	}
+	otel.SetMeterProvider(MeterProvider)
 	slog.Info("OpenTelemetry initialized successfully.")
 	return nil
 }
@@ -40,7 +51,20 @@ func initTracer(res *resource.Resource, ctx context.Context) error {
 		sdktrace.WithBatcher(tracerExporter),
 		sdktrace.WithResource(res),
 	)
-	Tracer = otel.Tracer("clients-service")
+	Tracer = otel.Tracer("tracer-clients-service")
+	return nil
+}
+
+func initMetrics(res *resource.Resource, ctx context.Context) error {
+	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithInsecure())
+	if err != nil {
+		return fmt.Errorf("failed to create metric exporter: %w", err)
+	}
+	MeterProvider = metric.NewMeterProvider(
+		metric.WithReader(metric.NewPeriodicReader(metricExporter)),
+		metric.WithResource(res),
+	)
+	Meter = otel.Meter("metrics-clients-service")
 	return nil
 }
 

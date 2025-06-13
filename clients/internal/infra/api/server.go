@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +12,7 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/janapc/event-tickets/clients/internal/application"
 	"github.com/janapc/event-tickets/clients/internal/domain"
+	"github.com/janapc/event-tickets/clients/internal/infra/api/middleware"
 	_ "github.com/janapc/event-tickets/clients/internal/infra/docs"
 )
 
@@ -31,8 +33,11 @@ func (s *Server) Init(port string) {
 			return ctx.Status(statusCode).JSON(message)
 		},
 	})
-	app.Use(otelfiber.Middleware())
 	app.Use(logger.New())
+	if os.Getenv("ENV") == "PROD" {
+		app.Use(otelfiber.Middleware())
+		app.Use(middleware.OtelMetricMiddleware())
+	}
 	app.Use(healthcheck.New(healthcheck.Config{
 		LivenessEndpoint:  "/clients/healthcheck/live",
 		ReadinessEndpoint: "/clients/healthcheck/ready",
@@ -60,7 +65,6 @@ func (s *Server) Init(port string) {
 func (s *Server) HandlerGetClientByEmail(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	email := c.Query("email")
-	fmt.Println(email)
 	getClientByEmail := application.NewGetClientByEmail(s.Repository)
 	client, err := getClientByEmail.Execute(ctx, email)
 	if err != nil {

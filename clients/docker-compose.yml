@@ -100,7 +100,35 @@ services:
     networks:
       - clients_network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - .docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - clients_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3006:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - clients_network
+    secrets:
+      - grafana_user
+      - grafana_password
 volumes:
+  grafana_data:
+  prometheus_data:
   postgres_data:
   kafka_data:
 
