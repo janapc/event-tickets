@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -30,6 +31,7 @@ func (s *Server) Init(port string) {
 			return ctx.Status(statusCode).JSON(message)
 		},
 	})
+	app.Use(otelfiber.Middleware())
 	app.Use(logger.New())
 	app.Use(healthcheck.New(healthcheck.Config{
 		LivenessEndpoint:  "/clients/healthcheck/live",
@@ -56,10 +58,11 @@ func (s *Server) Init(port string) {
 // @Failure 500
 // @Router /clients [get]
 func (s *Server) HandlerGetClientByEmail(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	email := c.Query("email")
 	fmt.Println(email)
 	getClientByEmail := application.NewGetClientByEmail(s.Repository)
-	client, err := getClientByEmail.Execute(email)
+	client, err := getClientByEmail.Execute(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -81,8 +84,9 @@ func (s *Server) HandlerSaveClient(c *fiber.Ctx) error {
 	if err := c.BodyParser(input); err != nil {
 		return err
 	}
+	ctx := c.UserContext()
 	saveClient := application.NewSaveClient(s.Repository)
-	client, err := saveClient.Execute(*input)
+	client, err := saveClient.Execute(ctx, *input)
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/janapc/event-tickets/clients/internal/infra/telemetry"
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type KafkaClient struct {
@@ -22,7 +25,10 @@ func NewKafkaClient(brokers []string) *KafkaClient {
 	}
 }
 
-func (k *KafkaClient) Producer(topic string, key, value []byte) error {
+func (k *KafkaClient) Producer(topic string, key, value []byte, ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	writer := kafka.Writer{
 		Addr:                   kafka.TCP(k.Brokers...),
 		Topic:                  topic,
@@ -30,8 +36,18 @@ func (k *KafkaClient) Producer(topic string, key, value []byte) error {
 		AllowAutoTopicCreation: true,
 	}
 	defer writer.Close()
-
-	err := writer.WriteMessages(context.Background(), kafka.Message{
+	ctx, span := telemetry.Tracer.Start(ctx, "produce-message",
+		trace.WithAttributes(
+			attribute.String("messaging.system", "kafka"),
+			attribute.String("messaging.destination", topic),
+			attribute.String("messaging.destination_kind", "topic"),
+			attribute.String("messaging.operation", "send"),
+			attribute.String("messaging.kafka.message_key", string(key)),
+			attribute.Int("messaging.kafka.message_size", len(value)),
+		),
+	)
+	defer span.End()
+	err := writer.WriteMessages(ctx, kafka.Message{
 		Key:   key,
 		Value: value,
 	})
@@ -43,7 +59,7 @@ func (k *KafkaClient) Producer(topic string, key, value []byte) error {
 	return nil
 }
 
-func (k *KafkaClient) Consumer(topic, groupID string, handler func(string) error) {
+func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Context, string) error) {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  k.Brokers,
 		GroupID:  groupID,
@@ -56,15 +72,30 @@ func (k *KafkaClient) Consumer(topic, groupID string, handler func(string) error
 	go func() {
 		slog.Info("Starting Kafka consumer", "topic", topic, "groupID", groupID)
 		for {
-			msg, err := reader.ReadMessage(context.Background())
+			ctx := context.Background()
+			msg, err := reader.ReadMessage(ctx)
+
 			if err != nil {
 				slog.Error("Error reading from", "topic ", topic, "error", err)
 				continue
 			}
+			ctx, span := telemetry.Tracer.Start(ctx, "kafka-consume",
+				trace.WithAttributes(
+					attribute.String("messaging.system", "kafka"),
+					attribute.String("messaging.destination", msg.Topic),
+					attribute.String("messaging.destination_kind", "topic"),
+					attribute.String("messaging.operation", "receive"),
+					attribute.String("messaging.kafka.message_key", string(msg.Key)),
+					attribute.Int("messaging.kafka.partition", msg.Partition),
+					attribute.Int64("messaging.kafka.offset", msg.Offset),
+					attribute.Int("messaging.kafka.message_size", len(msg.Value)),
+				),
+			)
 			slog.Info("Received message", "topic", topic, "key", string(msg.Key))
-			if err := handler(string(msg.Value)); err != nil {
+			if err := handler(ctx, string(msg.Value)); err != nil {
 				slog.Info("Error processing message", "topic", topic, "error", err)
 			}
+			span.End()
 		}
 	}()
 }

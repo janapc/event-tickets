@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"regexp"
 	"testing"
 	"time"
@@ -26,7 +27,8 @@ func TestSaveClient(t *testing.T) {
 		"id", "name", "email", "created_at",
 	}).AddRow(1, input.Name, input.Email, time.Now()))
 	repository := NewClientRepository(db)
-	result, err := repository.Save(input)
+	ctx := context.Background()
+	result, err := repository.Save(ctx, input)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
 	assert.NotEmpty(t, result.ID)
@@ -54,7 +56,8 @@ func TestGetOneClient(t *testing.T) {
 	)
 	mock.ExpectPrepare(query).ExpectQuery().WithArgs(email).WillReturnRows(rows)
 	repository := NewClientRepository(db)
-	result, err := repository.GetByEmail(email)
+	ctx := context.Background()
+	result, err := repository.GetByEmail(ctx, email)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
 	assert.NotEmpty(t, result.ID)

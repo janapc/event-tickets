@@ -1,6 +1,8 @@
 package domain
 
+import "context"
+
 type IClientRepository interface {
-	Save(client *Client) (*Client, error)
-	GetByEmail(email string) (*Client, error)
+	Save(ctx context.Context, client *Client) (*Client, error)
+	GetByEmail(ctx context.Context, email string) (*Client, error)
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
+	"golang.org/x/net/context"
 )
 
 type ClientRepository struct {
@@ -16,14 +17,14 @@ func NewClientRepository(db *sql.DB) *ClientRepository {
 	}
 }
 
-func (p *ClientRepository) Save(client *domain.Client) (*domain.Client, error) {
-	stmt, err := p.DB.Prepare("INSERT INTO clients(name, email) VALUES($1,$2) RETURNING *")
+func (p *ClientRepository) Save(ctx context.Context, client *domain.Client) (*domain.Client, error) {
+	stmt, err := p.DB.PrepareContext(ctx, "INSERT INTO clients(name, email) VALUES($1,$2) RETURNING *")
 	if err != nil {
 		return &domain.Client{}, err
 	}
 	defer stmt.Close()
 	var newClient domain.Client
-	err = stmt.QueryRow(client.Name, client.Email).Scan(&newClient.ID, &newClient.Name, &newClient.Email, &newClient.CreatedAt)
+	err = stmt.QueryRowContext(ctx, client.Name, client.Email).Scan(&newClient.ID, &newClient.Name, &newClient.Email, &newClient.CreatedAt)
 	if err != nil {
 		return &domain.Client{}, err
 	}
@@ -32,14 +33,14 @@ func (p *ClientRepository) Save(client *domain.Client) (*domain.Client, error) {
 
 }
 
-func (p *ClientRepository) GetByEmail(email string) (*domain.Client, error) {
-	stmt, err := p.DB.Prepare("SELECT id, name, email, created_at FROM clients WHERE email = $1")
+func (p *ClientRepository) GetByEmail(ctx context.Context, email string) (*domain.Client, error) {
+	stmt, err := p.DB.PrepareContext(ctx, "SELECT id, name, email, created_at FROM clients WHERE email = $1")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 	var client domain.Client
-	err = stmt.QueryRow(email).Scan(&client.ID, &client.Name, &client.Email, &client.CreatedAt)
+	err = stmt.QueryRowContext(ctx, email).Scan(&client.ID, &client.Name, &client.Email, &client.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

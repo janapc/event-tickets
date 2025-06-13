@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -24,8 +25,8 @@ func NewGetClientByEmail(repo domain.IClientRepository) *GetClientByEmail {
 	}
 }
 
-func (g *GetClientByEmail) Execute(email string) (*OutputGetClientByEmail, error) {
-	client, err := g.Repository.GetByEmail(email)
+func (g *GetClientByEmail) Execute(ctx context.Context, email string) (*OutputGetClientByEmail, error) {
+	client, err := g.Repository.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, errors.New("client is not found")
 	}

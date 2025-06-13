@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"time"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
@@ -28,7 +29,7 @@ func NewSaveClient(repo domain.IClientRepository) *SaveClient {
 	}
 }
 
-func (s *SaveClient) Execute(input InputSaveClient) (*OutputSaveClient, error) {
+func (s *SaveClient) Execute(ctx context.Context, input InputSaveClient) (*OutputSaveClient, error) {
 	client, err := domain.NewClient(domain.ClientParams{
 		Name:  input.Name,
 		Email: input.Email,
@@ -36,7 +37,7 @@ func (s *SaveClient) Execute(input InputSaveClient) (*OutputSaveClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	newClient, err := s.Repository.Save(client)
+	newClient, err := s.Repository.Save(ctx, client)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 
@@ -41,7 +42,7 @@ func NewProcessMessage(repo domain.IClientRepository, messaging domain.IMessagin
 	}
 }
 
-func (p *ProcessMessage) Execute(input string) error {
+func (p *ProcessMessage) Execute(ctx context.Context, input string) error {
 	var data InputProcessMessage
 	if err := json.Unmarshal([]byte(input), &data); err != nil {
 		return err
@@ -50,25 +51,25 @@ func (p *ProcessMessage) Execute(input string) error {
 		return err
 	}
 
-	if err := p.processClient(data); err != nil {
+	if err := p.processClient(ctx, data); err != nil {
 		return err
 	}
-	return p.sendTicket(data)
+	return p.sendTicket(ctx, data)
 }
 
-func (p *ProcessMessage) processClient(input InputProcessMessage) error {
-	existsClient, err := p.Repository.GetByEmail(input.Email)
+func (p *ProcessMessage) processClient(ctx context.Context, input InputProcessMessage) error {
+	existsClient, err := p.Repository.GetByEmail(ctx, input.Email)
 	if existsClient == nil || err != nil {
-		newClient, err := p.CreateClient(input)
+		newClient, err := p.CreateClient(ctx, input)
 		if err != nil {
 			return err
 		}
-		return p.notifyClientCreated(newClient)
+		return p.notifyClientCreated(ctx, newClient)
 	}
 	return nil
 }
 
-func (p *ProcessMessage) notifyClientCreated(client *domain.Client) error {
+func (p *ProcessMessage) notifyClientCreated(ctx context.Context, client *domain.Client) error {
 	clientCreated := ClientCreated{
 		MessageID: uuid.New().String(),
 		Email:     client.Email,
@@ -78,15 +79,15 @@ func (p *ProcessMessage) notifyClientCreated(client *domain.Client) error {
 	if err != nil {
 		return err
 	}
-	return p.Messaging.Producer(p.ClientCreatedQueue, []byte(clientCreated.MessageID), clientCreatedJson)
+	return p.Messaging.Producer(p.ClientCreatedQueue, []byte(clientCreated.MessageID), clientCreatedJson, ctx)
 }
 
-func (p *ProcessMessage) sendTicket(input InputProcessMessage) error {
+func (p *ProcessMessage) sendTicket(ctx context.Context, input InputProcessMessage) error {
 	sendTicketJson, err := json.Marshal(input)
 	if err != nil {
 		return err
 	}
-	return p.Messaging.Producer(p.SendTicketQueue, []byte(input.MessageID), sendTicketJson)
+	return p.Messaging.Producer(p.SendTicketQueue, []byte(input.MessageID), sendTicketJson, ctx)
 }
 
 func (input *InputProcessMessage) Validate() error {
@@ -99,7 +100,7 @@ func (input *InputProcessMessage) Validate() error {
 	return nil
 }
 
-func (p *ProcessMessage) CreateClient(input InputProcessMessage) (*domain.Client, error) {
+func (p *ProcessMessage) CreateClient(ctx context.Context, input InputProcessMessage) (*domain.Client, error) {
 	client, err := domain.NewClient(domain.ClientParams{
 		Name:  input.Name,
 		Email: input.Email,
@@ -107,5 +108,5 @@ func (p *ProcessMessage) CreateClient(input InputProcessMessage) (*domain.Client
 	if err != nil {
 		return nil, err
 	}
-	return p.Repository.Save(client)
+	return p.Repository.Save(ctx, client)
 }

@@ -1,4 +1,26 @@
 services:
+  clients_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clients_service
+    ports:
+      - "3004:3004"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - clients_network
+
   postgres:
     image: postgres:14.18
     container_name: postgres
@@ -26,22 +48,57 @@ services:
     image: docker.io/bitnami/kafka:4.0.0
     container_name: kafka
     ports:
-      - "9092:9092"
+      - "9094:9094" # External (host machine)
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions.sh",
+          "--bootstrap-server",
+          "kafka:9092",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     environment:
-      - KAFKA_ENABLE_KRAFT=yes
-      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:2181
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_NODE_ID=1
-      - KAFKA_KRAFT_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
     volumes:
       - "kafka_data:/bitnami"
+    networks:
+      - clients_network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317"
+    networks:
+      - clients_network
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: collector
+    volumes:
+      - .docker/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    command: --config /etc/otelcol-contrib/config.yaml
+    ports:
+      - 4318:4318
+      - 4317:4317
+      - 8889:8889 # Prometheus exporter metrics
+    restart: always
+    depends_on:
+      - jaeger
+      - prometheus
+    networks:
+      - clients_network
 
 volumes:
   postgres_data:
@@ -55,3 +112,7 @@ secrets:
     file: .docker/secrets/postgres_password.txt
   postgres_user:
     file: .docker/secrets/postgres_user.txt
+  grafana_user:
+    file: .docker/secrets/grafana_user.txt
+  grafana_password:
+    file: .docker/secrets/grafana_password.txt
