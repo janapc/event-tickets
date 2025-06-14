@@ -1,102 +1,88 @@
-# Event Tickets - Clients Service
+# Clients Service
 
-This project is a microservice for managing clients in an event ticketing system. It provides APIs to register new clients, retrieve client information by email, and integrates with Kafka for messaging.
+The Clients Service is a microservice designed to manage client information and handle messaging related to client creation and ticket processing. It is built using Go and integrates with various tools and services for telemetry, logging, messaging, and database management.
 
 ## Features
 
 - **Client Management**: Create and retrieve client information.
-- **Kafka Integration**: Processes messages from Kafka topics and produces messages to other topics.
-- **PostgreSQL Database**: Stores client data.
-- **Swagger Documentation**: API documentation available at `/clients/docs`.
+- **Kafka Integration**: Consume and produce messages for client creation and ticket processing.
+- **Telemetry**: OpenTelemetry integration for tracing and metrics.
+- **Logging**: Structured logging using Logrus.
+- **Database**: PostgreSQL for persistent storage.
+- **Health Checks**: Liveness and readiness endpoints.
+- **Swagger Documentation**: API documentation for easy integration.
 
-## Prerequisites
+## Architecture
 
-Before running the project, ensure you have the following installed:
+The service follows a clean architecture pattern, separating the domain, application, and infrastructure layers. It uses the following technologies:
 
-- Docker and Docker Compose
-- Go (version 1.22.1 or later)
-- PostgreSQL (if running without Docker)
-- Kafka (if running without Docker)
+- **Go**: The programming language for the service.
+- **PostgreSQL**: Database for storing client information.
+- **Kafka**: Messaging system for event-driven communication.
+- **OpenTelemetry**: For distributed tracing and metrics.
+- **Fiber**: Web framework for building the API.
+- **Swagger**: API documentation.
 
-## Environment Variables
+## Endpoints
 
-The project uses environment variables for configuration. You can find an example in the `.env_example` file. Copy it to `.env` and update the values as needed:
+### Health Check
+- **GET** `/clients/healthcheck/live`: Liveness endpoint.
+- **GET** `/clients/healthcheck/ready`: Readiness endpoint.
 
-```bash
-cp clients/.env_example clients/.env
-```
+### Client Management
+- **GET** `/clients`: Retrieve client information by email.
+- **POST** `/clients`: Create a new client.
 
-### Key Environment Variables
+### API Documentation
+- **GET** `/clients/docs/*`: Swagger documentation.
 
-- `PORT`: The port on which the service will run (default: `3004`).
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Database connection details.
-- `KAFKA_BROKERS`: Kafka broker addresses.
-- `SUCCESS_PAYMENT_TOPIC`, `CLIENT_CREATED_TOPIC`, `SEND_TICKET_TOPIC`: Kafka topic names.
+## Setup
 
-## Running the Project
+### Prerequisites
+- Docker
+- Docker Compose
 
-### Using Docker Compose
-
-1. Build and start the services:
-
+### Steps
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/janapc/event-tickets.git
+   cd event-tickets/clients
+   ```
+2. Create a `.env` file based on `.env_example` and fill in the required values.
+3. Start the services using Docker Compose:
    ```bash
    docker-compose up --build
    ```
+4. Access the service at `http://localhost:3004`.
 
-2. The service will be available at `http://localhost:3004`.
+## Telemetry and Monitoring
 
-3. Swagger documentation can be accessed at `http://localhost:3004/clients/docs`.
+The service integrates with OpenTelemetry for tracing and metrics. It also includes monitoring tools like Prometheus, Grafana, Elasticsearch, and Kibana.
 
-### Running Locally
+### Prometheus
+- Access Prometheus at `http://localhost:9090`.
 
-1. Start PostgreSQL and Kafka services.
+### Grafana
+- Access Grafana at `http://localhost:3006`.
+- Default credentials:
+  - Username: `admin`
+  - Password: `admin`
 
-2. Set up the database:
+### Kibana
+- Access Kibana at `http://localhost:5601`.
 
-   - Create a database named `event_tickets`.
-   - Run the SQL script located at `clients/.docker/clients.sql` to create the `clients` table.
+### Jaeger
+- Access Jaeger at `http://localhost:16686`.
 
-3. Export the required environment variables or use the `.env` file.
+## Testing
 
-4. Run the application:
-
-   ```bash
-   go run clients/cmd/main.go
-   ```
-
-5. The service will be available at `http://localhost:3004`.
-
-### Testing
-
-The project includes unit tests for the application logic and database interactions. To run the tests:
-
+The service includes unit tests for the application and infrastructure layers. Run the tests using:
 ```bash
 go test ./...
 ```
 
-## Kafka Topics
+## Documentation
 
-The service interacts with the following Kafka topics:
+Swagger documentation is available at `http://localhost:3004/clients/docs`.
 
-- **`SUCCESS_PAYMENT_TOPIC`**: Consumes messages about successful payments.
-- **`CLIENT_CREATED_TOPIC`**: Produces messages when a new client is created.
-- **`SEND_TICKET_TOPIC`**: Produces messages to send tickets to clients.
-
-## API Endpoints
-
-### Health Check
-
-- **Liveness**: `GET /clients/healthcheck/live`
-- **Readiness**: `GET /clients/healthcheck/ready`
-
-### Client Management
-
-- **Get Client by Email**: `GET /clients?email={email}`
-- **Create Client**: `POST /clients`
-
-### Swagger Documentation
-
-Access the API documentation at `/clients/docs`.
-
-## Author
-Made by Janapc 🤘 [Get in touch](https://www.linkedin.com/in/janaina-pedrina/)!
+```
