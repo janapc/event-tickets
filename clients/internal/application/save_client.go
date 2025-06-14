@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 )
 
 type InputSaveClient struct {
@@ -41,6 +42,7 @@ func (s *SaveClient) Execute(ctx context.Context, input InputSaveClient) (*Outpu
 	if err != nil {
 		return nil, err
 	}
+	logger.Logger.WithContext(ctx).Infof("Client saved successfully client_id %s", newClient.ID)
 	return &OutputSaveClient{
 		ID:        newClient.ID,
 		Name:      newClient.Name,

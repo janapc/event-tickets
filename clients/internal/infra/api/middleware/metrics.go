@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	"github.com/janapc/event-tickets/clients/internal/infra/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -35,7 +36,7 @@ func OtelMetricMiddleware() fiber.Handler {
 
 		requestCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
 		latencyHistogram.Record(ctx, duration, metric.WithAttributes(attrs...))
-
+		logger.Logger.WithContext(ctx).Infof("Request processed: %s %s Status Code: %d", c.Method(), c.Route().Path, c.Response().StatusCode())
 		return err
 	}
 }

@@ -1,0 +1,37 @@
+filebeat.inputs:
+  - type: filestream
+    id: filebeat-logs
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    fields:
+      app_name: "clients_service"
+      log_type: "application"
+      env: "production"
+    parsers:
+      - container:
+    processors:
+      - decode_json_fields:
+          fields: ["message"]
+          target: ""
+          overwrite_keys: true
+          add_error_key: true
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+          match_fields: ["container.id"]
+      - drop_event:
+          when:
+            not:
+              equals:
+                container.name: "clients_service"
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  index: "filebeat-logs-%{+yyyy.MM.dd}"
+
+setup.ilm.enabled: false
+setup.template.enabled: true
+setup.template.name: "filebeat-logs"
+setup.template.pattern: "filebeat-logs-*"
+
+setup.kibana:
+  host: "http://kibana:5601"

@@ -2,22 +2,23 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 
 	"github.com/janapc/event-tickets/clients/internal/application"
 	"github.com/janapc/event-tickets/clients/internal/infra/api"
 	"github.com/janapc/event-tickets/clients/internal/infra/database"
 	_ "github.com/janapc/event-tickets/clients/internal/infra/docs"
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	"github.com/janapc/event-tickets/clients/internal/infra/messaging/kafka"
 	"github.com/janapc/event-tickets/clients/internal/infra/telemetry"
 	"github.com/joho/godotenv"
 )
 
 func init() {
+	logger.Init()
 	if os.Getenv("ENV") != "PROD" {
 		if err := godotenv.Load(); err != nil {
-			panic(err)
+			logger.Logger.Panic(err)
 		}
 	}
 	ctx := context.Background()
@@ -25,12 +26,12 @@ func init() {
 	if env == "PROD" {
 		err := telemetry.Init(ctx)
 		if err != nil {
-			panic(err)
+			logger.Logger.Panic(err)
 		}
 	}
 	err := database.Init(ctx)
 	if err != nil {
-		panic(err)
+		logger.Logger.Panic(err)
 	}
 }
 
@@ -41,10 +42,11 @@ func init() {
 // @host localhost:3004
 // @BasePath /
 func main() {
-	defer database.Close(context.Background())
+	ctx := context.Background()
+	defer database.Close(ctx)
 	defer func() {
-		if err := telemetry.Shutdown(context.Background()); err != nil {
-			slog.Error("Error shutting down telemetry")
+		if err := telemetry.Shutdown(ctx); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Failed to shutdown telemetry error: %v", err)
 		}
 	}()
 	port := os.Getenv("PORT")

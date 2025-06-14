@@ -2,12 +2,11 @@ package kafka
 
 import (
 	"context"
-	"log"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	"github.com/janapc/event-tickets/clients/internal/infra/telemetry"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel/attribute"
@@ -52,10 +51,10 @@ func (k *KafkaClient) Producer(topic string, key, value []byte, ctx context.Cont
 		Value: value,
 	})
 	if err != nil {
-		slog.Error("Error writing message to topic", "topic", topic, "error", err)
+		logger.Logger.WithContext(ctx).Errorf("Error writing message to topic %s error %v", topic, err)
 		return err
 	}
-	slog.Info("Message written to topic", "topic", topic, "key", string(key))
+	logger.Logger.WithContext(ctx).Infof("Message written to topic %s key %s", topic, string(key))
 	return nil
 }
 
@@ -70,13 +69,13 @@ func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Conte
 	k.readers = append(k.readers, reader)
 
 	go func() {
-		slog.Info("Starting Kafka consumer", "topic", topic, "groupID", groupID)
+		logger.Logger.Infof("Starting Kafka consumer topic %s groupID %s", topic, groupID)
 		for {
 			ctx := context.Background()
 			msg, err := reader.ReadMessage(ctx)
 
 			if err != nil {
-				slog.Error("Error reading from", "topic ", topic, "error", err)
+				logger.Logger.WithContext(ctx).Errorf("Error reading from topic %s error %v", topic, err)
 				continue
 			}
 			ctx, span := telemetry.Tracer.Start(ctx, "kafka-consume",
@@ -91,10 +90,11 @@ func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Conte
 					attribute.Int("messaging.kafka.message_size", len(msg.Value)),
 				),
 			)
-			slog.Info("Received message", "topic", topic, "key", string(msg.Key))
+			logger.Logger.WithContext(ctx).Infof("Received message topic %s key %s", topic, string(msg.Key))
 			if err := handler(ctx, string(msg.Value)); err != nil {
-				slog.Info("Error processing message", "topic", topic, "error", err)
+				logger.Logger.WithContext(ctx).Errorf("Error processing message topic %s error %v", topic, err)
 			}
+			logger.Logger.WithContext(ctx).Infof("Message processed topic %s key %s", topic, string(msg.Key))
 			span.End()
 		}
 	}()
@@ -105,7 +105,7 @@ func (k *KafkaClient) WaitForShutdown() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	log.Println("Shutting down Kafka readers...")
+	logger.Logger.Info("Shutting down Kafka readers...")
 	for _, r := range k.readers {
 		r.Close()
 	}

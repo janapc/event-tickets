@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log/slog"
 	"net/http"
 )
 
@@ -19,7 +18,6 @@ type OutputError struct {
 
 func HandlerErrors(err error) (OutputError, int) {
 	e := err.Error()
-	slog.Error("Error: " + e)
 	message := e
 	statusCode := MapErrors[e]
 	if MapErrors[e] == 0 {

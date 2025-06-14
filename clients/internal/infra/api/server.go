@@ -2,18 +2,18 @@ package api
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/swagger"
 	"github.com/janapc/event-tickets/clients/internal/application"
 	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/infra/api/middleware"
 	_ "github.com/janapc/event-tickets/clients/internal/infra/docs"
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 )
 
 type Server struct {
@@ -29,11 +29,14 @@ func NewServer(repo domain.IClientRepository) *Server {
 func (s *Server) Init(port string) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			logger.Logger.WithContext(ctx.UserContext()).Errorf("Error occurred: %v", err)
 			message, statusCode := HandlerErrors(err)
 			return ctx.Status(statusCode).JSON(message)
 		},
 	})
-	app.Use(logger.New())
+	if os.Getenv("ENV") != "PROD" {
+		app.Use(fiberLogger.New())
+	}
 	if os.Getenv("ENV") == "PROD" {
 		app.Use(otelfiber.Middleware())
 		app.Use(middleware.OtelMetricMiddleware())
@@ -47,9 +50,9 @@ func (s *Server) Init(port string) {
 	app.Get("/clients/docs/*", swagger.HandlerDefault)
 	addr := fmt.Sprintf(":%s", port)
 	if err := app.Listen(addr); err != nil {
-		slog.Error("Failed to start server", "error", err)
+		logger.Logger.Errorf("Failed to start server error: %v", err)
 	}
-	slog.Info("Server is running", "address", addr)
+	logger.Logger.Infof("Server is running address %s", addr)
 }
 
 // GetClientByEmail godoc

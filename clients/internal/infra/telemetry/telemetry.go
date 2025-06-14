@@ -3,8 +3,8 @@ package telemetry
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -38,7 +38,7 @@ func Init(ctx context.Context) error {
 		return err
 	}
 	otel.SetMeterProvider(MeterProvider)
-	slog.Info("OpenTelemetry initialized successfully.")
+	logger.Logger.WithContext(ctx).Info("OpenTelemetry initialized successfully.")
 	return nil
 }
 
@@ -71,10 +71,10 @@ func initMetrics(res *resource.Resource, ctx context.Context) error {
 func Shutdown(ctx context.Context) error {
 	if TracerProvider != nil {
 		if err := TracerProvider.Shutdown(ctx); err != nil {
-			slog.Error("Failed to shutdown OpenTelemetry TracerProvider")
+			logger.Logger.WithContext(ctx).Error("Failed to shutdown OpenTelemetry TracerProvider")
 			return fmt.Errorf("failed to shutdown TracerProvider: %w", err)
 		}
-		slog.Info("OpenTelemetry TracerProvider shut down.")
+		logger.Logger.WithContext(ctx).Info("OpenTelemetry TracerProvider shut down.")
 	}
 	return nil
 }

@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"os"
 
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	_ "github.com/lib/pq"
 	"go.opentelemetry.io/otel"
 
@@ -26,15 +26,15 @@ func Init(ctx context.Context) error {
 	dataSourceName := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
 	DB, err = sql.Open(driverName, dataSourceName)
 	if err != nil {
-		slog.Error("Failed to open database connection")
+		logger.Logger.WithContext(ctx).Error("Failed to open database connection")
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	if err = DB.PingContext(ctx); err != nil {
-		slog.Error("Failed to connect to database")
+		logger.Logger.WithContext(ctx).Error("Failed to connect to database")
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	slog.Info("Successfully connected to SQLite database.")
+	logger.Logger.WithContext(ctx).Info("Successfully connected to SQLite database.")
 
 	return err
 }
@@ -43,9 +43,9 @@ func Close(ctx context.Context) {
 	if DB != nil {
 		err := DB.Close()
 		if err != nil {
-			slog.Error("Failed to close database connection")
+			logger.Logger.WithContext(ctx).Error("Failed to close database connection")
 		} else {
-			slog.Info("Database connection closed.")
+			logger.Logger.WithContext(ctx).Info("Database connection closed.")
 		}
 	}
 }
