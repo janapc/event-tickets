@@ -6,6 +6,7 @@ import { CreateLeadHandler } from 'src/commands/create-lead/create-lead.handler'
 import { LeadAbstractRepository } from '@domain/lead-abstract.repository';
 import { LeadRepository } from '@infra/database/lead/lead.repository';
 import { GetLeadByEmailHandler } from '@queries/get-lead-by-email/get-lead-by-email.handler';
+import { GetLeadsHandler } from '@queries/get-leads/get-leads.handler';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { GetLeadByEmailHandler } from '@queries/get-lead-by-email/get-lead-by-em
   providers: [
     CreateLeadHandler,
     GetLeadByEmailHandler,
+    GetLeadsHandler,
     {
       provide: LeadAbstractRepository,
       useClass: LeadRepository,

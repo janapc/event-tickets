@@ -5,6 +5,7 @@ import { CreateLeadCommand } from '@commands/create-lead/create-lead.command';
 import { CreateLeadDto } from './dtos/create-lead.dto';
 import { Lead } from '@domain/lead';
 import { GetLeadByEmailQuery } from '@queries/get-lead-by-email/get-lead-by-email.query';
+import { GetLeadsQuery } from '@queries/get-leads/get-leads.query';
 
 describe('LeadController', () => {
   let controller: LeadController;
@@ -121,6 +122,29 @@ describe('LeadController', () => {
 
       await expect(controller.getByEmail(email)).rejects.toThrow(expectedError);
       expect(executeSpy).toHaveBeenCalledWith(new GetLeadByEmailQuery(email));
+    });
+  });
+
+  describe('getAll', () => {
+    it('should return all leads', async () => {
+      const lead: Lead = {
+        id: '6850496ae64e494cfaa8cf58',
+        email: 'test@test.com',
+        converted: false,
+        language: 'en',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue([lead]);
+
+      const result = await controller.getAll();
+
+      expect(executeSpy).toHaveBeenCalledWith(new GetLeadsQuery());
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(lead);
     });
   });
 });

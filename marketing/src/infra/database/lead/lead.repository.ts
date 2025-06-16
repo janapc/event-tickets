@@ -48,4 +48,19 @@ export class LeadRepository implements LeadAbstractRepository {
       updatedAt: lead.updatedAt,
     });
   }
+
+  async getAll(): Promise<Lead[]> {
+    const leads = await this.leadModel.find();
+    return leads.map(
+      (lead) =>
+        new Lead({
+          id: lead._id.toString(),
+          email: lead.email,
+          converted: lead.converted,
+          language: lead.language,
+          createdAt: lead.createdAt,
+          updatedAt: lead.updatedAt,
+        }),
+    );
+  }
 }

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './exceptions/http.exception';
 import { GetLeadByEmailQuery } from '@queries/get-lead-by-email/get-lead-by-email.query';
+import { GetLeadsQuery } from '@queries/get-leads/get-leads.query';
 
 @ApiTags('leads')
 @Controller('leads')
@@ -42,5 +43,13 @@ export class LeadController {
   @Get(':email')
   async getByEmail(@Param('email') email: string): Promise<Lead> {
     return this.queryBus.execute(new GetLeadByEmailQuery(email));
+  }
+
+  @ApiOperation({ summary: 'Get all leads' })
+  @ApiOkResponse({ description: 'Leads retrieved successfully' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @Get()
+  async getAll(): Promise<Lead[]> {
+    return this.queryBus.execute(new GetLeadsQuery());
   }
 }
