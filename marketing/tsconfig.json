@@ -20,7 +20,8 @@
     "paths": {
       "@domain/*": ["src/domain/*"],
       "@infra/*": ["src/infra/*"],
-      "@commands/*": ["src/commands/*"]
+      "@commands/*": ["src/commands/*"],
+      "@queries/*": ["src/queries/*"]
     }
   }
 }

@@ -77,7 +77,8 @@
     "moduleNameMapper": {
       "@domain/(.*)$": "<rootDir>/domain/$1",
       "@infra/(.*)$": "<rootDir>/infra/$1",
-      "@commands/(.*)$": "<rootDir>/commands/$1"
+      "@commands/(.*)$": "<rootDir>/commands/$1",
+      "@queries/(.*)$": "<rootDir>/queries/$1"
     },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

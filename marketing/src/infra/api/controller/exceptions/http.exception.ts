@@ -1,4 +1,5 @@
 import { LeadDuplicatedException } from '@domain/exceptions/lead-duplicated.exception';
+import { LeadNotFoundException } from '@domain/exceptions/lead-not-found.exception';
 import {
   ExceptionFilter,
   Catch,
@@ -11,6 +12,7 @@ import { Response, Request } from 'express';
 
 export const ErrorHttpStatusMap = new Map<string, HttpStatus>([
   [LeadDuplicatedException.name, HttpStatus.CONFLICT],
+  [LeadNotFoundException.name, HttpStatus.NOT_FOUND],
 ]);
 
 @Catch()

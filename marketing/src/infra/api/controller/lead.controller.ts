@@ -1,22 +1,28 @@
 import { Lead } from '@domain/lead';
-import { Controller, Post, Body, UseFilters } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { Controller, Post, Body, UseFilters, Get, Param } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateLeadCommand } from '@commands/create-lead/create-lead.command';
 import { CreateLeadDto } from './dtos/create-lead.dto';
 import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './exceptions/http.exception';
+import { GetLeadByEmailQuery } from '@queries/get-lead-by-email/get-lead-by-email.query';
 
 @ApiTags('leads')
 @Controller('leads')
 @UseFilters(HttpExceptionFilter)
 export class LeadController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @ApiOperation({ summary: 'Register a new lead' })
   @ApiCreatedResponse({ description: 'Lead registered successfully' })
@@ -27,5 +33,14 @@ export class LeadController {
     return this.commandBus.execute(
       new CreateLeadCommand(body.email, body.converted, body.language),
     );
+  }
+
+  @ApiOperation({ summary: 'Get lead by email' })
+  @ApiOkResponse({ description: 'Lead found successfully' })
+  @ApiNotFoundResponse({ description: 'Lead not found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @Get(':email')
+  async getByEmail(@Param('email') email: string): Promise<Lead> {
+    return this.queryBus.execute(new GetLeadByEmailQuery(email));
   }
 }

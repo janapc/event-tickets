@@ -1,13 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LeadController } from './lead.controller';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateLeadCommand } from '@commands/create-lead/create-lead.command';
 import { CreateLeadDto } from './dtos/create-lead.dto';
 import { Lead } from '@domain/lead';
+import { GetLeadByEmailQuery } from '@queries/get-lead-by-email/get-lead-by-email.query';
 
 describe('LeadController', () => {
   let controller: LeadController;
   let commandBus: CommandBus;
+  let queryBus: QueryBus;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,15 +21,24 @@ describe('LeadController', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: QueryBus,
+          useValue: {
+            execute: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<LeadController>(LeadController);
     commandBus = module.get<CommandBus>(CommandBus);
+    queryBus = module.get<QueryBus>(QueryBus);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+    expect(commandBus).toBeDefined();
+    expect(queryBus).toBeDefined();
   });
 
   describe('create', () => {
@@ -38,7 +49,7 @@ describe('LeadController', () => {
         language: 'en',
       };
       const lead: Lead = {
-        id: '1',
+        id: '6850496ae64e494cfaa8cf58',
         email: createLeadDto.email,
         converted: createLeadDto.converted,
         language: createLeadDto.language,
@@ -68,14 +79,48 @@ describe('LeadController', () => {
         converted: true,
         language: 'en',
       };
+      const expectedError = new Error('Command failed');
 
-      jest
-        .spyOn(commandBus, 'execute')
-        .mockRejectedValue(new Error('Command failed'));
+      jest.spyOn(commandBus, 'execute').mockRejectedValue(expectedError);
 
       await expect(controller.create(createLeadDto)).rejects.toThrow(
-        'Command failed',
+        expectedError,
       );
+    });
+  });
+
+  describe('getByEmail', () => {
+    it('should return a lead by email', async () => {
+      const email = 'test@test.com';
+      const lead: Lead = {
+        id: '6850496ae64e494cfaa8cf58',
+        email,
+        converted: false,
+        language: 'en',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue(lead);
+
+      const result = await controller.getByEmail(email);
+
+      expect(executeSpy).toHaveBeenCalledWith(new GetLeadByEmailQuery(email));
+      expect(result).toEqual(lead);
+    });
+
+    it('should throw an error if lead not found', async () => {
+      const email = 'error@error.com';
+      const expectedError = new Error('Lead not found');
+
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockRejectedValueOnce(expectedError);
+
+      await expect(controller.getByEmail(email)).rejects.toThrow(expectedError);
+      expect(executeSpy).toHaveBeenCalledWith(new GetLeadByEmailQuery(email));
     });
   });
 });
