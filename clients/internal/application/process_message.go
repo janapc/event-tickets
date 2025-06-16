@@ -86,7 +86,7 @@ func (p *ProcessMessage) sendTicket(ctx context.Context, input InputProcessMessa
 	if err != nil {
 		return err
 	}
-	return p.Messaging.Producer(p.SendTicketQueue, []byte(input.MessageID), sendTicketJson, ctx)
+	return p.Messaging.Producer(p.SendTicketQueue, []byte(input.MessageID), []byte(string(sendTicketJson)), ctx)
 }
 
 func (input *InputProcessMessage) Validate() error {

@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
+	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	"github.com/janapc/event-tickets/clients/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	testMock "github.com/stretchr/testify/mock"
 )
 
 func TestSaveClient(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mocks.MockClientRepository)
 	mockClient := &domain.Client{
 		ID:        "123",
