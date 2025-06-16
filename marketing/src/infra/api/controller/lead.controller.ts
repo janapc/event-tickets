@@ -15,6 +15,8 @@ import {
 import { HttpExceptionFilter } from './exceptions/http.exception';
 import { GetLeadByEmailQuery } from '@queries/get-lead-by-email/get-lead-by-email.query';
 import { GetLeadsQuery } from '@queries/get-leads/get-leads.query';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { ProcessCreatedClientCommand } from '@commands/process-created-client/process-created-client.query';
 
 @ApiTags('leads')
 @Controller('leads')
@@ -51,5 +53,18 @@ export class LeadController {
   @Get()
   async getAll(): Promise<Lead[]> {
     return this.queryBus.execute(new GetLeadsQuery());
+  }
+
+  @MessagePattern('CLIENT_CREATED_TOPIC')
+  async handleClientCreated(
+    @Payload()
+    message: {
+      messageId: string;
+      email: string;
+    },
+  ): Promise<void> {
+    return this.commandBus.execute(
+      new ProcessCreatedClientCommand(message.messageId, message.email),
+    );
   }
 }

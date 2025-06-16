@@ -35,6 +35,7 @@ describe('LeadRepository', () => {
                 _id: new mongoose.Types.ObjectId('6850496ae64e494cfaa8cf58'),
               };
             }),
+            updateOne: jest.fn(),
           },
         },
       ],
@@ -50,7 +51,7 @@ describe('LeadRepository', () => {
   });
 
   describe('save', () => {
-    it('should save a lead and return in', async () => {
+    it('should save a lead and return it', async () => {
       const inputLead = new Lead({
         email: 'email@email.com',
         converted: false,
@@ -106,6 +107,26 @@ describe('LeadRepository', () => {
         LeadNotFoundException,
       );
       expect(findOneSpy).toHaveBeenCalledWith({ email });
+    });
+  });
+
+  describe('converted', () => {
+    it('should converted a lead', async () => {
+      const updateOneSpy = jest.spyOn(leadModel, 'updateOne');
+      await expect(
+        repository.converted('test@test.com'),
+      ).resolves.toBeUndefined();
+      expect(updateOneSpy).toHaveBeenCalledTimes(1);
+    });
+    it('should throw an error when something goes wrong', async () => {
+      const expectedError = new Error('Database save failed');
+      const updateOneSpy = jest
+        .spyOn(leadModel, 'updateOne')
+        .mockRejectedValue(expectedError);
+      await expect(repository.converted('erro@error.com')).rejects.toThrow(
+        expectedError,
+      );
+      expect(updateOneSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

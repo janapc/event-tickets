@@ -63,4 +63,8 @@ export class LeadRepository implements LeadAbstractRepository {
         }),
     );
   }
+
+  async converted(email: string): Promise<void> {
+    await this.leadModel.updateOne({ email }, { converted: true });
+  }
 }

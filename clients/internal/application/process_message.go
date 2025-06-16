@@ -73,13 +73,12 @@ func (p *ProcessMessage) notifyClientCreated(ctx context.Context, client *domain
 	clientCreated := ClientCreated{
 		MessageID: uuid.New().String(),
 		Email:     client.Email,
-		HasClient: true,
 	}
 	clientCreatedJson, err := json.Marshal(clientCreated)
 	if err != nil {
 		return err
 	}
-	return p.Messaging.Producer(p.ClientCreatedQueue, []byte(clientCreated.MessageID), clientCreatedJson, ctx)
+	return p.Messaging.Producer(p.ClientCreatedQueue, []byte(clientCreated.MessageID), []byte(string(clientCreatedJson)), ctx)
 }
 
 func (p *ProcessMessage) sendTicket(ctx context.Context, input InputProcessMessage) error {

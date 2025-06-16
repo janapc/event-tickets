@@ -6,6 +6,7 @@ import { CreateLeadDto } from './dtos/create-lead.dto';
 import { Lead } from '@domain/lead';
 import { GetLeadByEmailQuery } from '@queries/get-lead-by-email/get-lead-by-email.query';
 import { GetLeadsQuery } from '@queries/get-leads/get-leads.query';
+import { ProcessCreatedClientCommand } from '@commands/process-created-client/process-created-client.query';
 
 describe('LeadController', () => {
   let controller: LeadController;
@@ -145,6 +146,25 @@ describe('LeadController', () => {
       expect(executeSpy).toHaveBeenCalledWith(new GetLeadsQuery());
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(lead);
+    });
+  });
+
+  describe('handleClientCreated', () => {
+    it('should execute handleClientCreated with correct parameters', async () => {
+      const message = {
+        email: 'test@example.com',
+        messageId: 'message123',
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+
+      await expect(
+        controller.handleClientCreated(message),
+      ).resolves.toBeUndefined();
+
+      expect(executeSpy).toHaveBeenCalledWith(
+        new ProcessCreatedClientCommand(message.messageId, message.email),
+      );
     });
   });
 });
