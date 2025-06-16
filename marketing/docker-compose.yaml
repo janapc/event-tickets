@@ -1,0 +1,25 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongodb_password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - marketing_network
+    secrets:
+      - mongodb_password
+
+volumes:
+  mongodb_data:
+
+networks:
+  marketing_network:
+
+secrets:
+  mongodb_password:
+    file: .docker/secrets/mongodb_password.txt

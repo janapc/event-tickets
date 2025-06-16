@@ -1,18 +1,26 @@
-export class Lead {
-  id?: string
-  email: string
-  converted: boolean
-  language: string
+type LeadParameters = {
+  id?: string;
+  email: string;
+  converted: boolean;
+  language: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
-  constructor(
-    email: string,
-    converted: boolean,
-    language: string,
-    id?: string,
-  ) {
-    if (id) this.id = id
-    this.email = email
-    this.converted = converted
-    this.language = language
+export class Lead {
+  id?: string;
+  email: string;
+  converted: boolean;
+  language: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+
+  constructor(parameters: LeadParameters) {
+    this.id = parameters.id;
+    this.email = parameters.email;
+    this.converted = parameters.converted;
+    this.language = parameters.language;
+    this.createdAt = parameters.createdAt;
+    this.updatedAt = parameters.updatedAt;
   }
 }

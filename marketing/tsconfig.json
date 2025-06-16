@@ -1,24 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "CommonJS",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
     "skipLibCheck": true,
-    "baseUrl": "./src",
-    "moduleResolution": "Node",
-    "outDir": "./build",
-    "resolveJsonModule": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@domain/*": ["domain/*"],
-      "@infra/*": ["infra/*"],
-      "@application/*": ["application/*"]
+      "@domain/*": ["src/domain/*"],
+      "@infra/*": ["src/infra/*"],
+      "@commands/*": ["src/commands/*"]
     }
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/infra/docs/swagger-output.json",
-    "process-env.d.ts"
-  ]
+  }
 }
