@@ -2,7 +2,7 @@ type LeadParameters = {
   id?: string;
   email: string;
   converted: boolean;
-  language: string;
+  language?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -11,7 +11,7 @@ export class Lead {
   id?: string;
   email: string;
   converted: boolean;
-  language: string;
+  language?: string;
   createdAt?: Date;
   updatedAt?: Date;
 

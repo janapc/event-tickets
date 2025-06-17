@@ -3,6 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Lead } from '@domain/lead';
 import { Inject } from '@nestjs/common';
 import { GetLeadByEmailQuery } from './get-lead-by-email.query';
+import { LeadNotFoundException } from '@domain/exceptions/lead-not-found.exception';
 
 @QueryHandler(GetLeadByEmailQuery)
 export class GetLeadByEmailHandler
@@ -14,6 +15,10 @@ export class GetLeadByEmailHandler
   ) {}
 
   async execute(query: GetLeadByEmailQuery): Promise<Lead> {
-    return await this.leadRepository.getByEmail(query.email);
+    const lead = await this.leadRepository.getByEmail(query.email);
+    if (!lead) {
+      throw new LeadNotFoundException(query.email);
+    }
+    return lead;
   }
 }

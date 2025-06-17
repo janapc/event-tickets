@@ -5,7 +5,6 @@ import { LeadDocument, LeadModel } from './lead.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { LeadDuplicatedException } from '@domain/exceptions/lead-duplicated.exception';
-import { LeadNotFoundException } from '@domain/exceptions/lead-not-found.exception';
 
 @Injectable()
 export class LeadRepository implements LeadAbstractRepository {
@@ -34,10 +33,10 @@ export class LeadRepository implements LeadAbstractRepository {
       throw error;
     }
   }
-  async getByEmail(email: string): Promise<Lead> {
+  async getByEmail(email: string): Promise<Lead | null> {
     const lead = await this.leadModel.findOne({ email });
     if (!lead) {
-      throw new LeadNotFoundException(email);
+      return null;
     }
     return new Lead({
       id: lead._id.toString(),

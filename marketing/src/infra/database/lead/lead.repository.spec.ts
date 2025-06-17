@@ -4,7 +4,6 @@ import mongoose, { Model } from 'mongoose';
 import { LeadRepository } from './lead.repository';
 import { LeadDocument, LeadModel } from './lead.schema';
 import { Lead } from '@domain/lead';
-import { LeadNotFoundException } from '@domain/exceptions/lead-not-found.exception';
 
 describe('LeadRepository', () => {
   let repository: LeadRepository;
@@ -89,23 +88,21 @@ describe('LeadRepository', () => {
       const email = 'test@test.com';
       const result = await repository.getByEmail(email);
       expect(result).toBeInstanceOf(Lead);
-      expect(result.converted).toBe(false);
-      expect(result.language).toBe('en');
-      expect(result.email).toBe(email);
-      expect(result.createdAt).toBeDefined();
-      expect(result.updatedAt).toBeDefined();
-      expect(result.id).toBeDefined();
+      expect(result!.converted).toBe(false);
+      expect(result!.language).toBe('en');
+      expect(result!.email).toBe(email);
+      expect(result!.createdAt).toBeDefined();
+      expect(result!.updatedAt).toBeDefined();
+      expect(result!.id).toBeDefined();
       expect(findOneSpy).toHaveBeenCalledWith({ email });
     });
 
-    it('should throw an error when lead is not found', async () => {
+    it('should return null when lead is not found', async () => {
       const findOneSpy = jest
         .spyOn(leadModel, 'findOne')
         .mockResolvedValue(null);
       const email = 'test2@test.com';
-      await expect(repository.getByEmail(email)).rejects.toThrow(
-        LeadNotFoundException,
-      );
+      await expect(repository.getByEmail(email)).resolves.toBeNull();
       expect(findOneSpy).toHaveBeenCalledWith({ email });
     });
   });

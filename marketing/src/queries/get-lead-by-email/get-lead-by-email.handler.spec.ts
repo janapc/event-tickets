@@ -3,6 +3,7 @@ import { LeadAbstractRepository } from '@domain/lead-abstract.repository';
 import { Lead } from '@domain/lead';
 import { GetLeadByEmailHandler } from './get-lead-by-email.handler';
 import { GetLeadByEmailQuery } from './get-lead-by-email.query';
+import { LeadNotFoundException } from '@domain/exceptions/lead-not-found.exception';
 
 describe('GetLeadByEmailHandler', () => {
   let handler: GetLeadByEmailHandler;
@@ -47,14 +48,13 @@ describe('GetLeadByEmailHandler', () => {
     expect(getByEmailSpy).toHaveBeenCalledWith(query.email);
   });
 
-  it('should rethrow other errors', async () => {
+  it('should erro if lead not found', async () => {
     const query = new GetLeadByEmailQuery('error@example.com');
-    const unexpectedError = new Error('Unexpected error');
     const findByEmailSpy = jest
       .spyOn(leadRepository, 'getByEmail')
-      .mockRejectedValueOnce(unexpectedError);
+      .mockResolvedValueOnce(null);
 
-    await expect(handler.execute(query)).rejects.toThrow(unexpectedError);
+    await expect(handler.execute(query)).rejects.toThrow(LeadNotFoundException);
     expect(findByEmailSpy).toHaveBeenCalled();
   });
 });
