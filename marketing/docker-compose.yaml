@@ -43,6 +43,30 @@ services:
     networks:
       - marketing_network
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - '16686:16686'
+      - '4317'
+    networks:
+      - marketing_network
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: collector
+    command: ['--config=/etc/otel-collector-config.yml']
+    volumes:
+      - .docker/otel-collector-config.yaml:/etc/otel-collector-config.yml
+    ports:
+      - 4318:4318
+      - 4317:4317
+    restart: always
+    depends_on:
+      - jaeger
+    networks:
+      - marketing_network
+
 volumes:
   mongodb_data:
   kafka_data:
