@@ -40,8 +40,8 @@ services:
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
     volumes:
       - 'kafka_data:/bitnami'
-    # networks:
-    #   - marketing_network
+    networks:
+      - marketing_network
 
 volumes:
   mongodb_data:
