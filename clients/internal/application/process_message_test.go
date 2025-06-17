@@ -13,6 +13,7 @@ import (
 func TestProcessMessage_Execute_NewClient(t *testing.T) {
 	mockRepo := new(mocks.MockClientRepository)
 	mockMessaging := new(mocks.MockMessaging)
+	mockEventBus := new(mocks.MockEventBus)
 
 	input := `{
   "messageId": "123",
@@ -33,21 +34,23 @@ func TestProcessMessage_Execute_NewClient(t *testing.T) {
 
 	mockRepo.On("GetByEmail", testMock.Anything, testMock.AnythingOfType("string")).Return((*domain.Client)(nil), nil)
 	mockRepo.On("Save", testMock.Anything, testMock.AnythingOfType("*domain.Client")).Return(client, nil)
-	mockMessaging.On("Producer", testMock.Anything, testMock.Anything, testMock.Anything, testMock.Anything).Return(nil)
+	mockEventBus.On("Dispatch", testMock.AnythingOfType("*events.ClientCreatedEvent")).Once()
+	mockEventBus.On("Dispatch", testMock.AnythingOfType("*events.SendTicketEvent")).Once()
 
-	processMessage := NewProcessMessage(mockRepo, mockMessaging, "clientCreatedQueue", "sendTicketQueue")
+	processMessage := NewProcessMessage(mockRepo, mockMessaging, mockEventBus)
 	ctx := context.Background()
 	err := processMessage.Execute(ctx, input)
 
 	assert.NoError(t, err)
 	mockRepo.AssertCalled(t, "GetByEmail", testMock.Anything, "john.doe@example.com")
 	mockRepo.AssertCalled(t, "Save", testMock.Anything, testMock.Anything)
-	mockMessaging.AssertNumberOfCalls(t, "Producer", 2)
+	mockEventBus.AssertNumberOfCalls(t, "Dispatch", 2)
 }
 
 func TestProcessMessage_Execute_ExistingClient(t *testing.T) {
 	mockRepo := new(mocks.MockClientRepository)
 	mockMessaging := new(mocks.MockMessaging)
+	mockEventBus := new(mocks.MockEventBus)
 
 	input := `{
   "messageId": "123",
@@ -67,9 +70,9 @@ func TestProcessMessage_Execute_ExistingClient(t *testing.T) {
 	}
 
 	mockRepo.On("GetByEmail", testMock.Anything, "john.doe@example.com").Return(client, nil)
-	mockMessaging.On("Producer", testMock.Anything, testMock.Anything, testMock.Anything, testMock.Anything).Return(nil)
+	mockEventBus.On("Dispatch", testMock.AnythingOfType("*events.SendTicketEvent")).Once()
 
-	processMessage := NewProcessMessage(mockRepo, mockMessaging, "clientCreatedQueue", "sendTicketQueue")
+	processMessage := NewProcessMessage(mockRepo, mockMessaging, mockEventBus)
 	ctx := context.Background()
 
 	err := processMessage.Execute(ctx, input)
@@ -77,12 +80,13 @@ func TestProcessMessage_Execute_ExistingClient(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertCalled(t, "GetByEmail", testMock.Anything, "john.doe@example.com")
 	mockRepo.AssertNotCalled(t, "Save", testMock.Anything, testMock.Anything)
-	mockMessaging.AssertNumberOfCalls(t, "Producer", 1)
+	mockEventBus.AssertNumberOfCalls(t, "Dispatch", 1)
 }
 
 func TestProcessMessage_Execute_InvalidInput(t *testing.T) {
 	mockRepo := new(mocks.MockClientRepository)
 	mockMessaging := new(mocks.MockMessaging)
+	mockEventBus := new(mocks.MockEventBus)
 
 	input := `{
   "messageId": "123",
@@ -95,14 +99,14 @@ func TestProcessMessage_Execute_InvalidInput(t *testing.T) {
   "language": "en"
  }`
 
-	processMessage := NewProcessMessage(mockRepo, mockMessaging, "clientCreatedQueue", "sendTicketQueue")
+	processMessage := NewProcessMessage(mockRepo, mockMessaging, mockEventBus)
 	ctx := context.Background()
 
 	err := processMessage.Execute(ctx, input)
 
 	assert.Error(t, err)
 	assert.Equal(t, "email is required", err.Error())
-	mockRepo.AssertNotCalled(t, "GetByEmail", testMock.Anything, testMock.Anything)
-	mockRepo.AssertNotCalled(t, "Save", testMock.Anything, testMock.Anything)
-	mockMessaging.AssertNotCalled(t, "Producer", testMock.Anything, testMock.Anything, testMock.Anything)
+	mockRepo.AssertNotCalled(t, "GetByEmail")
+	mockRepo.AssertNotCalled(t, "Save")
+	mockMessaging.AssertNotCalled(t, "Dispatch")
 }

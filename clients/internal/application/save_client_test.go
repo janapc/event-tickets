@@ -16,6 +16,7 @@ import (
 func TestSaveClient(t *testing.T) {
 	logger.Init()
 	mockRepo := new(mocks.MockClientRepository)
+	mockEventBus := new(mocks.MockEventBus)
 	mockClient := &domain.Client{
 		ID:        "123",
 		Name:      "new",
@@ -23,7 +24,8 @@ func TestSaveClient(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 	mockRepo.On("Save", testMock.Anything, testMock.AnythingOfType("*domain.Client")).Return(mockClient, nil)
-	saveClient := NewSaveClient(mockRepo)
+	mockEventBus.On("Dispatch", testMock.AnythingOfType("*events.ClientCreatedEvent")).Once()
+	saveClient := NewSaveClient(mockRepo, mockEventBus)
 	input := InputSaveClient{
 		Name:  "new",
 		Email: "new@test.com",
@@ -36,13 +38,16 @@ func TestSaveClient(t *testing.T) {
 	assert.Equal(t, mockClient.Name, client.Name)
 	assert.Equal(t, mockClient.Email, client.Email)
 	mockRepo.AssertCalled(t, "Save", testMock.Anything, testMock.AnythingOfType("*domain.Client"))
+	mockEventBus.AssertNumberOfCalls(t, "Dispatch", 1)
 }
 
 func TestErrorIfClientAlreadyExists(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mocks.MockClientRepository)
+	mockEventBus := new(mocks.MockEventBus)
 	expectedError := errors.New("Error: pq: duplicate key value violates unique constraint \"clients_email_key\"")
 	mockRepo.On("Save", testMock.Anything, testMock.AnythingOfType("*domain.Client")).Return(&domain.Client{}, expectedError)
-	saveClient := NewSaveClient(mockRepo)
+	saveClient := NewSaveClient(mockRepo, mockEventBus)
 	input := InputSaveClient{
 		Name:  "new",
 		Email: "existing@test.com",
@@ -52,4 +57,5 @@ func TestErrorIfClientAlreadyExists(t *testing.T) {
 	assert.Error(t, expectedError, err)
 	assert.Nil(t, client)
 	mockRepo.AssertCalled(t, "Save", testMock.Anything, testMock.AnythingOfType("*domain.Client"))
+	mockEventBus.AssertNumberOfCalls(t, "Dispatch", 0)
 }

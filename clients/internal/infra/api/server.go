@@ -18,11 +18,13 @@ import (
 
 type Server struct {
 	Repository domain.IClientRepository
+	Bus        domain.Bus
 }
 
-func NewServer(repo domain.IClientRepository) *Server {
+func NewServer(repo domain.IClientRepository, bus domain.Bus) *Server {
 	return &Server{
 		Repository: repo,
+		Bus:        bus,
 	}
 }
 
@@ -92,7 +94,7 @@ func (s *Server) HandlerSaveClient(c *fiber.Ctx) error {
 		return err
 	}
 	ctx := c.UserContext()
-	saveClient := application.NewSaveClient(s.Repository)
+	saveClient := application.NewSaveClient(s.Repository, s.Bus)
 	client, err := saveClient.Execute(ctx, *input)
 	if err != nil {
 		return err

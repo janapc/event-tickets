@@ -2,10 +2,12 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/infra/logger"
 	"github.com/janapc/event-tickets/clients/internal/infra/telemetry"
 	"github.com/segmentio/kafka-go"
@@ -24,37 +26,43 @@ func NewKafkaClient(brokers []string) *KafkaClient {
 	}
 }
 
-func (k *KafkaClient) Producer(topic string, key, value []byte, ctx context.Context) error {
+func (k *KafkaClient) Producer(params domain.ProducerParameters) error {
+	payload, err := json.Marshal(params.Value)
+	if err != nil {
+		return err
+	}
+	ctx := params.Context
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	writer := kafka.Writer{
 		Addr:                   kafka.TCP(k.Brokers...),
-		Topic:                  topic,
+		Topic:                  params.Topic,
 		Balancer:               &kafka.LeastBytes{},
 		AllowAutoTopicCreation: true,
 	}
 	defer writer.Close()
+
 	ctx, span := telemetry.Tracer.Start(ctx, "produce-message",
 		trace.WithAttributes(
 			attribute.String("messaging.system", "kafka"),
-			attribute.String("messaging.destination", topic),
+			attribute.String("messaging.destination", params.Topic),
 			attribute.String("messaging.destination_kind", "topic"),
 			attribute.String("messaging.operation", "send"),
-			attribute.String("messaging.kafka.message_key", string(key)),
-			attribute.Int("messaging.kafka.message_size", len(value)),
+			attribute.String("messaging.kafka.message_key", params.Key),
+			attribute.Int("messaging.kafka.message_size", len(payload)),
 		),
 	)
 	defer span.End()
-	err := writer.WriteMessages(ctx, kafka.Message{
-		Key:   key,
-		Value: value,
+	err = writer.WriteMessages(ctx, kafka.Message{
+		Key:   []byte(params.Key),
+		Value: payload,
 	})
 	if err != nil {
-		logger.Logger.WithContext(ctx).Errorf("Error writing message to topic %s error %v", topic, err)
+		logger.Logger.WithContext(ctx).Errorf("Error writing message to topic %s error %v", params.Topic, err)
 		return err
 	}
-	logger.Logger.WithContext(ctx).Infof("Message written to topic %s key %s", topic, string(key))
+	logger.Logger.WithContext(ctx).Infof("Message written to topic %s key %s", params.Topic, params.Key)
 	return nil
 }
 

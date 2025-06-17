@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/janapc/event-tickets/clients/internal/domain"
 	testMock "github.com/stretchr/testify/mock"
 )
 
@@ -14,7 +15,7 @@ func (m *MockMessaging) Consumer(topic, groupID string, handler func(context.Con
 	m.Called(topic, groupID, handler)
 }
 
-func (m *MockMessaging) Producer(topic string, key, value []byte, ctx context.Context) error {
-	args := m.Called(topic, key, value, ctx)
+func (m *MockMessaging) Producer(params domain.ProducerParameters) error {
+	args := m.Called(params)
 	return args.Error(0)
 }

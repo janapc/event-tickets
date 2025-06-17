@@ -7,13 +7,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/janapc/event-tickets/clients/internal/domain"
+	"github.com/janapc/event-tickets/clients/internal/domain/events"
 )
 
 type ProcessMessage struct {
-	Repository         domain.IClientRepository
-	Messaging          domain.IMessaging
-	ClientCreatedQueue string
-	SendTicketQueue    string
+	Repository domain.IClientRepository
+	Messaging  domain.IMessaging
+	Bus        domain.Bus
 }
 
 type InputProcessMessage struct {
@@ -27,18 +27,11 @@ type InputProcessMessage struct {
 	Language         string `json:"language"`
 }
 
-type ClientCreated struct {
-	MessageID string `json:"messageId"`
-	Email     string `json:"email"`
-	HasClient bool   `json:"hasClient"`
-}
-
-func NewProcessMessage(repo domain.IClientRepository, messaging domain.IMessaging, clientCreatedQueue, sendTicketQueue string) *ProcessMessage {
+func NewProcessMessage(repo domain.IClientRepository, messaging domain.IMessaging, bus domain.Bus) *ProcessMessage {
 	return &ProcessMessage{
-		Repository:         repo,
-		Messaging:          messaging,
-		ClientCreatedQueue: clientCreatedQueue,
-		SendTicketQueue:    sendTicketQueue,
+		Repository: repo,
+		Messaging:  messaging,
+		Bus:        bus,
 	}
 }
 
@@ -70,23 +63,26 @@ func (p *ProcessMessage) processClient(ctx context.Context, input InputProcessMe
 }
 
 func (p *ProcessMessage) notifyClientCreated(ctx context.Context, client *domain.Client) error {
-	clientCreated := ClientCreated{
-		MessageID: uuid.New().String(),
-		Email:     client.Email,
-	}
-	clientCreatedJson, err := json.Marshal(clientCreated)
-	if err != nil {
-		return err
-	}
-	return p.Messaging.Producer(p.ClientCreatedQueue, []byte(clientCreated.MessageID), []byte(string(clientCreatedJson)), ctx)
+	event := events.NewClientCreatedEvent(uuid.New().String(),
+		client.Email, ctx)
+	p.Bus.Dispatch(event)
+	return nil
 }
 
 func (p *ProcessMessage) sendTicket(ctx context.Context, input InputProcessMessage) error {
-	sendTicketJson, err := json.Marshal(input)
-	if err != nil {
-		return err
-	}
-	return p.Messaging.Producer(p.SendTicketQueue, []byte(input.MessageID), []byte(string(sendTicketJson)), ctx)
+	event := events.NewSendTicketEvent(events.SendTicketEvent{
+		MessageID:        input.MessageID,
+		ClientName:       input.Name,
+		Email:            input.Email,
+		EventId:          input.EventId,
+		EventName:        input.EventName,
+		EventDescription: input.EventDescription,
+		EventImageUrl:    input.EventImageUrl,
+		Language:         input.Language,
+		Context:          ctx,
+	})
+	p.Bus.Dispatch(event)
+	return nil
 }
 
 func (input *InputProcessMessage) Validate() error {
