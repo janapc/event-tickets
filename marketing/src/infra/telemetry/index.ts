@@ -9,6 +9,8 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { KafkaJsInstrumentation } from '@opentelemetry/instrumentation-kafkajs';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 
 const logger = new Logger('Telemetry');
 
@@ -18,6 +20,10 @@ const resource = resourceFromAttributes({
 
 const otelSDK = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: new OTLPMetricExporter(),
+    exportIntervalMillis: 1000,
+  }),
   instrumentations: [
     new NestInstrumentation(),
     new HttpInstrumentation(),

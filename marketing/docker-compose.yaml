@@ -64,12 +64,40 @@ services:
     restart: always
     depends_on:
       - jaeger
+      - prometheus
     networks:
       - marketing_network
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - prometheus_data:/prometheus
+      - .docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - marketing_network
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - '3001:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - marketing_network
+    secrets:
+      - grafana_user
+      - grafana_password
 
 volumes:
   mongodb_data:
   kafka_data:
+  grafana_data:
+  prometheus_data:
 
 networks:
   marketing_network:
@@ -77,3 +105,7 @@ networks:
 secrets:
   mongodb_password:
     file: .docker/secrets/mongodb_password.txt
+  grafana_user:
+    file: .docker/secrets/grafana_user.txt
+  grafana_password:
+    file: .docker/secrets/grafana_password.txt

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CqrsModule } from '@nestjs/cqrs';
-import { ControllerModule } from '@infra/api/controller/controller.module';
+import { ControllerModule } from '@infra/api/controllers/controller.module';
 
 @Module({
   imports: [

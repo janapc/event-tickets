@@ -3,10 +3,12 @@ import { LeadAbstractRepository } from '@domain/lead-abstract.repository';
 import { ProcessCreatedClientHandler } from './process-created-client.handler';
 import { ProcessCreatedClientCommand } from './process-created-client.query';
 import { Lead } from '@domain/lead';
+import { MetricsService } from '@infra/telemetry/metrics';
 
 describe('ProcessCreatedClientHandler', () => {
   let handler: ProcessCreatedClientHandler;
   let leadRepository: LeadAbstractRepository;
+  let metricsService: MetricsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +40,12 @@ describe('ProcessCreatedClientHandler', () => {
             }),
           },
         },
+        {
+          provide: MetricsService,
+          useValue: {
+            incrementLeadCreated: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -45,6 +53,7 @@ describe('ProcessCreatedClientHandler', () => {
       ProcessCreatedClientHandler,
     );
     leadRepository = module.get<LeadAbstractRepository>(LeadAbstractRepository);
+    metricsService = module.get<MetricsService>(MetricsService);
   });
 
   it('should convert a lead successfully', async () => {
@@ -63,6 +72,10 @@ describe('ProcessCreatedClientHandler', () => {
       .spyOn(leadRepository, 'getByEmail')
       .mockResolvedValueOnce(null);
     const saveSpy = jest.spyOn(leadRepository, 'save');
+    const incrementLeadCreatedSpy = jest.spyOn(
+      metricsService,
+      'incrementLeadCreated',
+    );
     const command = new ProcessCreatedClientCommand(
       'message123',
       'test@example.com',
@@ -71,5 +84,6 @@ describe('ProcessCreatedClientHandler', () => {
     await expect(handler.execute(command)).resolves.toBeUndefined();
     expect(getByEmailSpy).toHaveBeenCalledWith(command.email);
     expect(saveSpy).toHaveBeenCalled();
+    expect(incrementLeadCreatedSpy).toHaveBeenCalled();
   });
 });
