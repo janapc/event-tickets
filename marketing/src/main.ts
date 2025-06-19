@@ -5,11 +5,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { logger } from '@infra/logger';
 
 async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   await otelSdk.start();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger,
+  });
   const configService = app.get(ConfigService);
   app.useGlobalPipes(
     new ValidationPipe({
