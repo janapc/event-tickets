@@ -3,12 +3,10 @@ import { CreateLeadHandler } from './create-lead.handler';
 import { LeadAbstractRepository } from '@domain/lead-abstract.repository';
 import { CreateLeadCommand } from './create-lead.command';
 import { Lead } from '@domain/lead';
-import { MetricsService } from '@infra/telemetry/metrics';
 
 describe('CreateLeadHandler', () => {
   let handler: CreateLeadHandler;
   let leadRepository: LeadAbstractRepository;
-  let metricsService: MetricsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,26 +27,15 @@ describe('CreateLeadHandler', () => {
             }),
           },
         },
-        {
-          provide: MetricsService,
-          useValue: {
-            incrementLeadCreated: jest.fn(),
-          },
-        },
       ],
     }).compile();
 
     handler = module.get<CreateLeadHandler>(CreateLeadHandler);
     leadRepository = module.get<LeadAbstractRepository>(LeadAbstractRepository);
-    metricsService = module.get<MetricsService>(MetricsService);
   });
 
   it('should create a lead successfully', async () => {
     const saveSpy = jest.spyOn(leadRepository, 'save');
-    const incrementLeadCreatedSpy = jest.spyOn(
-      metricsService,
-      'incrementLeadCreated',
-    );
     const command = new CreateLeadCommand('test@example.com', false, 'en');
 
     const result = await handler.execute(command);
@@ -60,7 +47,6 @@ describe('CreateLeadHandler', () => {
     expect(result.createdAt).toBeDefined();
     expect(result.updatedAt).toBeDefined();
     expect(saveSpy).toHaveBeenCalledTimes(1);
-    expect(incrementLeadCreatedSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should rethrow other errors', async () => {

@@ -3,7 +3,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { ProcessCreatedClientCommand } from './process-created-client.query';
 import { Lead } from '@domain/lead';
-import { MetricsService } from '@infra/telemetry/metrics';
 
 @CommandHandler(ProcessCreatedClientCommand)
 export class ProcessCreatedClientHandler
@@ -13,7 +12,6 @@ export class ProcessCreatedClientHandler
   constructor(
     @Inject(LeadAbstractRepository)
     private readonly leadRepository: LeadAbstractRepository,
-    private readonly metricsService: MetricsService,
   ) {}
 
   async execute(command: ProcessCreatedClientCommand): Promise<void> {
@@ -35,7 +33,6 @@ export class ProcessCreatedClientHandler
         converted: true,
       }),
     );
-    this.metricsService.incrementLeadCreated();
     this.logger.log('lead created and message processed:', {
       messageId: command.messageId,
       leadId: newLead.id,

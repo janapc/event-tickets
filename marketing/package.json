@@ -28,6 +28,7 @@
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.60.1",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.202.0",
     "@opentelemetry/instrumentation-express": "^0.51.0",
     "@opentelemetry/instrumentation-http": "^0.202.0",
@@ -40,6 +41,7 @@
     "class-validator": "^0.14.2",
     "kafkajs": "^2.2.4",
     "mongoose": "^8.15.2",
+    "nestjs-otel": "^6.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

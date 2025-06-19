@@ -1,4 +1,4 @@
-import '@infra/telemetry';
+import otelSdk from '@infra/telemetry';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -7,6 +7,8 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  await otelSdk.start();
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   app.useGlobalPipes(
