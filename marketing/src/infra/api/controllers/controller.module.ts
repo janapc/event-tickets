@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LeadModel, LeadSchema } from '@infra/database/lead/lead.schema';
 import { LeadController } from './lead.controller';
@@ -8,6 +8,7 @@ import { LeadRepository } from '@infra/database/lead/lead.repository';
 import { GetLeadByEmailHandler } from '@queries/get-lead-by-email/get-lead-by-email.handler';
 import { GetLeadsHandler } from '@queries/get-leads/get-leads.handler';
 import { ProcessCreatedClientHandler } from '@commands/process-created-client/process-created-client.handler';
+import { LoggingMiddleware } from '../middlewares/logging.middleware';
 
 @Module({
   imports: [
@@ -25,4 +26,8 @@ import { ProcessCreatedClientHandler } from '@commands/process-created-client/pr
     },
   ],
 })
-export class ControllerModule {}
+export class ControllerModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes(LeadController);
+  }
+}

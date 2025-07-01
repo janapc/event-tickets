@@ -1,4 +1,25 @@
 services:
+  marketing_service:
+    build: .
+    container_name: marketing_service
+    restart: always
+    ports:
+      - '3005:3005'
+    env_file:
+      - .env.production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+        restart: true
+    networks:
+      - marketing_network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -11,6 +32,12 @@ services:
       - mongodb_data:/data/db
     networks:
       - marketing_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/local --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     secrets:
       - mongodb_password
   kafka:
@@ -92,6 +119,43 @@ services:
     secrets:
       - grafana_user
       - grafana_password
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - '9200:9200'
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    networks:
+      - marketing_network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.0.0
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./.docker/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - marketing_network
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - '5601:5601'
+    networks:
+      - marketing_network
+    depends_on:
+      - elasticsearch
 
 volumes:
   mongodb_data:

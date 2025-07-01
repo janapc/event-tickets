@@ -1,8 +1,6 @@
 export class LeadDuplicatedException extends Error {
-  field: string;
-
-  constructor(field: string) {
-    super(`Duplicate lead found for field: ${field}`);
+  constructor() {
+    super(`Duplicate lead`);
     this.name = 'LeadDuplicatedException';
   }
 }

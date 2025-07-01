@@ -28,7 +28,7 @@ export class LeadRepository implements LeadAbstractRepository {
         keyPattern?: Record<string, any>;
       };
       if (mongooseError.code === 11000) {
-        throw new LeadDuplicatedException(lead.email);
+        throw new LeadDuplicatedException();
       }
       throw error;
     }

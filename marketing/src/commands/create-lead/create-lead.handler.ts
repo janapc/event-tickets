@@ -19,7 +19,7 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
       language: command.language,
     });
     const newLead = await this.leadRepository.save(lead);
-    this.Logger.log('created lead', { id: newLead.id });
+    this.Logger.log(`created lead id: ${newLead.id}`);
     return newLead;
   }
 }
