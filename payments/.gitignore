@@ -1,36 +1,36 @@
-# compiled output
-/dist
-/node_modules
 .env
+.docker/secrets/*
+# Binaries for the current project
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
 
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# Build artifacts
+# For Go modules, the default build output is often in the current directory
+# or a specific 'bin' directory.
+# If you use 'go build -o <output_name>', include that output name.
+# Example:
+# my_application
 
-# OS
-.DS_Store
+# Dependency cache and vendor directories
+vendor/
+# The go.mod and go.sum files are essential and should NOT be ignored.
 
-# Tests
-/coverage
-/.nyc_output
+# Test cache
+# Go's test cache can grow large and is not needed in version control.
+.test_cache/
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
+# IDE and editor specific files
+.idea/ # IntelliJ IDEA
+.vscode/ # VS Code
+*.sublime-project
 *.sublime-workspace
+.DS_Store # macOS specific
+Thumbs.db # Windows specific
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Log files and temporary data
+*.log
+*.tmp
+temp/
