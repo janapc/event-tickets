@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	commandPayment "github.com/janapc/event-tickets/payments/internal/application/payment/command"
-	"github.com/janapc/event-tickets/payments/internal/application/transaction/messaging"
 	"github.com/janapc/event-tickets/payments/internal/domain/payment"
 	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
 	"github.com/janapc/event-tickets/payments/internal/infra/email"
+	"github.com/janapc/event-tickets/payments/internal/interfaces/messaging"
+	"github.com/janapc/event-tickets/payments/pkg/kafka"
 	"log"
 	"log/slog"
 	"os"
@@ -14,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/infra/database"
-	"github.com/janapc/event-tickets/payments/internal/infra/messaging/kafka"
 	"github.com/janapc/event-tickets/payments/internal/interfaces/http"
 	"github.com/janapc/event-tickets/payments/pkg/eventbus"
 	"github.com/joho/godotenv"
@@ -32,6 +33,7 @@ func init() {
 
 func main() {
 	defer database.DB.Close()
+	ctx := context.Background()
 
 	kakfaClient := kafka.NewKafkaClient([]string{os.Getenv("KAFKA_BROKERS")})
 	defer kakfaClient.WaitForShutdown()
@@ -47,17 +49,7 @@ func main() {
 	api := http.NewPaymentHandler(commandPayment.NewCreatePaymentHandler(paymentRepo, bus))
 	api.RegisterRoutes(app)
 
-	onPaymentCreated := messaging.NewOnPaymentCreated(transactionRepo, bus)
-	go kakfaClient.Consumer(os.Getenv("PAYMENT_CREATED_TOPIC"), os.Getenv("KAFKA_GROUP_ID"), onPaymentCreated.Handle)
-
-	onTransactionCreated := messaging.NewOnTransactionCreated(transactionRepo, bus)
-	go kakfaClient.Consumer(os.Getenv("TRANSACTION_CREATED_TOPIC"), os.Getenv("KAFKA_GROUP_ID"), onTransactionCreated.Handle)
-
-	onTransactionFailed := messaging.NewOnTransactionFailed(paymentRepo, bus)
-	go kakfaClient.Consumer(os.Getenv("TRANSACTION_FAILED_TOPIC"), os.Getenv("KAFKA_GROUP_ID"), onTransactionFailed.Handle)
-
-	onTransactionSucceeded := messaging.NewOnTransactionSucceeded(paymentRepo, bus)
-	go kakfaClient.Consumer(os.Getenv("TRANSACTION_SUCCEEDED_TOPIC"), os.Getenv("KAFKA_GROUP_ID"), onTransactionSucceeded.Handle)
+	messaging.RegisterAllConsumers(ctx, kakfaClient, transactionRepo, paymentRepo, bus)
 
 	app.Listen(":3000")
 }
