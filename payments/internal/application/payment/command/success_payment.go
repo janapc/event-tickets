@@ -1,8 +1,8 @@
 package command
 
 import (
+	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/payment"
-	"github.com/janapc/event-tickets/payments/pkg/eventbus"
 )
 
 type SuccessPaymentCommand struct {
@@ -18,10 +18,10 @@ type SuccessPaymentCommand struct {
 
 type SuccessPaymentHandler struct {
 	PaymentRepo payment.IPaymentRepository
-	Bus         *eventbus.EventBus
+	Bus         domain.IEventBus
 }
 
-func NewSuccessPaymentHandler(repo payment.IPaymentRepository, bus *eventbus.EventBus) *SuccessPaymentHandler {
+func NewSuccessPaymentHandler(repo payment.IPaymentRepository, bus domain.IEventBus) *SuccessPaymentHandler {
 	return &SuccessPaymentHandler{
 		PaymentRepo: repo,
 		Bus:         bus,

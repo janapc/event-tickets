@@ -1,8 +1,8 @@
 package command
 
 import (
+	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
-	"github.com/janapc/event-tickets/payments/pkg/eventbus"
 )
 
 type CreateTransactionCommand struct {
@@ -20,10 +20,10 @@ type CreateTransactionCommand struct {
 
 type CreateTransactionHandler struct {
 	TransactionRepo transaction.ITransactionRepository
-	Bus             *eventbus.EventBus
+	Bus             domain.IEventBus
 }
 
-func NewCreateTransactionHandler(repo transaction.ITransactionRepository, bus *eventbus.EventBus) *CreateTransactionHandler {
+func NewCreateTransactionHandler(repo transaction.ITransactionRepository, bus domain.IEventBus) *CreateTransactionHandler {
 	return &CreateTransactionHandler{
 		TransactionRepo: repo,
 		Bus:             bus,

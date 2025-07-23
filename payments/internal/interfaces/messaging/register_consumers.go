@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/payment"
 	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
-	"github.com/janapc/event-tickets/payments/pkg/eventbus"
 	"github.com/janapc/event-tickets/payments/pkg/kafka"
 )
 
@@ -23,7 +24,7 @@ func RegisterAllConsumers(
 	kafka *kafka.Client,
 	transactionRepo transaction.ITransactionRepository,
 	paymentRepo payment.IPaymentRepository,
-	bus *eventbus.EventBus,
+	bus domain.IEventBus,
 ) {
 	var all []ConsumerRegistration
 

@@ -59,8 +59,6 @@ networks:
   payments_network:
 
 secrets:
-  mongodb_password:
-    file: .docker/secrets/mongodb_password.txt
   postgres_password:
     file: .docker/secrets/postgres_password.txt
   postgres_user:

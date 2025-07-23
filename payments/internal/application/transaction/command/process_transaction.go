@@ -1,9 +1,10 @@
 package command
 
 import (
-	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
-	"github.com/janapc/event-tickets/payments/pkg/eventbus"
 	"log"
+
+	"github.com/janapc/event-tickets/payments/internal/domain"
+	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
 )
 
 type ProcessTransactionCommand struct {
@@ -22,10 +23,10 @@ type ProcessTransactionCommand struct {
 
 type ProcessTransactionHandler struct {
 	TransactionRepo transaction.ITransactionRepository
-	Bus             *eventbus.EventBus
+	Bus             domain.IEventBus
 }
 
-func NewProcessTransactionHandler(repo transaction.ITransactionRepository, bus *eventbus.EventBus) *ProcessTransactionHandler {
+func NewProcessTransactionHandler(repo transaction.ITransactionRepository, bus domain.IEventBus) *ProcessTransactionHandler {
 	return &ProcessTransactionHandler{
 		TransactionRepo: repo,
 		Bus:             bus,
