@@ -1,12 +1,17 @@
-export function intlMail(
-  name: string,
-  passport: string,
-  eventDescription: string,
-  eventName: string,
-  eventImageUrl: string,
-  language: string,
-): { html: string; subject: string } {
-  const body = bodyMail(language)
+interface TicketMailProps {
+  name: string;
+  passport: string;
+  eventDescription: string;
+  eventName: string;
+  eventImageUrl: string;
+  language: string;
+}
+
+export function generateTicketMail(props: TicketMailProps): {
+  html: string;
+  subject: string;
+} {
+  const body = formatBody(props.language);
   return {
     html: `
 	<!DOCTYPE html>
@@ -29,34 +34,34 @@ export function intlMail(
 	</style>
 </head>
 <body>
-	<h3>${eventName}</h3>
-	<img src="${eventImageUrl}"/>
-	<p>${eventDescription}</p>
-	<p>${name} ${body.message}</p>
-	<p class="ticket">${passport}</p>
+	<h3>${props.eventName}</h3>
+	<img src="${props.eventImageUrl}"/>
+	<p>${props.eventDescription}</p>
+	<p>${props.name} ${body.message}</p>
+	<p class="ticket">${props.passport}</p>
 </body>
 </html>
 	`,
     subject: body.subject,
-  }
+  };
 }
 
-function bodyMail(language: string): { message: string; subject: string } {
+function formatBody(language: string): { message: string; subject: string } {
   switch (language) {
     case 'pt':
       return {
         subject: 'Seu ticket chegou =)',
         message: 'aqui está seu ticket:',
-      }
+      };
     case 'en':
       return {
         subject: 'Your ticket is here =)',
         message: 'here is your passport:',
-      }
+      };
     default:
       return {
         subject: 'Your ticket is here =)',
         message: 'here is your passport:',
-      }
+      };
   }
 }

@@ -1,46 +1,84 @@
-<div align="center">
-  <h1>Ticket Service</h1>
+# Ticket Service
 
-<a href="#description">Description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#requirement">Requirement</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#usage">Usage</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-<a href="#resources">Resources</a>
+This service is responsible for generating and sending event tickets via email. It listens to Kafka messages and creates tickets in MongoDB, then sends an email to the user with their ticket.
 
-</div>
+## Features
 
-## Description
+- Listens to Kafka topic for ticket creation requests
+- Stores tickets in MongoDB
+- Sends ticket emails using configurable SMTP
+- Uses NestJS CQRS pattern
 
-This service consumes messages from the queue to send the ticket by email.
+## Getting Started
 
-## Requirement
+### Prerequisites
 
-To this project your need:
+- Docker & Docker Compose
+- Node.js (for local development)
+- Kafka broker (Bitnami image used in docker-compose)
+- MongoDB
 
-- nodejs v22 [Nodejs](https://nodejs.org/en/download)
+### Environment Variables
 
-You must create a **.env** file with the same information as in **.env_examples**
+Copy `.env-example` to `.env` and fill in the required values.
 
-## Usage
+### Docker Compose
 
-Run this commands in your terminal:
+Start dependencies (MongoDB, Kafka):
 
-```sh
-## install dependecies
-❯ npm i
-
-## run this command to start:
-❯ npm run dev
-
+```bash
+docker-compose -f tickets/docker-compose.yaml up -d
 ```
 
-## Resources
+Make sure to set the MongoDB password in `tickets/.docker/secrets/mongodb_password.txt`.
 
-- typecript
-- rabbitmq
-- mongoDB
+### Running the Service
 
-<div align="center">
+Install dependencies:
 
-Made by Janapc 🤘 [Get in touch!](https://www.linkedin.com/in/janaina-pedrina/)
+```bash
+cd tickets
+npm install
+```
 
-</div>
+Start the service:
+
+```bash
+npm run start:dev
+```
+
+Or build and run with Docker (you'll need to create a Dockerfile):
+
+```bash
+docker build -t ticket-service .
+docker run --env-file .env --network=ticket_network ticket-service
+```
+
+### Kafka Topic
+
+The service listens to the topic specified by `SEND_TICKET_TOPIC` (default: `SEND_TICKET_TOPIC`). Example message:
+
+```json
+{
+  "messageId": "ab8e2d04-a375-40df-a9d1-1c4f7135283d",
+  "email": "email@email1.com",
+  "name": "test",
+  "eventId": "12345",
+  "eventName": "Test Event",
+  "eventDescription": "Test Event",
+  "eventImageUrl": "https://example.com/image.jpg",
+  "language": "en"
+}
+```
+
+### Testing
+
+Run unit tests:
+
+```bash
+npm run test
+```
+### Useful Commands
+
+- `npm run start:dev` - Start in development mode
+- `npm run test` - Run tests
