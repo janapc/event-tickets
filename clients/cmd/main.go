@@ -63,7 +63,7 @@ func main() {
 	api := api.NewServer(repository, bus)
 
 	processMessage := application.NewProcessMessage(repository, kakfaClient, bus)
-	go kakfaClient.Consumer(os.Getenv("SUCCESS_PAYMENT_TOPIC"), os.Getenv("KAFKA_GROUP_ID"), processMessage.Execute)
+	go kakfaClient.Consumer(os.Getenv("PAYMENT_SUCCEEDED_TOPIC"), os.Getenv("KAFKA_GROUP_ID"), processMessage.Execute)
 	api.Init(port)
 }
 
