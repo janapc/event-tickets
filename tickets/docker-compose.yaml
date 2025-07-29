@@ -1,6 +1,23 @@
 services:
+  tickets_service:
+    build: .
+    container_name: tickets_service
+    env_file:
+      - .env.production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - ticket_network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.12
     container_name: mongodb
     ports:
       - '27017:27017'

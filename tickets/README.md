@@ -47,28 +47,18 @@ Start the service:
 npm run start:dev
 ```
 
-Or build and run with Docker (you'll need to create a Dockerfile):
+Alternatively, you can run the service using Docker Compose:
 
 ```bash
-docker build -t ticket-service .
-docker run --env-file .env --network=ticket_network ticket-service
+docker compose -f tickets/docker-compose.yaml up --build -d
 ```
 
 ### Kafka Topic
 
-The service listens to the topic specified by `SEND_TICKET_TOPIC` (default: `SEND_TICKET_TOPIC`). Example message:
+The service listens to the topic specified by `SEND_TICKET_TOPIC`. Example message:
 
-```json
-{
-  "messageId": "ab8e2d04-a375-40df-a9d1-1c4f7135283d",
-  "email": "email@email1.com",
-  "name": "test",
-  "eventId": "12345",
-  "eventName": "Test Event",
-  "eventDescription": "Test Event",
-  "eventImageUrl": "https://example.com/image.jpg",
-  "language": "en"
-}
+```txt
+{"messageId": "ab8e2d04-a375-40df-a9d1-1c4f7135283d","email": "email@email1.com","name": "test","eventId": "987","eventName": "Test Event","eventDescription": "Test Event","eventImageUrl": "https://example.com/image.jpg","language": "en"}
 ```
 
 ### Testing
