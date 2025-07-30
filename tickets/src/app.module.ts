@@ -4,9 +4,19 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventModule } from './interfaces/event/event.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { OpenTelemetryModule } from 'nestjs-otel';
 
 @Module({
   imports: [
+    OpenTelemetryModule.forRoot({
+      metrics: {
+        hostMetrics: true,
+        apiMetrics: {
+          enable: true,
+          ignoreUndefinedRoutes: false,
+        },
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),

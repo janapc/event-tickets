@@ -10,7 +10,7 @@ services:
       kafka:
         condition: service_healthy
     networks:
-      - ticket_network
+      - tickets_network
     logging:
       driver: 'json-file'
       options:
@@ -27,7 +27,7 @@ services:
     volumes:
       - mongodb_data:/data/db
     networks:
-      - ticket_network
+      - tickets_network
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/local --quiet
       interval: 10s
@@ -64,15 +64,108 @@ services:
     volumes:
       - 'kafka_data:/bitnami'
     networks:
-      - ticket_network
+      - tickets_network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - '16686:16686'
+      - '4317'
+    networks:
+      - tickets_network
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: collector
+    command: ['--config=/etc/otel-collector-config.yml']
+    volumes:
+      - .docker/otel-collector-config.yaml:/etc/otel-collector-config.yml
+    ports:
+      - 4318:4318
+      - 4317:4317
+    restart: always
+    depends_on:
+      - jaeger
+      - prometheus
+    networks:
+      - tickets_network
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - prometheus_data:/prometheus
+      - .docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - tickets_network
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - '3001:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - tickets_network
+    secrets:
+      - grafana_user
+      - grafana_password
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - '9200:9200'
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    networks:
+      - tickets_network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.0.0
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./.docker/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - tickets_network
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - '5601:5601'
+    networks:
+      - tickets_network
+    depends_on:
+      - elasticsearch
 
 volumes:
   mongodb_data:
   kafka_data:
+  grafana_data:
+  prometheus_data:
 
 networks:
-  ticket_network:
+  tickets_network:
 
 secrets:
   mongodb_password:
     file: .docker/secrets/mongodb_password.txt
+  grafana_user:
+    file: .docker/secrets/grafana_user.txt
+  grafana_password:
+    file: .docker/secrets/grafana_password.txt

@@ -19,7 +19,9 @@ export class CreateTicketHandler
   ) {}
 
   async execute(command: CreateTicketCommand): Promise<void> {
-    this.Logger.log(`Creating ticket for eventId: ${command.eventId}`);
+    this.Logger.log(
+      `Creating ticket for eventId: ${command.eventId} with messageId: ${command.messageId}`,
+    );
     const ticket = new Ticket({
       email: command.email,
       eventId: command.eventId,
@@ -39,5 +41,8 @@ export class CreateTicketHandler
       html: mail.html,
       from: process.env.MAIL_FROM!,
     });
+    this.Logger.log(
+      `Ticket created successfully with id ${newTicket.id} for eventId: ${command.eventId} and messageId: ${command.messageId}`,
+    );
   }
 }

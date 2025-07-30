@@ -1,4 +1,5 @@
 export interface CreateTicketCommandProps {
+  messageId: string;
   name: string;
   email: string;
   eventId: string;
@@ -9,6 +10,7 @@ export interface CreateTicketCommandProps {
 }
 
 export class CreateTicketCommand {
+  messageId: string;
   name: string;
   email: string;
   eventId: string;
@@ -18,6 +20,7 @@ export class CreateTicketCommand {
   language: string;
 
   constructor(props: CreateTicketCommandProps) {
+    this.messageId = props.messageId;
     this.name = props.name;
     this.email = props.email;
     this.eventId = props.eventId;

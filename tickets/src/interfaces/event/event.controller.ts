@@ -4,7 +4,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { SendTicketDto } from './dto/send-ticket.dto';
 
-@Controller('events')
+@Controller()
 export class EventController {
   constructor(private readonly commandBus: CommandBus) {}
 
@@ -12,6 +12,7 @@ export class EventController {
   async sendTicket(@Payload() message: SendTicketDto): Promise<void> {
     await this.commandBus.execute(
       new CreateTicketCommand({
+        messageId: message.messageId,
         name: message.name,
         email: message.email,
         eventId: message.eventId,

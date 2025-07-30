@@ -1,10 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { MailAbstract, SendMailProps } from '@domain/mail';
 
 @Injectable()
 export class MailService implements MailAbstract {
-  private logger = new Logger(MailService.name);
   constructor(private readonly mailerService: MailerService) {}
 
   async sendMail(props: SendMailProps) {
@@ -15,6 +14,5 @@ export class MailService implements MailAbstract {
       text: props.text,
       html: props.html,
     });
-    this.logger.log('Mail sent successfully');
   }
 }
