@@ -1,4 +1,4 @@
-import { start } from './infra/telemetry';
+import Telemetry from './infra/telemetry';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
@@ -7,7 +7,8 @@ import { ConfigService } from '@nestjs/config';
 import { logger } from '@infra/logger';
 
 async function bootstrap() {
-  start();
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  await Telemetry.start();
   const app = await NestFactory.create(AppModule, {
     logger,
   });

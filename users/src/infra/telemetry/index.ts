@@ -1,15 +1,12 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import * as process from 'process';
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
-import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
-import { MongooseInstrumentation } from '@opentelemetry/instrumentation-mongoose';
 import { Logger } from '@nestjs/common';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
-const logger = new Logger('Tracing');
+const logger = new Logger('Telemetry');
 
 const otelSDK = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
@@ -17,13 +14,10 @@ const otelSDK = new NodeSDK({
     exporter: new OTLPMetricExporter(),
     exportIntervalMillis: 1000,
   }),
-  instrumentations: [
-    new HttpInstrumentation(),
-    new ExpressInstrumentation(),
-    new NestInstrumentation(),
-    new MongooseInstrumentation(),
-  ],
+  instrumentations: [getNodeAutoInstrumentations()],
 });
+
+export default otelSDK;
 
 process.on('SIGTERM', () => {
   otelSDK
@@ -34,14 +28,3 @@ process.on('SIGTERM', () => {
     )
     .finally(() => process.exit(0));
 });
-
-export function start() {
-  if (process.env.ENV === 'PROD') {
-    try {
-      otelSDK.start();
-      logger.log('OpenTelemetry initialized');
-    } catch (err) {
-      logger.error('OpenTelemetry init failed', err);
-    }
-  }
-}
