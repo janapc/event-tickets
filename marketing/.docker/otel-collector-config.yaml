@@ -11,13 +11,17 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  otlphttp/apm:
+    endpoint: http://apm_server:8200
+    tls:
+      insecure: true
   prometheus:
     endpoint: 0.0.0.0:9090
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [otlp/jaeger]
+      exporters: [otlp/jaeger, otlphttp/apm]
     metrics:
       receivers: [otlp]
       exporters: [prometheus]
