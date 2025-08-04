@@ -20,8 +20,8 @@ func (h *TraceContextHook) Fire(entry *logrus.Entry) error {
 	spanCtx := span.SpanContext()
 
 	if spanCtx.IsValid() {
-		entry.Data["trace.id"] = spanCtx.TraceID().String()
-		entry.Data["span.id"] = spanCtx.SpanID().String()
+		entry.Data["trace_id"] = spanCtx.TraceID().String()
+		entry.Data["span_id"] = spanCtx.SpanID().String()
 	}
 	return nil
 }

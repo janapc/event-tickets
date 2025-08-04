@@ -44,12 +44,12 @@ func (s *Server) Init(port string) {
 		app.Use(middleware.OtelMetricMiddleware())
 	}
 	app.Use(healthcheck.New(healthcheck.Config{
-		LivenessEndpoint:  "/clients/healthcheck/live",
-		ReadinessEndpoint: "/clients/healthcheck/ready",
+		LivenessEndpoint:  "/healthcheck/live",
+		ReadinessEndpoint: "/healthcheck/ready",
 	}))
 	app.Get("/clients", s.HandlerGetClientByEmail)
 	app.Post("/clients", s.HandlerSaveClient)
-	app.Get("/clients/docs/*", swagger.HandlerDefault)
+	app.Get("/api/*", swagger.HandlerDefault)
 	addr := fmt.Sprintf(":%s", port)
 	if err := app.Listen(addr); err != nil {
 		logger.Logger.Errorf("Failed to start server error: %v", err)

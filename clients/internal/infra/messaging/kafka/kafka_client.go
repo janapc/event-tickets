@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/infra/logger"
@@ -43,15 +44,13 @@ func (k *KafkaClient) Producer(params domain.ProducerParameters) error {
 	}
 	defer writer.Close()
 
-	ctx, span := telemetry.Tracer.Start(ctx, "produce-message",
-		trace.WithAttributes(
-			attribute.String("messaging.system", "kafka"),
-			attribute.String("messaging.destination", params.Topic),
-			attribute.String("messaging.destination_kind", "topic"),
-			attribute.String("messaging.operation", "send"),
-			attribute.String("messaging.kafka.message_key", params.Key),
-			attribute.Int("messaging.kafka.message_size", len(payload)),
-		),
+	ctx, span := k.startTrace(ctx, "produce-message",
+		attribute.String("messaging.system", "kafka"),
+		attribute.String("messaging.destination", params.Topic),
+		attribute.String("messaging.destination_kind", "topic"),
+		attribute.String("messaging.operation", "send"),
+		attribute.String("messaging.kafka.message_key", params.Key),
+		attribute.Int("messaging.kafka.message_size", len(payload)),
 	)
 	defer span.End()
 	err = writer.WriteMessages(ctx, kafka.Message{
@@ -71,8 +70,9 @@ func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Conte
 		Brokers:  k.Brokers,
 		GroupID:  groupID,
 		Topic:    topic,
-		MinBytes: 1e3,
+		MinBytes: 1, //dev
 		MaxBytes: 10e6,
+		MaxWait:  100 * time.Millisecond,
 	})
 	k.readers = append(k.readers, reader)
 
@@ -86,18 +86,17 @@ func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Conte
 				logger.Logger.WithContext(ctx).Errorf("Error reading from topic %s error %v", topic, err)
 				continue
 			}
-			ctx, span := telemetry.Tracer.Start(ctx, "kafka-consume",
-				trace.WithAttributes(
-					attribute.String("messaging.system", "kafka"),
-					attribute.String("messaging.destination", msg.Topic),
-					attribute.String("messaging.destination_kind", "topic"),
-					attribute.String("messaging.operation", "receive"),
-					attribute.String("messaging.kafka.message_key", string(msg.Key)),
-					attribute.Int("messaging.kafka.partition", msg.Partition),
-					attribute.Int64("messaging.kafka.offset", msg.Offset),
-					attribute.Int("messaging.kafka.message_size", len(msg.Value)),
-				),
+			ctx, span := k.startTrace(ctx, "kafka-consume",
+				attribute.String("messaging.system", "kafka"),
+				attribute.String("messaging.destination", msg.Topic),
+				attribute.String("messaging.destination_kind", "topic"),
+				attribute.String("messaging.operation", "receive"),
+				attribute.String("messaging.kafka.message_key", string(msg.Key)),
+				attribute.Int("messaging.kafka.partition", msg.Partition),
+				attribute.Int64("messaging.kafka.offset", msg.Offset),
+				attribute.Int("messaging.kafka.message_size", len(msg.Value)),
 			)
+
 			logger.Logger.WithContext(ctx).Infof("Received message topic %s key %s", topic, string(msg.Key))
 			if err := handler(ctx, string(msg.Value)); err != nil {
 				logger.Logger.WithContext(ctx).Errorf("Error processing message topic %s error %v", topic, err)
@@ -117,4 +116,12 @@ func (k *KafkaClient) WaitForShutdown() {
 	for _, r := range k.readers {
 		r.Close()
 	}
+}
+
+func (k *KafkaClient) startTrace(ctx context.Context, name string, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
+	env := os.Getenv("ENV")
+	if env != "PROD" {
+		return ctx, trace.SpanFromContext(ctx)
+	}
+	return telemetry.Tracer.Start(ctx, name, trace.WithAttributes(attrs...))
 }
