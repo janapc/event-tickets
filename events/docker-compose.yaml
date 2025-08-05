@@ -1,5 +1,6 @@
 services:
   events_service:
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,7 +16,7 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-      - .env
+      - .env.production
     networks:
       - events_network
 
@@ -132,6 +133,25 @@ services:
     depends_on:
       - jaeger
       - prometheus
+    networks:
+      - events_network
+
+  apm_server:
+    image: docker.elastic.co/apm/apm-server:9.0.1
+    container_name: apm_server
+    depends_on:
+      - elasticsearch
+      - kibana
+    environment:
+      - output.elasticsearch.hosts=["http://elasticsearch:9200"]
+      - apm-server.auth.anonymous.enabled=true
+      - apm-server.auth.anonymous.allow_agent=["opentelemetry"]
+      - apm-server.auth.anonymous.allow_service=["app"]
+      - apm-server.kibana.enabled=true
+      - apm-server.kibana.host=http://kibana:5601
+      - setup.kibana.host=http://kibana:5601
+    ports:
+      - "8200:8200"
     networks:
       - events_network
 

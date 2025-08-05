@@ -15,6 +15,10 @@ exporters:
       insecure: true
   prometheus:
     endpoint: 0.0.0.0:8889
+  otlphttp/apm:
+    endpoint: http://apm_server:8200
+    tls:
+      insecure: true
 
 processors:
   batch:
@@ -23,7 +27,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [otlp/jaeger]
+      exporters: [otlp/jaeger, otlphttp/apm]
     metrics:
       receivers: [otlp]
       exporters: [prometheus]
