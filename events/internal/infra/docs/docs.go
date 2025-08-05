@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/": {
+        "/events": {
             "get": {
                 "security": [
                     {
@@ -58,7 +58,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/": {
+        "/events/admin/": {
             "post": {
                 "security": [
                     {
@@ -96,7 +96,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/{id}": {
+        "/events/admin/{id}": {
             "put": {
                 "security": [
                     {
@@ -180,7 +180,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{id}": {
+        "/events/{id}": {
             "get": {
                 "security": [
                     {
@@ -196,9 +196,8 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "event id",
+                        "type": "integer",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -379,7 +378,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:3001/",
+	Host:             "",
 	BasePath:         "events",
 	Schemes:          []string{},
 	Title:            "Events API",

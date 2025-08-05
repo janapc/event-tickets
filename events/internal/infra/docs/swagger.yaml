@@ -92,14 +92,13 @@ definitions:
       totalPages:
         type: integer
     type: object
-host: localhost:3001/
 info:
   contact: {}
   description: api to manager events
   title: Events API
   version: "1.0"
 paths:
-  /:
+  /events:
     get:
       consumes:
       - application/json
@@ -126,18 +125,17 @@ paths:
           description: Internal Server Error
       security:
       - BearerAuth: []
-  /{id}:
+  /events/{id}:
     get:
       consumes:
       - application/json
       description: get a event by id
       parameters:
-      - description: event id
-        format: uuid
+      - description: Event ID
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -153,7 +151,7 @@ paths:
           description: Internal Server Error
       security:
       - BearerAuth: []
-  /admin/:
+  /events/admin/:
     post:
       consumes:
       - application/json
@@ -176,7 +174,7 @@ paths:
           description: Internal Server Error
       security:
       - BearerAuth: []
-  /admin/{id}:
+  /events/admin/{id}:
     delete:
       consumes:
       - application/json

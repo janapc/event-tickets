@@ -55,10 +55,10 @@ func (g *GetEvents) Execute(ctx context.Context, page, size int) (OutputGetEvent
 	page, size = formatPagination(page, size)
 	events, pagination, err := g.Repository.List(ctx, page, size)
 	if err != nil {
-		return OutputGetEventsDTO{}, err
+		return OutputGetEventsDTO{Events: []EventsOutputDTO{}, Pagination: pagination}, err
 	}
 	if len(events) == 0 {
-		return OutputGetEventsDTO{}, nil
+		return OutputGetEventsDTO{Events: []EventsOutputDTO{}, Pagination: pagination}, nil
 	}
 	var eventsResponse []EventsOutputDTO
 	for _, event := range events {

@@ -6,10 +6,9 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:3001/",
     "basePath": "events",
     "paths": {
-        "/": {
+        "/events": {
             "get": {
                 "security": [
                     {
@@ -52,7 +51,7 @@
                 }
             }
         },
-        "/admin/": {
+        "/events/admin/": {
             "post": {
                 "security": [
                     {
@@ -90,7 +89,7 @@
                 }
             }
         },
-        "/admin/{id}": {
+        "/events/admin/{id}": {
             "put": {
                 "security": [
                     {
@@ -174,7 +173,7 @@
                 }
             }
         },
-        "/{id}": {
+        "/events/{id}": {
             "get": {
                 "security": [
                     {
@@ -190,9 +189,8 @@
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "event id",
+                        "type": "integer",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true

@@ -20,8 +20,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-const ROUTE_PREFIX = "/events"
-
 type Api struct {
 	Repository domain.IEventRepository
 }
@@ -59,9 +57,8 @@ func (a *Api) Init(port string) {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
-	baseUrlDocs := fmt.Sprintf("%s/docs/doc.json", os.Getenv("BASE_API_URL"))
-	r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL(baseUrlDocs)))
-	r.Route(ROUTE_PREFIX, func(r chi.Router) {
+	r.Mount("/api", httpSwagger.WrapHandler)
+	r.Route("/events", func(r chi.Router) {
 		r.Use(md.LoggingMiddleware)
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
@@ -71,7 +68,8 @@ func (a *Api) Init(port string) {
 		r.Mount("/admin", a.adminRouter())
 	})
 	logger.Logger.Infof("Server running port: %s", port)
-	if err := http.ListenAndServe(port, r); err != nil {
+	portString := fmt.Sprintf(":%s", port)
+	if err := http.ListenAndServe(portString, r); err != nil {
 		logger.Logger.Fatalf("Error starting server: %v", err)
 	}
 }
@@ -93,7 +91,7 @@ func (a *Api) adminRouter() http.Handler {
 // @Param size query int false "Page size" default(10)
 // @Success 200 {object} application.OutputGetEventsDTO
 // @Failure 500
-// @Router / [get]
+// @Router /events [get]
 // @Security BearerAuth
 func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
@@ -121,12 +119,12 @@ func (a *Api) GetEvents(w http.ResponseWriter, r *http.Request) {
 // @Description get a event by id
 // @Accept json
 // @Produce json
-// @Param id path string true "event id" Format(uuid)
+// @Param id path int  true  "Event ID"
 // @Success 200 {object} domain.Event
 // @Failure 400
 // @Failure 404
 // @Failure 500
-// @Router /{id} [get]
+// @Router /events/{id} [get]
 // @Security BearerAuth
 func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
@@ -157,7 +155,7 @@ func (a *Api) GetEventById(w http.ResponseWriter, r *http.Request) {
 // @Success 204
 // @Failure 404
 // @Failure 500
-// @Router /admin/{id} [delete]
+// @Router /events/admin/{id} [delete]
 // @Security BearerAuth
 func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
@@ -184,7 +182,7 @@ func (a *Api) RemoveEvent(w http.ResponseWriter, r *http.Request) {
 // @Success 201
 // @Failure 400
 // @Failure 500
-// @Router /admin/ [post]
+// @Router /events/admin/ [post]
 // @Security BearerAuth
 func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
@@ -222,7 +220,7 @@ func (a *Api) RegisterEvent(w http.ResponseWriter, r *http.Request) {
 // @Failure 400
 // @Failure 404
 // @Failure 500
-// @Router /admin/{id} [put]
+// @Router /events/admin/{id} [put]
 // @Security BearerAuth
 func (a *Api) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")

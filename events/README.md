@@ -23,18 +23,6 @@ cd event-tickets/events
 cp .env_example .env
 ```
 
-Edit the `.env` file with your preferred configuration:
-```
-PORT=:3001
-DB_HOST=localhost       # Use postgres-database for Docker
-DB_PORT=5432
-DB_USER=root
-DB_PASSWORD=root
-DB_NAME=event_tickets
-JWT_SECRET=secret
-BASE_API_URL=http://localhost:3001
-```
-
 3. Install dependencies:
 ```sh
 go mod tidy
@@ -82,7 +70,7 @@ This project includes integrated monitoring and logging tools:
 
 Swagger documentation is automatically generated and available at:
 ```
-http://localhost:3001/docs/index.html
+http://localhost:3001/api/index.html
 ```
 
 ## Development

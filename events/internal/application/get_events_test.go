@@ -54,7 +54,8 @@ func TestReturnErrorIfRepositoryListCallFails(t *testing.T) {
 	ctx := context.Background()
 	events, err := getEvents.Execute(ctx, 1, 10)
 	assert.Error(t, err)
-	assert.Empty(t, events)
+	assert.Empty(t, events.Pagination)
+	assert.Len(t, events.Events, 0)
 }
 
 func TestListEmpty(t *testing.T) {
@@ -64,7 +65,8 @@ func TestListEmpty(t *testing.T) {
 	ctx := context.Background()
 	events, err := getEvents.Execute(ctx, 1, 10)
 	assert.Empty(t, err)
-	assert.Empty(t, events)
+	assert.Empty(t, events.Pagination)
+	assert.Len(t, events.Events, 0)
 	mockRepo.AssertCalled(t, "List", ctx, 1, 10)
 }
 
