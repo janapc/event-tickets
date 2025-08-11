@@ -1,16 +1,19 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 	"github.com/janapc/event-tickets/payments/internal/mock"
 	"github.com/stretchr/testify/assert"
 	testMock "github.com/stretchr/testify/mock"
 )
 
 func TestProcessTransaction_Success(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.TransactionRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
@@ -20,8 +23,8 @@ func TestProcessTransaction_Success(t *testing.T) {
 		PaymentID: "pay_1",
 		Reason:    "-",
 	}
-	mockRepo.On("FindByID", "tx123").Return(tx, nil)
-	mockRepo.On("Update", tx).Return(nil)
+	mockRepo.On("FindByID", testMock.Anything, "tx123").Return(tx, nil)
+	mockRepo.On("Update", testMock.Anything, tx).Return(nil)
 	mockBus.On("Publish", testMock.AnythingOfType("*transaction.SucceededEvent"))
 
 	handler := NewProcessTransactionHandler(mockRepo, mockBus)
@@ -38,16 +41,17 @@ func TestProcessTransaction_Success(t *testing.T) {
 		PaymentID:        "pay_1",
 		Amount:           100.0,
 	}
-
-	err := handler.Handle(cmd)
+	ctx := context.Background()
+	err := handler.Handle(ctx, cmd)
 	assert.NoError(t, err)
-	mockRepo.AssertCalled(t, "FindByID", "tx123")
-	mockRepo.AssertCalled(t, "Update", tx)
+	mockRepo.AssertCalled(t, "FindByID", ctx, "tx123")
+	mockRepo.AssertCalled(t, "Update", ctx, tx)
 	mockBus.AssertCalled(t, "Publish", testMock.AnythingOfType("*transaction.SucceededEvent"))
 	mockBus.AssertNotCalled(t, "Publish", testMock.AnythingOfType("*transaction.FailedEvent"))
 }
 
 func TestProcessTransaction_Failed_InvalidPaymentData(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.TransactionRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
@@ -57,8 +61,8 @@ func TestProcessTransaction_Failed_InvalidPaymentData(t *testing.T) {
 		PaymentID: "pay_1",
 		Reason:    "-",
 	}
-	mockRepo.On("FindByID", "tx124").Return(tx, nil)
-	mockRepo.On("Update", tx).Return(nil)
+	mockRepo.On("FindByID", testMock.Anything, "tx124").Return(tx, nil)
+	mockRepo.On("Update", testMock.Anything, tx).Return(nil)
 	mockBus.On("Publish", testMock.AnythingOfType("*transaction.FailedEvent"))
 
 	handler := NewProcessTransactionHandler(mockRepo, mockBus)
@@ -76,15 +80,17 @@ func TestProcessTransaction_Failed_InvalidPaymentData(t *testing.T) {
 		Amount:           0,
 	}
 
-	err := handler.Handle(cmd)
+	ctx := context.Background()
+	err := handler.Handle(ctx, cmd)
 	assert.NoError(t, err)
-	mockRepo.AssertCalled(t, "FindByID", "tx124")
-	mockRepo.AssertCalled(t, "Update", tx)
+	mockRepo.AssertCalled(t, "FindByID", ctx, "tx124")
+	mockRepo.AssertCalled(t, "Update", ctx, tx)
 	mockBus.AssertCalled(t, "Publish", testMock.AnythingOfType("*transaction.FailedEvent"))
 	mockBus.AssertNotCalled(t, "Publish", testMock.AnythingOfType("*transaction.SucceededEvent"))
 }
 
 func TestProcessTransaction_Failed_GatewayReject(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.TransactionRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
@@ -94,8 +100,8 @@ func TestProcessTransaction_Failed_GatewayReject(t *testing.T) {
 		PaymentID: "pay_1",
 		Reason:    "-",
 	}
-	mockRepo.On("FindByID", "tx125").Return(tx, nil)
-	mockRepo.On("Update", tx).Return(nil)
+	mockRepo.On("FindByID", testMock.Anything, "tx125").Return(tx, nil)
+	mockRepo.On("Update", testMock.Anything, tx).Return(nil)
 	mockBus.On("Publish", testMock.AnythingOfType("*transaction.FailedEvent"))
 
 	handler := NewProcessTransactionHandler(mockRepo, mockBus)
@@ -113,19 +119,21 @@ func TestProcessTransaction_Failed_GatewayReject(t *testing.T) {
 		Amount:           50.0,
 	}
 
-	err := handler.Handle(cmd)
+	ctx := context.Background()
+	err := handler.Handle(ctx, cmd)
 	assert.NoError(t, err)
-	mockRepo.AssertCalled(t, "FindByID", "tx125")
-	mockRepo.AssertCalled(t, "Update", tx)
+	mockRepo.AssertCalled(t, "FindByID", ctx, "tx125")
+	mockRepo.AssertCalled(t, "Update", ctx, tx)
 	mockBus.AssertCalled(t, "Publish", testMock.AnythingOfType("*transaction.FailedEvent"))
 	mockBus.AssertNotCalled(t, "Publish", testMock.AnythingOfType("*transaction.SucceededEvent"))
 }
 
 func TestProcessTransaction_FindByID_Error(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.TransactionRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
-	mockRepo.On("FindByID", "tx126").Return(&transaction.Transaction{}, errors.New("not found"))
+	mockRepo.On("FindByID", testMock.Anything, "tx126").Return(&transaction.Transaction{}, errors.New("not found"))
 
 	handler := NewProcessTransactionHandler(mockRepo, mockBus)
 	cmd := ProcessTransactionCommand{
@@ -142,9 +150,10 @@ func TestProcessTransaction_FindByID_Error(t *testing.T) {
 		Amount:           30.0,
 	}
 
-	err := handler.Handle(cmd)
+	ctx := context.Background()
+	err := handler.Handle(ctx, cmd)
 	assert.EqualError(t, err, "not found")
-	mockRepo.AssertCalled(t, "FindByID", "tx126")
-	mockRepo.AssertNotCalled(t, "Update", testMock.Anything)
+	mockRepo.AssertCalled(t, "FindByID", ctx, "tx126")
+	mockRepo.AssertNotCalled(t, "Update", ctx, testMock.Anything)
 	mockBus.AssertNotCalled(t, "Publish", testMock.Anything)
 }

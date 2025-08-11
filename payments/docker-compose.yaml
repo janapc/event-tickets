@@ -1,4 +1,27 @@
 services:
+  payments_service:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payments_service
+    ports:
+      - "3000:3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    networks:
+      - payments_network
+
   postgres:
     image: postgres:14.18
     container_name: postgres
@@ -21,43 +44,169 @@ services:
     secrets:
       - postgres_password
       - postgres_user
-  kafka:
-    image: "confluentinc/cp-kafka:latest"
-    container_name: kafka
-    ports:
-      - "9092:9092"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
     environment:
-      - KAFKA_NODE_ID=1
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
-      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
-      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-      - KAFKA_PROCESS_ROLES=broker,controller
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:29093
-      - KAFKA_LISTENERS=PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
-      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
-      - KAFKA_CREATE_TOPICS=PAYMENT_CREATED_TOPIC:1:1,PAYMENT_SUCCEEDED_TOPIC:1:1,TRANSACTION_CREATED_TOPIC:1:1,TRANSACTION_FAILED_TOPIC:1:1,TRANSACTION_SUCCEEDED_TOPIC:1:1
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - payments_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - payments_network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.0.0
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./.docker/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - payments_network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - .docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - payments_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3006:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - payments_network
+    secrets:
+      - grafana_user
+      - grafana_password
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317"
+    networks:
+      - payments_network
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: collector
+    volumes:
+      - .docker/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    command: --config /etc/otelcol-contrib/config.yaml
+    ports:
+      - 4318:4318
+      - 4317:4317
+      - 8889:8889 # Prometheus exporter metrics
+    restart: always
+    depends_on:
+      - jaeger
+      - prometheus
+    networks:
+      - payments_network
+
+  apm_server:
+    image: docker.elastic.co/apm/apm-server:9.0.1
+    container_name: apm_server
+    depends_on:
+      - elasticsearch
+      - kibana
+    environment:
+      - output.elasticsearch.hosts=["http://elasticsearch:9200"]
+      - apm-server.auth.anonymous.enabled=true
+      - apm-server.auth.anonymous.allow_agent=["opentelemetry"]
+      - apm-server.auth.anonymous.allow_service=["app"]
+      - apm-server.kibana.enabled=true
+      - apm-server.kibana.host=http://kibana:5601
+      - setup.kibana.host=http://kibana:5601
+    ports:
+      - "8200:8200"
+    networks:
+      - payments_network
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    networks:
+      - payments_network
+    ports:
+      - 9094:9094
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "kafka-topics --bootstrap-server localhost:9092 --list || exit 1",
+          "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1",
         ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - kafka_data:/bitnami/kafka
+
+  kafka-init-topics:
+    image: bitnami/kafka:latest
     networks:
       - payments_network
-
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      sleep 5 &&
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic PAYMENT_SUCCEEDED_TOPIC &&
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic PAYMENT_CREATED_TOPIC &&
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic TRANSACTION_CREATED_TOPIC &&
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic TRANSACTION_FAILED_TOPIC &&
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic TRANSACTION_SUCCEEDED_TOPIC &&
+      kafka-topics.sh --list --bootstrap-server kafka:9092
+      "
 volumes:
   postgres_data:
+  grafana_data:
+  prometheus_data:
+  es_data:
   kafka_data:
 
 networks:
@@ -68,3 +217,7 @@ secrets:
     file: .docker/secrets/postgres_password.txt
   postgres_user:
     file: .docker/secrets/postgres_user.txt
+  grafana_user:
+    file: .docker/secrets/grafana_user.txt
+  grafana_password:
+    file: .docker/secrets/grafana_password.txt

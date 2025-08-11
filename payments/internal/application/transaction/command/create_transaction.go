@@ -1,8 +1,11 @@
 package command
 
 import (
+	"context"
+
 	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
 type CreateTransactionCommand struct {
@@ -30,9 +33,9 @@ func NewCreateTransactionHandler(repo transaction.ITransactionRepository, bus do
 	}
 }
 
-func (h *CreateTransactionHandler) Handle(cmd CreateTransactionCommand) error {
+func (h *CreateTransactionHandler) Handle(ctx context.Context, cmd CreateTransactionCommand) error {
 	newTransaction := transaction.NewTransaction(cmd.PaymentID)
-	err := h.TransactionRepo.Save(newTransaction)
+	err := h.TransactionRepo.Save(ctx, newTransaction)
 	if err != nil {
 		return err
 	}
@@ -48,7 +51,9 @@ func (h *CreateTransactionHandler) Handle(cmd CreateTransactionCommand) error {
 		TransactionID:    newTransaction.ID,
 		EventId:          cmd.EventId,
 		Amount:           cmd.EventAmount,
+		Context:          ctx,
 	})
+	logger.Logger.WithContext(ctx).Infof("Transaction %s created successfully", newTransaction.ID)
 	return nil
 
 }

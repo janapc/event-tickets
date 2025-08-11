@@ -28,5 +28,4 @@ func IntlPaymentSucceeded(language, name string) *PaymentSucceededEmail {
 			Message: formatMessage,
 		}
 	}
-	return nil
 }

@@ -1,13 +1,15 @@
 package email
 
 import (
-	"github.com/go-mail/mail"
-	"log"
+	"context"
 	"os"
 	"strconv"
+
+	"github.com/go-mail/mail"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
-func SendEmail(email string, subject string, message string) error {
+func SendEmail(ctx context.Context, email string, subject string, message string) error {
 	m := mail.NewMessage()
 	m.SetHeader("From", os.Getenv("MAIL_FROM"))
 	m.SetHeader("To", email)
@@ -19,6 +21,6 @@ func SendEmail(email string, subject string, message string) error {
 	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
-	log.Println("Email sent")
+	logger.Logger.WithContext(ctx).Infof("Email sent to %s", email)
 	return nil
 }

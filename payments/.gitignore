@@ -34,3 +34,4 @@ Thumbs.db # Windows specific
 *.log
 *.tmp
 temp/
+.env.production

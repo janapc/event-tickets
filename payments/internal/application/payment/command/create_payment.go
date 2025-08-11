@@ -1,10 +1,12 @@
 package command
 
 import (
+	"context"
 	"errors"
 
 	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/payment"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
 type CreatePaymentCommand struct {
@@ -31,12 +33,12 @@ func NewCreatePaymentHandler(repo payment.IPaymentRepository, bus domain.IEventB
 	}
 }
 
-func (h *CreatePaymentHandler) Handle(cmd CreatePaymentCommand) error {
+func (h *CreatePaymentHandler) Handle(ctx context.Context, cmd CreatePaymentCommand) error {
 	if cmd.EventAmount < 0 {
 		return errors.New("amount must be greater than 0")
 	}
 	newPayment := payment.NewPayment(cmd.UserEmail, payment.StatusPending, cmd.EventId, cmd.EventAmount, cmd.PaymentToken)
-	err := h.PaymentRepo.Save(newPayment)
+	err := h.PaymentRepo.Save(ctx, newPayment)
 	if err != nil {
 		return err
 	}
@@ -51,6 +53,8 @@ func (h *CreatePaymentHandler) Handle(cmd CreatePaymentCommand) error {
 		EventImageUrl:    cmd.EventImageUrl,
 		UserLanguage:     cmd.UserLanguage,
 		PaymentID:        newPayment.ID,
+		Context:          ctx,
 	})
+	logger.Logger.WithContext(ctx).Infof("Payment %s created successfully", newPayment.ID)
 	return nil
 }

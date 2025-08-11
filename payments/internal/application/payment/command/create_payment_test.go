@@ -1,21 +1,25 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"testing"
 
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 	"github.com/janapc/event-tickets/payments/internal/mock"
 	"github.com/stretchr/testify/assert"
 	testMock "github.com/stretchr/testify/mock"
 )
 
 func TestCreatePayment_Success(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.PaymentRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
-	mockRepo.On("Save", testMock.AnythingOfType("*payment.Payment")).Return(nil)
+	mockRepo.On("Save", testMock.Anything, testMock.AnythingOfType("*payment.Payment")).Return(nil)
 	mockBus.On("Publish", testMock.AnythingOfType("*payment.CreatedEvent"))
 
+	ctx := context.Background()
 	handler := NewCreatePaymentHandler(mockRepo, mockBus)
 	cmd := CreatePaymentCommand{
 		UserName:         "Alice",
@@ -29,13 +33,14 @@ func TestCreatePayment_Success(t *testing.T) {
 		UserLanguage:     "en",
 	}
 
-	err := handler.Handle(cmd)
+	err := handler.Handle(ctx, cmd)
 	assert.NoError(t, err)
-	mockRepo.AssertCalled(t, "Save", testMock.AnythingOfType("*payment.Payment"))
+	mockRepo.AssertCalled(t, "Save", ctx, testMock.AnythingOfType("*payment.Payment"))
 	mockBus.AssertCalled(t, "Publish", testMock.AnythingOfType("*payment.CreatedEvent"))
 }
 
 func TestCreatePayment_Failed_NegativeAmount(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.PaymentRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
@@ -52,17 +57,19 @@ func TestCreatePayment_Failed_NegativeAmount(t *testing.T) {
 		UserLanguage:     "es",
 	}
 
-	err := handler.Handle(cmd)
+	ctx := context.Background()
+	err := handler.Handle(ctx, cmd)
 	assert.EqualError(t, err, "amount must be greater than 0")
-	mockRepo.AssertNotCalled(t, "Save", testMock.Anything)
+	mockRepo.AssertNotCalled(t, "Save", ctx, testMock.Anything)
 	mockBus.AssertNotCalled(t, "Publish", testMock.Anything)
 }
 
 func TestCreatePayment_Failed_SaveError(t *testing.T) {
+	logger.Init()
 	mockRepo := new(mock.PaymentRepositoryMock)
 	mockBus := new(mock.EventBusMock)
 
-	mockRepo.On("Save", testMock.AnythingOfType("*payment.Payment")).Return(errors.New("db error"))
+	mockRepo.On("Save", testMock.Anything, testMock.AnythingOfType("*payment.Payment")).Return(errors.New("db error"))
 
 	handler := NewCreatePaymentHandler(mockRepo, mockBus)
 	cmd := CreatePaymentCommand{
@@ -77,8 +84,9 @@ func TestCreatePayment_Failed_SaveError(t *testing.T) {
 		UserLanguage:     "fr",
 	}
 
-	err := handler.Handle(cmd)
+	ctx := context.Background()
+	err := handler.Handle(ctx, cmd)
 	assert.EqualError(t, err, "db error")
-	mockRepo.AssertCalled(t, "Save", testMock.AnythingOfType("*payment.Payment"))
+	mockRepo.AssertCalled(t, "Save", ctx, testMock.AnythingOfType("*payment.Payment"))
 	mockBus.AssertNotCalled(t, "Publish", testMock.Anything)
 }

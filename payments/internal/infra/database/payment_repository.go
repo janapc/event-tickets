@@ -1,9 +1,11 @@
 package database
 
 import (
+	"context"
 	"database/sql"
-	domainPayment "github.com/janapc/event-tickets/payments/internal/domain/payment"
 	"time"
+
+	domainPayment "github.com/janapc/event-tickets/payments/internal/domain/payment"
 )
 
 type PaymentRepository struct {
@@ -16,40 +18,40 @@ func NewPaymentRepository(db *sql.DB) *PaymentRepository {
 	}
 }
 
-func (r *PaymentRepository) FindByID(ID string) (*domainPayment.Payment, error) {
-	stmt, err := r.DB.Prepare(`SELECT id, user_email, status, event_id, amount FROM payments WHERE id=$1`)
+func (r *PaymentRepository) FindByID(ctx context.Context, ID string) (*domainPayment.Payment, error) {
+	stmt, err := r.DB.PrepareContext(ctx, `SELECT id, user_email, status, event_id, amount FROM payments WHERE id=$1`)
 	if err != nil {
 		return &domainPayment.Payment{}, err
 	}
 	defer stmt.Close()
 	var payment domainPayment.Payment
-	err = stmt.QueryRow(ID).Scan(&payment.ID, &payment.UserEmail, &payment.Status, &payment.EventId, &payment.Amount)
+	err = stmt.QueryRowContext(ctx, ID).Scan(&payment.ID, &payment.UserEmail, &payment.Status, &payment.EventId, &payment.Amount)
 	if err != nil {
 		return &domainPayment.Payment{}, err
 	}
 	return &payment, nil
 }
 
-func (r *PaymentRepository) Save(payment *domainPayment.Payment) error {
-	stmt, err := r.DB.Prepare(`INSERT INTO payments(id, user_email, status, event_id, amount) VALUES($1,$2,$3,$4,$5) RETURNING id`)
+func (r *PaymentRepository) Save(ctx context.Context, payment *domainPayment.Payment) error {
+	stmt, err := r.DB.PrepareContext(ctx, `INSERT INTO payments(id, user_email, status, event_id, amount) VALUES($1,$2,$3,$4,$5) RETURNING id`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(payment.ID, payment.UserEmail, payment.Status, payment.EventId, payment.Amount)
+	_, err = stmt.ExecContext(ctx, payment.ID, payment.UserEmail, payment.Status, payment.EventId, payment.Amount)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *PaymentRepository) Update(payment *domainPayment.Payment) error {
-	stmt, err := r.DB.Prepare("UPDATE payments SET status=$1,  updated_at=$2 WHERE id=$3")
+func (r *PaymentRepository) Update(ctx context.Context, payment *domainPayment.Payment) error {
+	stmt, err := r.DB.PrepareContext(ctx, "UPDATE payments SET status=$1,  updated_at=$2 WHERE id=$3")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(payment.Status, time.Now().UTC(), payment.ID)
+	_, err = stmt.ExecContext(ctx, payment.Status, time.Now().UTC(), payment.ID)
 	if err != nil {
 		return err
 	}

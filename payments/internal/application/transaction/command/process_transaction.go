@@ -1,10 +1,11 @@
 package command
 
 import (
-	"log"
+	"context"
 
 	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/transaction"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
 type ProcessTransactionCommand struct {
@@ -33,8 +34,8 @@ func NewProcessTransactionHandler(repo transaction.ITransactionRepository, bus d
 	}
 }
 
-func (h *ProcessTransactionHandler) Handle(cmd ProcessTransactionCommand) error {
-	tx, err := h.TransactionRepo.FindByID(cmd.TransactionID)
+func (h *ProcessTransactionHandler) Handle(ctx context.Context, cmd ProcessTransactionCommand) error {
+	tx, err := h.TransactionRepo.FindByID(ctx, cmd.TransactionID)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func (h *ProcessTransactionHandler) Handle(cmd ProcessTransactionCommand) error 
 
 	if success {
 		tx.MarkSuccess()
-		log.Printf("Transaction %s processed successfully", tx.ID)
+		logger.Logger.WithContext(ctx).Infof("Transaction %s processed successfully", tx.ID)
 		h.Bus.Publish(&transaction.SucceededEvent{
 			UserName:         cmd.UserName,
 			UserEmail:        cmd.UserEmail,
@@ -52,20 +53,21 @@ func (h *ProcessTransactionHandler) Handle(cmd ProcessTransactionCommand) error 
 			EventName:        cmd.EventName,
 			EventDescription: cmd.EventDescription,
 			EventImageUrl:    cmd.EventImageUrl,
+			Context:          ctx,
 		})
 
 	} else {
 		tx.MarkFailed(reason)
-		log.Printf("Transaction %s failed: %s", tx.ID, reason)
-
+		logger.Logger.WithContext(ctx).Infof("Transaction %s failed: %s", tx.ID, reason)
 		h.Bus.Publish(&transaction.FailedEvent{
 			UserName:     cmd.UserName,
 			UserEmail:    cmd.UserEmail,
 			UserLanguage: cmd.UserLanguage,
 			PaymentID:    cmd.PaymentID,
+			Context:      ctx,
 		})
 	}
-	return h.TransactionRepo.Update(tx)
+	return h.TransactionRepo.Update(ctx, tx)
 }
 
 func simulateGateway(token string, amount float64) (bool, string) {

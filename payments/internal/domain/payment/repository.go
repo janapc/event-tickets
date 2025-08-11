@@ -1,7 +1,9 @@
 package payment
 
+import "context"
+
 type IPaymentRepository interface {
-	FindByID(ID string) (*Payment, error)
-	Save(payment *Payment) error
-	Update(payment *Payment) error
+	FindByID(ctx context.Context, ID string) (*Payment, error)
+	Save(ctx context.Context, payment *Payment) error
+	Update(ctx context.Context, payment *Payment) error
 }

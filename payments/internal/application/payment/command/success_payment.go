@@ -1,8 +1,11 @@
 package command
 
 import (
+	"context"
+
 	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/payment"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
 type SuccessPaymentCommand struct {
@@ -28,13 +31,13 @@ func NewSuccessPaymentHandler(repo payment.IPaymentRepository, bus domain.IEvent
 	}
 }
 
-func (h *SuccessPaymentHandler) Handle(cmd SuccessPaymentCommand) error {
-	p, err := h.PaymentRepo.FindByID(cmd.PaymentID)
+func (h *SuccessPaymentHandler) Handle(ctx context.Context, cmd SuccessPaymentCommand) error {
+	p, err := h.PaymentRepo.FindByID(ctx, cmd.PaymentID)
 	if err != nil {
 		return err
 	}
 	p.MarkSuccess()
-	h.PaymentRepo.Update(p)
+	h.PaymentRepo.Update(ctx, p)
 	h.Bus.Publish(&payment.SucceededEvent{
 		UserName:         cmd.UserName,
 		UserEmail:        cmd.UserEmail,
@@ -43,6 +46,8 @@ func (h *SuccessPaymentHandler) Handle(cmd SuccessPaymentCommand) error {
 		EventName:        cmd.EventName,
 		EventDescription: cmd.EventDescription,
 		EventImageUrl:    cmd.EventImageUrl,
+		Context:          ctx,
 	})
+	logger.Logger.WithContext(ctx).Infof("Payment %s marked as successful", p.ID)
 	return nil
 }

@@ -1,8 +1,11 @@
 package command
 
 import (
+	"context"
+
 	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/janapc/event-tickets/payments/internal/domain/payment"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
 type FailPaymentCommand struct {
@@ -24,17 +27,19 @@ func NewFailPaymentHandler(repo payment.IPaymentRepository, bus domain.IEventBus
 	}
 }
 
-func (h *FailPaymentHandler) Handle(cmd FailPaymentCommand) error {
-	p, err := h.PaymentRepo.FindByID(cmd.PaymentID)
+func (h *FailPaymentHandler) Handle(ctx context.Context, cmd FailPaymentCommand) error {
+	p, err := h.PaymentRepo.FindByID(ctx, cmd.PaymentID)
 	if err != nil {
 		return err
 	}
 	p.MarkFailed()
-	h.PaymentRepo.Update(p)
+	h.PaymentRepo.Update(ctx, p)
 	h.Bus.Publish(&payment.FailedEvent{
 		UserName:     cmd.UserName,
 		UserLanguage: cmd.UserLanguage,
 		UserEmail:    cmd.UserEmail,
+		Context:      ctx,
 	})
+	logger.Logger.WithContext(ctx).Infof("Payment %s marked as failed", p.ID)
 	return nil
 }

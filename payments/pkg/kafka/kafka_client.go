@@ -3,19 +3,31 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"github.com/gofiber/fiber/v2/log"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/janapc/event-tickets/payments/internal/domain"
 	"github.com/segmentio/kafka-go"
 )
 
 type Client struct {
-	Brokers []string
-	readers []*kafka.Reader
+	Brokers  []string
+	readers  []*kafka.Reader
+	Handlers []HandlerConfig
+}
+
+type NamedEvent interface {
+	Name() string
+}
+
+type TypedHandler[T any] func(ctx context.Context, msg T) error
+
+type HandlerConfig struct {
+	Topic   string
+	GroupID string
+	Handle  func(ctx context.Context, b []byte)
 }
 
 func NewKafkaClient(brokers []string) *Client {
@@ -24,59 +36,79 @@ func NewKafkaClient(brokers []string) *Client {
 	}
 }
 
-func (k *Client) Producer(params domain.ProducerParameters) error {
-	payload, err := json.Marshal(params.Value)
+func (k *Client) Producer(Value NamedEvent,
+	Context context.Context,
+	Topic string,
+	Key string) error {
+	payload, err := json.Marshal(Value)
 	if err != nil {
 		return err
 	}
-	writer := kafka.Writer{
-		Addr:                   kafka.TCP(k.Brokers...),
-		Topic:                  params.Topic,
-		Balancer:               &kafka.LeastBytes{},
-		AllowAutoTopicCreation: true,
+	writer := &kafka.Writer{
+		Addr:     kafka.TCP(k.Brokers...),
+		Topic:    Topic,
+		Balancer: &kafka.LeastBytes{},
 	}
 	defer writer.Close()
 	ctx := context.Background()
 	err = writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(params.Key),
+		Key:   []byte(Key),
 		Value: payload,
+		Time:  time.Now(),
 	})
 	if err != nil {
 		return err
 	}
-	log.Debugf("Kafka message %s sent to topic %s", params.Key, params.Topic)
+	log.Printf("Kafka message %s sent to topic %s", Key, Topic)
 	return nil
 }
 
-func (k *Client) Consumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, key string, value []byte) error) error {
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  k.Brokers,
-		GroupID:  groupID,
-		Topic:    topic,
-		MinBytes: 1, //dev
-		MaxBytes: 10e6,
-		MaxWait:  100 * time.Millisecond,
-	})
-	k.readers = append(k.readers, reader)
+func (k *Client) Consumer(handlers []HandlerConfig) {
+	for _, entry := range handlers {
+		go func() {
+			reader := kafka.NewReader(kafka.ReaderConfig{
+				Brokers:        k.Brokers,
+				GroupID:        entry.GroupID,
+				Topic:          entry.Topic,
+				MinBytes:       1,
+				MaxBytes:       10e6,
+				MaxWait:        100 * time.Millisecond,
+				CommitInterval: 50 * time.Millisecond,
+			})
+			k.readers = append(k.readers, reader)
+			log.Printf("Kafka consumer started for topic: %s", entry.Topic)
 
-	go func() {
-		log.Debugf("Starting Kafka consumer topic %s groupID %s", topic, groupID)
-		for {
-			msg, err := reader.ReadMessage(ctx)
-			log.Debugf("Kafka consumer topic %s groupID %s", topic, groupID)
+			for {
+				ctx := context.Background()
 
-			if err != nil {
-				log.Errorf("Kafka Error reading from topic %s error %v", topic, err)
-				continue
+				m, err := reader.ReadMessage(ctx)
+				log.Printf("Kafka consumer reading message from topic: %s %s", entry.Topic, string(m.Key))
+				if err != nil {
+					log.Printf("Error reading message from %s: %v", entry.Topic, err)
+					continue
+				}
+
+				entry.Handle(ctx, m.Value)
 			}
+		}()
+	}
+}
 
-			if err := handler(ctx, string(msg.Key), msg.Value); err != nil {
-				log.Debugf("KafkaError processing message topic %s error %v", topic, err)
+func RegisterTypedHandler[T any](topic, groupID string, typedHandler TypedHandler[T]) HandlerConfig {
+	return HandlerConfig{
+		Topic:   topic,
+		GroupID: groupID,
+		Handle: func(ctx context.Context, b []byte) {
+			var msg T
+			if err := json.Unmarshal(b, &msg); err != nil {
+				log.Printf("Unmarshal error on topic %s: %v", topic, err)
+				return
 			}
-			log.Debugf("Kafka Message processed topic %s key %s", topic, string(msg.Key))
-		}
-	}()
-	return nil
+			if err := typedHandler(ctx, msg); err != nil {
+				log.Printf("Handler error on topic %s: %v", topic, err)
+			}
+		},
+	}
 }
 
 func (k *Client) WaitForShutdown() {
@@ -84,11 +116,11 @@ func (k *Client) WaitForShutdown() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	log.Debugf("Shutting down Kafka readers...")
+	log.Printf("Shutting down Kafka readers...")
 	for _, r := range k.readers {
 		err := r.Close()
 		if err != nil {
-			log.Errorf("Kafka Error closing reader %v", err)
+			log.Fatalf("Kafka Error closing reader %v", err)
 		}
 	}
 }

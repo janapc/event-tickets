@@ -1,9 +1,14 @@
 package http
 
 import (
+	"os"
+
+	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/janapc/event-tickets/payments/internal/application/payment/command"
+	"github.com/janapc/event-tickets/payments/internal/interfaces/http/middleware"
 )
 
 type PaymentHandler struct {
@@ -17,11 +22,19 @@ func NewPaymentHandler(createPayment *command.CreatePaymentHandler) *PaymentHand
 }
 
 func (h *PaymentHandler) RegisterRoutes(app *fiber.App) {
+	if os.Getenv("ENV") != "PROD" {
+		app.Use(fiberLogger.New())
+	}
+	if os.Getenv("ENV") == "PROD" {
+		app.Use(otelfiber.Middleware())
+		app.Use(middleware.OtelMetricMiddleware())
+	}
 	payments := app.Group("/payments")
 	payments.Post("/", h.createPayment)
 }
 
 func (h *PaymentHandler) createPayment(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	var input struct {
 		UserName         string  `json:"user_name"`
 		UserEmail        string  `json:"user_email"`
@@ -39,7 +52,7 @@ func (h *PaymentHandler) createPayment(c *fiber.Ctx) error {
 			"error": "invalid request",
 		})
 	}
-	err := h.CreatePayment.Handle(command.CreatePaymentCommand{
+	err := h.CreatePayment.Handle(ctx, command.CreatePaymentCommand{
 		UserName:         input.UserName,
 		UserEmail:        input.UserEmail,
 		EventId:          input.EventId,
