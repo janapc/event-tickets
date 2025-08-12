@@ -34,12 +34,11 @@ func (h *FailPaymentHandler) Handle(ctx context.Context, cmd FailPaymentCommand)
 	}
 	p.MarkFailed()
 	h.PaymentRepo.Update(ctx, p)
-	h.Bus.Publish(&payment.FailedEvent{
+	h.Bus.Publish(payment.NewFailedEvent(payment.FailedEventPayload{
 		UserName:     cmd.UserName,
 		UserLanguage: cmd.UserLanguage,
 		UserEmail:    cmd.UserEmail,
-		Context:      ctx,
-	})
+	}, ctx))
 	logger.Logger.WithContext(ctx).Infof("Payment %s marked as failed", p.ID)
 	return nil
 }

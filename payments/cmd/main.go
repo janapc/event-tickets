@@ -98,7 +98,12 @@ func registerEvents(bus domain.IEventBus, kakfaClient *kafka.Client) {
 	bus.Subscribe(payment.CreatedEventName, func(e domain.Event) {
 		event := e.(*payment.CreatedEvent)
 		topic := os.Getenv("PAYMENT_CREATED_TOPIC")
-		err := kakfaClient.Producer(event, event.Context, topic, uuid.NewString())
+		message, err := event.ToMessage()
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("error converting event to message: %v", err)
+			return
+		}
+		err = kakfaClient.Producer(message, event.Context, topic, uuid.NewString())
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n to eventName: %s", err, event.Name())
 		}
@@ -107,7 +112,12 @@ func registerEvents(bus domain.IEventBus, kakfaClient *kafka.Client) {
 	bus.Subscribe(transaction.CreatedEventName, func(e domain.Event) {
 		event := e.(*transaction.CreatedEvent)
 		topic := os.Getenv("TRANSACTION_CREATED_TOPIC")
-		err := kakfaClient.Producer(event, event.Context, topic, uuid.NewString())
+		message, err := event.ToMessage()
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("error converting event to message: %v", err)
+			return
+		}
+		err = kakfaClient.Producer(message, event.Context, topic, uuid.NewString())
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n to eventName: %s", err, event.Name())
 		}
@@ -116,7 +126,12 @@ func registerEvents(bus domain.IEventBus, kakfaClient *kafka.Client) {
 	bus.Subscribe(transaction.FailedEventName, func(e domain.Event) {
 		event := e.(*transaction.FailedEvent)
 		topic := os.Getenv("TRANSACTION_FAILED_TOPIC")
-		err := kakfaClient.Producer(event, event.Context, topic, uuid.NewString())
+		message, err := event.ToMessage()
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("error converting event to message: %v", err)
+			return
+		}
+		err = kakfaClient.Producer(message, event.Context, topic, uuid.NewString())
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n to eventName: %s", err, event.Name())
 		}
@@ -125,7 +140,12 @@ func registerEvents(bus domain.IEventBus, kakfaClient *kafka.Client) {
 	bus.Subscribe(transaction.SucceededEventName, func(e domain.Event) {
 		event := e.(*transaction.SucceededEvent)
 		topic := os.Getenv("TRANSACTION_SUCCEEDED_TOPIC")
-		err := kakfaClient.Producer(event, event.Context, topic, uuid.NewString())
+		message, err := event.ToMessage()
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("error converting event to message: %v", err)
+			return
+		}
+		err = kakfaClient.Producer(message, event.Context, topic, uuid.NewString())
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n to eventName: %s", err, event.Name())
 		}
@@ -133,8 +153,8 @@ func registerEvents(bus domain.IEventBus, kakfaClient *kafka.Client) {
 
 	bus.Subscribe(payment.FailedEventName, func(e domain.Event) {
 		event := e.(*payment.FailedEvent)
-		bodyEmail := email.IntlPaymentFailed(event.UserLanguage, event.UserName)
-		err := email.SendEmail(event.Context, event.UserEmail, bodyEmail.Subject, bodyEmail.Message)
+		bodyEmail := email.IntlPaymentFailed(event.Payload.UserLanguage, event.Payload.UserName)
+		err := email.SendEmail(event.Context, event.Payload.UserEmail, bodyEmail.Subject, bodyEmail.Message)
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("email send error: %v/n to eventName: %s", err, event.Name())
 		}
@@ -143,12 +163,17 @@ func registerEvents(bus domain.IEventBus, kakfaClient *kafka.Client) {
 	bus.Subscribe(payment.SucceededEventName, func(e domain.Event) {
 		event := e.(*payment.SucceededEvent)
 		topic := os.Getenv("PAYMENT_SUCCEEDED_TOPIC")
-		err := kakfaClient.Producer(event, event.Context, topic, uuid.NewString())
+		message, err := event.ToMessage()
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("error converting event to message: %v", err)
+			return
+		}
+		err = kakfaClient.Producer(message, event.Context, topic, uuid.NewString())
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n to eventName: %s", err, event.Name())
 		}
-		bodyEmail := email.IntlPaymentSucceeded(event.UserLanguage, event.UserName)
-		err = email.SendEmail(event.Context, event.UserEmail, bodyEmail.Subject, bodyEmail.Message)
+		bodyEmail := email.IntlPaymentSucceeded(event.Payload.UserLanguage, event.Payload.UserName)
+		err = email.SendEmail(event.Context, event.Payload.UserEmail, bodyEmail.Subject, bodyEmail.Message)
 		if err != nil {
 			logger.Logger.WithContext(event.Context).Errorf("email send error: %v/n to eventName: %s", err, event.Name())
 		}

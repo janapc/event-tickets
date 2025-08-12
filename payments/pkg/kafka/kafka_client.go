@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Client struct {
 	Brokers  []string
 	readers  []*kafka.Reader
 	Handlers []HandlerConfig
+	writer   *kafka.Writer
 }
 
 type NamedEvent interface {
@@ -33,33 +35,36 @@ type HandlerConfig struct {
 func NewKafkaClient(brokers []string) *Client {
 	return &Client{
 		Brokers: brokers,
+		writer: &kafka.Writer{
+			Addr:     kafka.TCP(brokers...),
+			Balancer: &kafka.LeastBytes{},
+		},
 	}
 }
 
-func (k *Client) Producer(Value NamedEvent,
-	Context context.Context,
-	Topic string,
-	Key string) error {
-	payload, err := json.Marshal(Value)
-	if err != nil {
-		return err
+func (k *Client) Producer(message []byte, ctx context.Context, topic string, key string) error {
+	var traceID string
+	span := trace.SpanFromContext(ctx)
+	if span.SpanContext().IsValid() {
+		traceID = span.SpanContext().TraceID().String()
 	}
-	writer := &kafka.Writer{
-		Addr:     kafka.TCP(k.Brokers...),
-		Topic:    Topic,
-		Balancer: &kafka.LeastBytes{},
-	}
-	defer writer.Close()
-	ctx := context.Background()
-	err = writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(Key),
-		Value: payload,
+
+	sendCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := k.writer.WriteMessages(sendCtx, kafka.Message{
+		Topic: topic,
+		Key:   []byte(key),
+		Value: message,
 		Time:  time.Now(),
+		Headers: []kafka.Header{
+			{Key: "traceId", Value: []byte(traceID)},
+		},
 	})
 	if err != nil {
 		return err
 	}
-	log.Printf("Kafka message %s sent to topic %s", Key, Topic)
+	log.Printf("Kafka message %s sent to topic %s", key, topic)
 	return nil
 }
 
@@ -87,7 +92,6 @@ func (k *Client) Consumer(handlers []HandlerConfig) {
 					log.Printf("Error reading message from %s: %v", entry.Topic, err)
 					continue
 				}
-
 				entry.Handle(ctx, m.Value)
 			}
 		}()

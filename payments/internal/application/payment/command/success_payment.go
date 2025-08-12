@@ -38,7 +38,7 @@ func (h *SuccessPaymentHandler) Handle(ctx context.Context, cmd SuccessPaymentCo
 	}
 	p.MarkSuccess()
 	h.PaymentRepo.Update(ctx, p)
-	h.Bus.Publish(&payment.SucceededEvent{
+	h.Bus.Publish(payment.NewSucceededEvent(payment.SucceededEventPayload{
 		UserName:         cmd.UserName,
 		UserEmail:        cmd.UserEmail,
 		UserLanguage:     cmd.UserLanguage,
@@ -46,8 +46,7 @@ func (h *SuccessPaymentHandler) Handle(ctx context.Context, cmd SuccessPaymentCo
 		EventName:        cmd.EventName,
 		EventDescription: cmd.EventDescription,
 		EventImageUrl:    cmd.EventImageUrl,
-		Context:          ctx,
-	})
+	}, ctx))
 	logger.Logger.WithContext(ctx).Infof("Payment %s marked as successful", p.ID)
 	return nil
 }

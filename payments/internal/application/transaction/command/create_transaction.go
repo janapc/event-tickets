@@ -39,7 +39,7 @@ func (h *CreateTransactionHandler) Handle(ctx context.Context, cmd CreateTransac
 	if err != nil {
 		return err
 	}
-	h.Bus.Publish(&transaction.CreatedEvent{
+	h.Bus.Publish(transaction.NewCreatedEvent(transaction.CreatedEventPayload{
 		UserName:         cmd.UserName,
 		UserEmail:        cmd.UserEmail,
 		UserLanguage:     cmd.UserLanguage,
@@ -51,8 +51,7 @@ func (h *CreateTransactionHandler) Handle(ctx context.Context, cmd CreateTransac
 		TransactionID:    newTransaction.ID,
 		EventId:          cmd.EventId,
 		Amount:           cmd.EventAmount,
-		Context:          ctx,
-	})
+	}, ctx))
 	logger.Logger.WithContext(ctx).Infof("Transaction %s created successfully", newTransaction.ID)
 	return nil
 

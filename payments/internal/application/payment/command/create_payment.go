@@ -42,7 +42,7 @@ func (h *CreatePaymentHandler) Handle(ctx context.Context, cmd CreatePaymentComm
 	if err != nil {
 		return err
 	}
-	h.Bus.Publish(&payment.CreatedEvent{
+	h.Bus.Publish(payment.NewCreatedEvent(payment.CreatedEventPayload{
 		UserName:         cmd.UserName,
 		UserEmail:        cmd.UserEmail,
 		EventId:          cmd.EventId,
@@ -53,8 +53,7 @@ func (h *CreatePaymentHandler) Handle(ctx context.Context, cmd CreatePaymentComm
 		EventImageUrl:    cmd.EventImageUrl,
 		UserLanguage:     cmd.UserLanguage,
 		PaymentID:        newPayment.ID,
-		Context:          ctx,
-	})
+	}, ctx))
 	logger.Logger.WithContext(ctx).Infof("Payment %s created successfully", newPayment.ID)
 	return nil
 }

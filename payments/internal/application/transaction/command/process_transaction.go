@@ -44,7 +44,7 @@ func (h *ProcessTransactionHandler) Handle(ctx context.Context, cmd ProcessTrans
 	if success {
 		tx.MarkSuccess()
 		logger.Logger.WithContext(ctx).Infof("Transaction %s processed successfully", tx.ID)
-		h.Bus.Publish(&transaction.SucceededEvent{
+		h.Bus.Publish(transaction.NewSucceededEvent(transaction.SucceededEventPayload{
 			UserName:         cmd.UserName,
 			UserEmail:        cmd.UserEmail,
 			UserLanguage:     cmd.UserLanguage,
@@ -53,19 +53,17 @@ func (h *ProcessTransactionHandler) Handle(ctx context.Context, cmd ProcessTrans
 			EventName:        cmd.EventName,
 			EventDescription: cmd.EventDescription,
 			EventImageUrl:    cmd.EventImageUrl,
-			Context:          ctx,
-		})
+		}, ctx))
 
 	} else {
 		tx.MarkFailed(reason)
 		logger.Logger.WithContext(ctx).Infof("Transaction %s failed: %s", tx.ID, reason)
-		h.Bus.Publish(&transaction.FailedEvent{
+		h.Bus.Publish(transaction.NewFailedEvent(transaction.FailedEventPayload{
 			UserName:     cmd.UserName,
 			UserEmail:    cmd.UserEmail,
 			UserLanguage: cmd.UserLanguage,
 			PaymentID:    cmd.PaymentID,
-			Context:      ctx,
-		})
+		}, ctx))
 	}
 	return h.TransactionRepo.Update(ctx, tx)
 }
