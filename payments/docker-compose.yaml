@@ -187,6 +187,7 @@ services:
 
   kafka-init-topics:
     image: bitnami/kafka:latest
+    container_name: kafka_init_topics
     networks:
       - payments_network
     depends_on:

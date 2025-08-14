@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 type Client struct {
@@ -43,24 +45,27 @@ func NewKafkaClient(brokers []string) *Client {
 }
 
 func (k *Client) Producer(message []byte, ctx context.Context, topic string, key string) error {
-	var traceID string
-	span := trace.SpanFromContext(ctx)
-	if span.SpanContext().IsValid() {
-		traceID = span.SpanContext().TraceID().String()
-	}
-
-	sendCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	sendCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
 	defer cancel()
 
-	err := k.writer.WriteMessages(sendCtx, kafka.Message{
-		Topic: topic,
-		Key:   []byte(key),
-		Value: message,
-		Time:  time.Now(),
-		Headers: []kafka.Header{
-			{Key: "traceId", Value: []byte(traceID)},
-		},
-	})
+	msg := kafka.Message{
+		Topic:   topic,
+		Key:     []byte(key),
+		Value:   message,
+		Time:    time.Now(),
+		Headers: []kafka.Header{},
+	}
+
+	carrier := propagation.MapCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, carrier)
+
+	for k, v := range carrier {
+		msg.Headers = append(msg.Headers, kafka.Header{
+			Key:   k,
+			Value: []byte(v),
+		})
+	}
+	err := k.writer.WriteMessages(sendCtx, msg)
 	if err != nil {
 		return err
 	}
@@ -69,6 +74,7 @@ func (k *Client) Producer(message []byte, ctx context.Context, topic string, key
 }
 
 func (k *Client) Consumer(handlers []HandlerConfig) {
+	tracer := otel.Tracer("kafka-consumer")
 	for _, entry := range handlers {
 		go func() {
 			reader := kafka.NewReader(kafka.ReaderConfig{
@@ -81,17 +87,25 @@ func (k *Client) Consumer(handlers []HandlerConfig) {
 				CommitInterval: 50 * time.Millisecond,
 			})
 			k.readers = append(k.readers, reader)
-			log.Printf("Kafka consumer started for topic: %s", entry.Topic)
+
+			log.Printf("Starting Kafka consumer for topic %s with group ID %s", entry.Topic, entry.GroupID)
 
 			for {
-				ctx := context.Background()
-
-				m, err := reader.ReadMessage(ctx)
-				log.Printf("Kafka consumer reading message from topic: %s %s", entry.Topic, string(m.Key))
+				m, err := reader.ReadMessage(context.Background())
 				if err != nil {
-					log.Printf("Error reading message from %s: %v", entry.Topic, err)
+					log.Printf("Error reading message from topic %s: %v", entry.Topic, err)
 					continue
 				}
+				carrier := propagation.MapCarrier{}
+				for _, h := range m.Headers {
+					carrier[h.Key] = string(h.Value)
+				}
+				ctx := otel.GetTextMapPropagator().Extract(context.Background(), carrier)
+
+				ctx, span := tracer.Start(ctx, "consume-kafka-message")
+				span.SetAttributes(attribute.String("kafka.topic", m.Topic))
+				defer span.End()
+				log.Printf("Received message from topic %s: %s", m.Topic, string(m.Key))
 				entry.Handle(ctx, m.Value)
 			}
 		}()
@@ -105,11 +119,11 @@ func RegisterTypedHandler[T any](topic, groupID string, typedHandler TypedHandle
 		Handle: func(ctx context.Context, b []byte) {
 			var msg T
 			if err := json.Unmarshal(b, &msg); err != nil {
-				log.Printf("Unmarshal error on topic %s: %v", topic, err)
+				log.Printf("Error unmarshalling message for topic %s: %v", topic, err)
 				return
 			}
 			if err := typedHandler(ctx, msg); err != nil {
-				log.Printf("Handler error on topic %s: %v", topic, err)
+				log.Printf("Error handling message for topic %s: %v", topic, err)
 			}
 		},
 	}
@@ -120,11 +134,13 @@ func (k *Client) WaitForShutdown() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	log.Printf("Shutting down Kafka readers...")
 	for _, r := range k.readers {
+		log.Printf("Shutting down Kafka reader for topic %s", r.Config().Topic)
 		err := r.Close()
 		if err != nil {
-			log.Fatalf("Kafka Error closing reader %v", err)
+			log.Printf("Error closing Kafka reader for topic %s: %v", r.Config().Topic, err)
+		} else {
+			log.Printf("Kafka reader for topic %s closed successfully", r.Config().Topic)
 		}
 	}
 }

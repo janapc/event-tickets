@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	m "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -32,6 +33,12 @@ func Init(ctx context.Context) error {
 		return err
 	}
 	otel.SetTracerProvider(TracerProvider)
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		),
+	)
 	// Metrics
 	err = initMetrics(res, ctx)
 	if err != nil {
@@ -54,23 +61,6 @@ func initTracer(res *resource.Resource, ctx context.Context) error {
 	Tracer = otel.Tracer("tracer-payments-service")
 	return nil
 }
-
-// func initTracer(res *resource.Resource) error {
-// 	traceExporter, err := stdouttrace.New(
-// 		stdouttrace.WithPrettyPrint())
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	TracerProvider = sdktrace.NewTracerProvider(
-// 		sdktrace.WithBatcher(traceExporter,
-// 			// Default is 5s. Set to 1s for demonstrative purposes.
-// 			sdktrace.WithBatchTimeout(time.Second)),
-// 		sdktrace.WithResource(res),
-// 	)
-// 	Tracer = otel.Tracer("tracer-payments-service")
-// 	return nil
-// }
 
 func initMetrics(res *resource.Resource, ctx context.Context) error {
 	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithInsecure())
