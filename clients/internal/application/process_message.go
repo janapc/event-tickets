@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/domain/events"
 )
@@ -17,14 +16,13 @@ type ProcessMessage struct {
 }
 
 type InputProcessMessage struct {
-	MessageID        string `json:"messageId"`
-	Name             string `json:"name"`
-	Email            string `json:"email"`
-	EventId          string `json:"eventId"`
-	EventName        string `json:"eventName"`
-	EventDescription string `json:"eventDescription"`
-	EventImageUrl    string `json:"eventImageUrl"`
-	Language         string `json:"language"`
+	UserName         string `json:"user_name"`
+	UserEmail        string `json:"user_email"`
+	EventId          string `json:"event_id"`
+	EventName        string `json:"event_name"`
+	EventDescription string `json:"event_description"`
+	EventImageUrl    string `json:"event_image_url"`
+	UserLanguage     string `json:"user_language"`
 }
 
 func NewProcessMessage(repo domain.IClientRepository, messaging domain.IMessaging, bus domain.Bus) *ProcessMessage {
@@ -51,7 +49,7 @@ func (p *ProcessMessage) Execute(ctx context.Context, input string) error {
 }
 
 func (p *ProcessMessage) processClient(ctx context.Context, input InputProcessMessage) error {
-	existsClient, err := p.Repository.GetByEmail(ctx, input.Email)
+	existsClient, err := p.Repository.GetByEmail(ctx, input.UserEmail)
 	if existsClient == nil || err != nil {
 		newClient, err := p.CreateClient(ctx, input)
 		if err != nil {
@@ -63,30 +61,29 @@ func (p *ProcessMessage) processClient(ctx context.Context, input InputProcessMe
 }
 
 func (p *ProcessMessage) notifyClientCreated(ctx context.Context, client *domain.Client) error {
-	event := events.NewClientCreatedEvent(uuid.New().String(),
-		client.Email, ctx)
+	event := events.NewClientCreatedEvent(events.ClientCreatedEventPayload{
+		Email: client.Email,
+	}, ctx)
 	p.Bus.Dispatch(event)
 	return nil
 }
 
 func (p *ProcessMessage) sendTicket(ctx context.Context, input InputProcessMessage) error {
-	event := events.NewSendTicketEvent(events.SendTicketEvent{
-		MessageID:        input.MessageID,
-		ClientName:       input.Name,
-		Email:            input.Email,
+	event := events.NewSendTicketEvent(events.SendTicketEventPayload{
+		ClientName:       input.UserName,
+		Email:            input.UserEmail,
 		EventId:          input.EventId,
 		EventName:        input.EventName,
 		EventDescription: input.EventDescription,
 		EventImageUrl:    input.EventImageUrl,
-		Language:         input.Language,
-		Context:          ctx,
-	})
+		Language:         input.UserLanguage,
+	}, ctx)
 	p.Bus.Dispatch(event)
 	return nil
 }
 
 func (input *InputProcessMessage) Validate() error {
-	if input.Email == "" {
+	if input.UserEmail == "" {
 		return errors.New("email is required")
 	}
 	if input.EventId == "" {
@@ -97,8 +94,8 @@ func (input *InputProcessMessage) Validate() error {
 
 func (p *ProcessMessage) CreateClient(ctx context.Context, input InputProcessMessage) (*domain.Client, error) {
 	client, err := domain.NewClient(domain.ClientParams{
-		Name:  input.Name,
-		Email: input.Email,
+		Name:  input.UserName,
+		Email: input.UserEmail,
 	})
 	if err != nil {
 		return nil, err

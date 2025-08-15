@@ -1,23 +1,36 @@
 package events
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 const CLIENT_CREATED_EVENT = "CLIENT_CREATED"
 
-type ClientCreatedEvent struct {
-	MessageID string          `json:"messageId"`
-	Email     string          `json:"email"`
-	Context   context.Context `json:"-"`
+type ClientCreatedEventPayload struct {
+	Email string `json:"email"`
 }
 
-func NewClientCreatedEvent(messageId, email string, context context.Context) *ClientCreatedEvent {
+type ClientCreatedEvent struct {
+	Payload ClientCreatedEventPayload
+	Context context.Context `json:"-"`
+}
+
+func NewClientCreatedEvent(payload ClientCreatedEventPayload, context context.Context) *ClientCreatedEvent {
 	return &ClientCreatedEvent{
-		MessageID: messageId,
-		Email:     email,
-		Context:   context,
+		Payload: payload,
+		Context: context,
 	}
 }
 
 func (c ClientCreatedEvent) Name() string {
 	return CLIENT_CREATED_EVENT
+}
+
+func (c ClientCreatedEvent) ToMessage() ([]byte, error) {
+	message, err := json.Marshal(c.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
 }

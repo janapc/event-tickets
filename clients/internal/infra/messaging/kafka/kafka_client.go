@@ -2,107 +2,100 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/infra/logger"
-	"github.com/janapc/event-tickets/clients/internal/infra/telemetry"
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 type KafkaClient struct {
 	Brokers []string
 	readers []*kafka.Reader
+	writer  *kafka.Writer
 }
 
 func NewKafkaClient(brokers []string) *KafkaClient {
 	return &KafkaClient{
 		Brokers: brokers,
+		writer: &kafka.Writer{
+			Addr:     kafka.TCP(brokers...),
+			Balancer: &kafka.LeastBytes{},
+		},
 	}
 }
 
-func (k *KafkaClient) Producer(params domain.ProducerParameters) error {
-	payload, err := json.Marshal(params.Value)
-	if err != nil {
-		return err
-	}
-	ctx := params.Context
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	writer := kafka.Writer{
-		Addr:                   kafka.TCP(k.Brokers...),
-		Topic:                  params.Topic,
-		Balancer:               &kafka.LeastBytes{},
-		AllowAutoTopicCreation: true,
-	}
-	defer writer.Close()
+func (k *KafkaClient) Producer(message []byte, ctx context.Context, topic string, key string) error {
+	sendCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+	defer cancel()
 
-	ctx, span := k.startTrace(ctx, "produce-message",
-		attribute.String("messaging.system", "kafka"),
-		attribute.String("messaging.destination", params.Topic),
-		attribute.String("messaging.destination_kind", "topic"),
-		attribute.String("messaging.operation", "send"),
-		attribute.String("messaging.kafka.message_key", params.Key),
-		attribute.Int("messaging.kafka.message_size", len(payload)),
-	)
-	defer span.End()
-	err = writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(params.Key),
-		Value: payload,
-	})
+	msg := kafka.Message{
+		Topic:   topic,
+		Key:     []byte(key),
+		Value:   message,
+		Time:    time.Now(),
+		Headers: []kafka.Header{},
+	}
+
+	carrier := propagation.MapCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, carrier)
+
+	for k, v := range carrier {
+		msg.Headers = append(msg.Headers, kafka.Header{
+			Key:   k,
+			Value: []byte(v),
+		})
+	}
+	err := k.writer.WriteMessages(sendCtx, msg)
 	if err != nil {
-		logger.Logger.WithContext(ctx).Errorf("Error writing message to topic %s error %v", params.Topic, err)
 		return err
 	}
-	logger.Logger.WithContext(ctx).Infof("Message written to topic %s key %s", params.Topic, params.Key)
+	logger.Logger.WithContext(ctx).Infof("Kafka message %s sent to topic %s", key, topic)
 	return nil
 }
 
 func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Context, string) error) {
+	tracer := otel.Tracer("kafka-consumer")
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  k.Brokers,
-		GroupID:  groupID,
-		Topic:    topic,
-		MinBytes: 1, //dev
-		MaxBytes: 10e6,
-		MaxWait:  100 * time.Millisecond,
+		Brokers:        k.Brokers,
+		GroupID:        groupID,
+		Topic:          topic,
+		MinBytes:       1,
+		MaxBytes:       10e6,
+		MaxWait:        100 * time.Millisecond,
+		CommitInterval: 50 * time.Millisecond,
 	})
 	k.readers = append(k.readers, reader)
 
 	go func() {
 		logger.Logger.Infof("Starting Kafka consumer topic %s groupID %s", topic, groupID)
 		for {
-			ctx := context.Background()
-			msg, err := reader.ReadMessage(ctx)
-
+			msg, err := reader.ReadMessage(context.Background())
 			if err != nil {
-				logger.Logger.WithContext(ctx).Errorf("Error reading from topic %s error %v", topic, err)
+				logger.Logger.Errorf("Error reading from topic %s error %v", topic, err)
 				continue
 			}
-			ctx, span := k.startTrace(ctx, "kafka-consume",
-				attribute.String("messaging.system", "kafka"),
-				attribute.String("messaging.destination", msg.Topic),
-				attribute.String("messaging.destination_kind", "topic"),
-				attribute.String("messaging.operation", "receive"),
-				attribute.String("messaging.kafka.message_key", string(msg.Key)),
-				attribute.Int("messaging.kafka.partition", msg.Partition),
-				attribute.Int64("messaging.kafka.offset", msg.Offset),
-				attribute.Int("messaging.kafka.message_size", len(msg.Value)),
-			)
+
+			carrier := propagation.MapCarrier{}
+			for _, h := range msg.Headers {
+				carrier[h.Key] = string(h.Value)
+			}
+			ctx := otel.GetTextMapPropagator().Extract(context.Background(), carrier)
+
+			ctx, span := tracer.Start(ctx, "consume-kafka-message")
+			span.SetAttributes(attribute.String("kafka.topic", msg.Topic))
+			defer span.End()
 
 			logger.Logger.WithContext(ctx).Infof("Received message topic %s key %s", topic, string(msg.Key))
 			if err := handler(ctx, string(msg.Value)); err != nil {
 				logger.Logger.WithContext(ctx).Errorf("Error processing message topic %s error %v", topic, err)
 			}
 			logger.Logger.WithContext(ctx).Infof("Message processed topic %s key %s", topic, string(msg.Key))
-			span.End()
 		}
 	}()
 }
@@ -112,16 +105,13 @@ func (k *KafkaClient) WaitForShutdown() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	logger.Logger.Info("Shutting down Kafka readers...")
 	for _, r := range k.readers {
-		r.Close()
+		logger.Logger.Printf("Shutting down Kafka reader for topic %s", r.Config().Topic)
+		err := r.Close()
+		if err != nil {
+			logger.Logger.Errorf("Error closing Kafka reader for topic %s: %v", r.Config().Topic, err)
+		} else {
+			logger.Logger.Printf("Kafka reader for topic %s closed successfully", r.Config().Topic)
+		}
 	}
-}
-
-func (k *KafkaClient) startTrace(ctx context.Context, name string, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
-	env := os.Getenv("ENV")
-	if env != "PROD" {
-		return ctx, trace.SpanFromContext(ctx)
-	}
-	return telemetry.Tracer.Start(ctx, name, trace.WithAttributes(attrs...))
 }

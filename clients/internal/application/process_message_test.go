@@ -16,15 +16,14 @@ func TestProcessMessage_Execute_NewClient(t *testing.T) {
 	mockEventBus := new(mocks.MockEventBus)
 
 	input := `{
-  "messageId": "123",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "eventId": "event123",
-  "eventName": "Concert",
-  "eventDescription": "A great concert",
-  "eventImageUrl": "http://example.com/image.jpg",
-  "language": "en"
- }`
+  "user_name": "John Doe",
+  "user_email": "john.doe@example.com",
+  "event_id": "event123",
+  "event_name":  "Concert",
+  "event_description": "A great concert",
+  "event_image_url": "http://example.com/image.jpg",
+  "user_language": "en"
+  }`
 
 	client := &domain.Client{
 		ID:    "client123",
@@ -53,14 +52,13 @@ func TestProcessMessage_Execute_ExistingClient(t *testing.T) {
 	mockEventBus := new(mocks.MockEventBus)
 
 	input := `{
-  "messageId": "123",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "eventId": "event123",
-  "eventName": "Concert",
-  "eventDescription": "A great concert",
-  "eventImageUrl": "http://example.com/image.jpg",
-  "language": "en"
+	"user_name": "John Doe",
+  "user_email": "john.doe@example.com",
+  "event_id": "event123",
+  "event_name":  "Concert",
+  "event_description": "A great concert",
+  "event_image_url": "http://example.com/image.jpg",
+  "user_language": "en"
  }`
 
 	client := &domain.Client{
@@ -89,14 +87,13 @@ func TestProcessMessage_Execute_InvalidInput(t *testing.T) {
 	mockEventBus := new(mocks.MockEventBus)
 
 	input := `{
-  "messageId": "123",
-  "name": "John Doe",
-  "email": "",
-  "eventId": "event123",
-  "eventName": "Concert",
-  "eventDescription": "A great concert",
-  "eventImageUrl": "http://example.com/image.jpg",
-  "language": "en"
+	"user_name": "John Doe",
+  "user_email": "",
+  "event_id": "event123",
+  "event_name":  "Concert",
+  "event_description": "A great concert",
+  "event_image_url": "http://example.com/image.jpg",
+  "user_language": "en"
  }`
 
 	processMessage := NewProcessMessage(mockRepo, mockMessaging, mockEventBus)

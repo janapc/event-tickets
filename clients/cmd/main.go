@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/janapc/event-tickets/clients/internal/application"
 	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/domain/events"
@@ -69,32 +70,30 @@ func main() {
 
 func registerEvents(bus domain.Bus, kakfaClient *kafka.KafkaClient) {
 	bus.Register(events.CLIENT_CREATED_EVENT, func(e domain.Event) {
-		clientEvent := e.(*events.ClientCreatedEvent)
-		topic := os.Getenv("CLIENT_CREATED_TOPIC")
-		params := domain.ProducerParameters{
-			Context: clientEvent.Context,
-			Topic:   topic,
-			Key:     clientEvent.MessageID,
-			Value:   clientEvent,
-		}
-		err := kakfaClient.Producer(params)
+		event := e.(*events.ClientCreatedEvent)
+		msg, err := event.ToMessage()
 		if err != nil {
-			logger.Logger.WithContext(clientEvent.Context).Errorf("kafka producer error: %v/n", err)
+			logger.Logger.WithContext(event.Context).Errorf("error converting event %s to message: %v", event.Name(), err)
+			return
+		}
+		topic := os.Getenv("CLIENT_CREATED_TOPIC")
+		err = kakfaClient.Producer(msg, event.Context, topic, uuid.NewString())
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n", err)
 		}
 	})
 
 	bus.Register(events.SEND_TICKET_EVENT, func(e domain.Event) {
-		SendTicketEvent := e.(*events.SendTicketEvent)
-		topic := os.Getenv("SEND_TICKET_TOPIC")
-		params := domain.ProducerParameters{
-			Context: SendTicketEvent.Context,
-			Topic:   topic,
-			Key:     SendTicketEvent.MessageID,
-			Value:   SendTicketEvent,
-		}
-		err := kakfaClient.Producer(params)
+		event := e.(*events.SendTicketEvent)
+		msg, err := event.ToMessage()
 		if err != nil {
-			logger.Logger.WithContext(SendTicketEvent.Context).Errorf("kafka producer error: %v/n", err)
+			logger.Logger.WithContext(event.Context).Errorf("error converting event %s to message: %v", event.Name(), err)
+			return
+		}
+		topic := os.Getenv("SEND_TICKET_TOPIC")
+		err = kakfaClient.Producer(msg, event.Context, topic, uuid.NewString())
+		if err != nil {
+			logger.Logger.WithContext(event.Context).Errorf("kafka producer error: %v/n", err)
 		}
 	})
 }

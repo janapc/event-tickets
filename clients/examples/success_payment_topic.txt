@@ -1,1 +1,1 @@
-{"messageId": "123","name": "John Doe","email": "john.doe@example.com","eventId": "event123","eventName": "Concert","eventDescription": "A great concert","eventImageUrl": "http://example.com/image.jpg","language": "en"}
+{"name": "John Doe","email": "john.doe@example.com","eventId": "event123","eventName": "Concert","eventDescription": "A great concert","eventImageUrl": "http://example.com/image.jpg","language": "en"}

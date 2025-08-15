@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/janapc/event-tickets/clients/internal/domain"
 	"github.com/janapc/event-tickets/clients/internal/domain/events"
 	"github.com/janapc/event-tickets/clients/internal/infra/logger"
@@ -47,11 +46,9 @@ func (s *SaveClient) Execute(ctx context.Context, input InputSaveClient) (*Outpu
 		return nil, err
 	}
 	logger.Logger.WithContext(ctx).Infof("Client saved successfully client_id %s", newClient.ID)
-	event := events.NewClientCreatedEvent(
-		uuid.New().String(),
-		newClient.Email,
-		ctx,
-	)
+	event := events.NewClientCreatedEvent(events.ClientCreatedEventPayload{
+		Email: newClient.Email,
+	}, ctx)
 	s.Bus.Dispatch(event)
 	return &OutputSaveClient{
 		ID:        newClient.ID,
