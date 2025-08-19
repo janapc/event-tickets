@@ -12,7 +12,6 @@ export class EventController {
   async sendTicket(@Payload() message: SendTicketDto): Promise<void> {
     await this.commandBus.execute(
       new CreateTicketCommand({
-        messageId: message.messageId,
         name: message.name,
         email: message.email,
         eventId: message.eventId,

@@ -1,5 +1,4 @@
 export interface SendTicketDto {
-  messageId: string;
   name: string;
   email: string;
   eventId: string;
