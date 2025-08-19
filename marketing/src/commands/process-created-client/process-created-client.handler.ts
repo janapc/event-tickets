@@ -15,16 +15,10 @@ export class ProcessCreatedClientHandler
   ) {}
 
   async execute(command: ProcessCreatedClientCommand): Promise<void> {
-    this.logger.log(
-      `processing message: ${JSON.stringify({
-        messageId: command.messageId,
-      })}`,
-    );
     const lead = await this.leadRepository.getByEmail(command.email);
     if (lead) {
       await this.leadRepository.converted(command.email);
       this.logger.log('message processed:', {
-        messageId: command.messageId,
         leadId: lead.id,
       });
       return;
@@ -37,7 +31,6 @@ export class ProcessCreatedClientHandler
     );
     this.logger.log(
       `lead created and message processed:${JSON.stringify({
-        messageId: command.messageId,
         leadId: newLead.id,
       })}`,
     );

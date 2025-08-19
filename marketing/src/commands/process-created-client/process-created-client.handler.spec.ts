@@ -49,10 +49,7 @@ describe('ProcessCreatedClientHandler', () => {
 
   it('should convert a lead successfully', async () => {
     const convertedSpy = jest.spyOn(leadRepository, 'converted');
-    const command = new ProcessCreatedClientCommand(
-      'message123',
-      'test@example.com',
-    );
+    const command = new ProcessCreatedClientCommand('test@example.com');
 
     await expect(handler.execute(command)).resolves.toBeUndefined();
     expect(convertedSpy).toHaveBeenCalledWith(command.email);
@@ -63,10 +60,7 @@ describe('ProcessCreatedClientHandler', () => {
       .spyOn(leadRepository, 'getByEmail')
       .mockResolvedValueOnce(null);
     const saveSpy = jest.spyOn(leadRepository, 'save');
-    const command = new ProcessCreatedClientCommand(
-      'message123',
-      'test@example.com',
-    );
+    const command = new ProcessCreatedClientCommand('test@example.com');
 
     await expect(handler.execute(command)).resolves.toBeUndefined();
     expect(getByEmailSpy).toHaveBeenCalledWith(command.email);

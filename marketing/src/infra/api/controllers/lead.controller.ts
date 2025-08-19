@@ -59,12 +59,11 @@ export class LeadController {
   async handleClientCreated(
     @Payload()
     message: {
-      messageId: string;
       email: string;
     },
   ): Promise<void> {
     return this.commandBus.execute(
-      new ProcessCreatedClientCommand(message.messageId, message.email),
+      new ProcessCreatedClientCommand(message.email),
     );
   }
 }
