@@ -38,38 +38,47 @@ services:
     secrets:
       - mongodb_password
   kafka:
-    image: 'confluentinc/cp-kafka:latest'
+    image: bitnami/kafka:latest
     container_name: kafka
+    networks:
+      - tickets_network
     ports:
-      - '9092:9092'
-    environment:
-      - KAFKA_NODE_ID=1
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
-      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
-      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-      - KAFKA_PROCESS_ROLES=broker,controller
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:29093
-      - KAFKA_LISTENERS=PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
-      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+      - 9094:9094
     healthcheck:
       test:
         [
           'CMD-SHELL',
-          'kafka-topics --bootstrap-server localhost:9092 --list || exit 1',
+          'kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1',
         ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - kafka_data:/bitnami/kafka
+
+  kafka-init-topics:
+    image: bitnami/kafka:latest
+    container_name: kafka_init_topics
     networks:
       - tickets_network
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      sleep 5 &&
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic SEND_TICKET_TOPIC &&
+      kafka-topics.sh --list --bootstrap-server kafka:9092
+      "
 
   jaeger:
     image: jaegertracing/all-in-one:latest
