@@ -1,87 +1,95 @@
-# Getting Started
+# Events Service 🎫
 
-This project is a secure REST API service designed to manage events such as concerts, shows, and theater performances. It includes features like JWT-based authentication, role-based access control, and comprehensive monitoring and logging.
+A robust Go-based microservice for managing events in an event ticketing system. Built with clean architecture principles, comprehensive observability, and production-ready features.
 
-## Prerequisites
+## ✨ Features
 
-Before running the project, ensure you have the following installed:
+### Core Functionality
+- **Event Management**: Create, read, update, delete, and list events
+- **Pagination**: Efficient event listing with configurable page sizes
+- **Data Validation**: Comprehensive input validation and error handling
 
-- Go 1.22.1 or higher
-- PostgreSQL 14.18
-- Docker and Docker Compose (optional, for containerized setup)
+### Security & Authentication
+- **JWT Authentication**: Token-based authentication
+- **Role-Based Access Control**: Admin and public user roles
+- **Protected Endpoints**: Admin-only access for CUD operations
 
-## Installation
+### Observability & Monitoring
+- **Distributed Tracing**: OpenTelemetry integration with Jaeger
+- **Metrics Collection**: Prometheus metrics for performance monitoring
+- **Structured Logging**: JSON-formatted logs with trace correlation
+- **Health Checks**: Built-in health check endpoint
 
-1. Clone the repository:
-```sh
-git clone https://github.com/janapc/event-tickets.git
+### API Documentation
+- **OpenAPI/Swagger**: Auto-generated API documentation
+- **Interactive UI**: Swagger UI for API exploration
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Go 1.24.2+
+- PostgreSQL
+- Docker & Docker Compose (for full stack)
+
+### Environment Setup
+
+1. **Clone and navigate to the project**:
+```bash
+git clone <repository-url>
 cd event-tickets/events
 ```
 
-2. Copy the example environment file and configure it:
-```sh
+2. **Copy environment configuration and configure your environment variables**:
+```bash
 cp .env_example .env
 ```
 
-3. Install dependencies:
-```sh
+
+### Running Locally
+
+1. **Install dependencies**:
+```bash
 go mod tidy
 ```
 
-## Running the Application
+2. **Run database migrations**:
+```bash
+# Create database and run the SQL script in .docker/events.sql
+psql -h localhost -U your_user -d events_db -f .docker/events.sql
+```
 
-### Local Development
-
-1. Start the PostgreSQL database and ensure it matches the configuration in `.env`.
-
-2. Run the application:
-```sh
+3. **Start the service**:
+```bash
 go run cmd/main.go
 ```
 
-The API will be available at `http://localhost:3001`.
+The service will be available at `http://localhost:3001`
 
-### Using Docker
+### Running with Docker
 
-1. Build and start the services using Docker Compose:
-```sh
-docker-compose up --build -d
+**Build and run the service**:
+```bash
+docker build -t events-service .
+docker run -p 3001:3001 --env-file .env events-service
 ```
 
-2. Access the API at `http://localhost:3001`.
+## 🧪 Testing
 
-## Testing
+The project includes comprehensive unit tests with mocks:
 
-Run the test suite to ensure everything is working correctly:
-```sh
-go test -v ./...
+**Run all tests**:
+```bash
+go test ./...
 ```
 
-## Monitoring and Logging
-
-This project includes integrated monitoring and logging tools:
-
-- **Prometheus**: Metrics available at `http://localhost:9090`
-- **Grafana**: Dashboards available at `http://localhost:3006` (default credentials: admin/admin)
-- **Jaeger**: Tracing available at `http://localhost:16686`
-- **Kibana**: Logs available at `http://localhost:5601`
-
-## API Documentation
-
-Swagger documentation is automatically generated and available at:
-```
-http://localhost:3001/api/index.html
+**Run tests with coverage**:
+```bash
+go test -cover ./...
 ```
 
-## Development
-
-To update the Swagger documentation after making API changes:
-```sh
-swag init -g cmd/main.go --output internal/infra/docs
+**Run specific package tests**:
+```bash
+go test ./internal/application/
+go test ./internal/domain/
+go test ./internal/infra/database/
 ```
-
-For containerized development, ensure all services are running via Docker Compose.
-
-## Author
-
-Made by Janapc 🤘 [Get in touch!](https://www.linkedin.com/in/janaina-pedrina/)

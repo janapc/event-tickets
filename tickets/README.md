@@ -1,74 +1,160 @@
-# Ticket Service
+# Tickets Service
 
-This service is responsible for generating and sending event tickets via email. It listens to Kafka messages and creates tickets in MongoDB, then sends an email to the user with their ticket.
+A NestJS-based microservice for handling event ticket generation and distribution. This service listens to Kafka messages, creates tickets in MongoDB, and sends email notifications to attendees.
 
 ## Features
 
-- Listens to Kafka topic for ticket creation requests
-- Stores tickets in MongoDB
-- Sends ticket emails using configurable SMTP
-- Uses NestJS CQRS pattern
+- 🎫 **Ticket Generation**: Creates unique tickets with UUID-based passports
+- 📧 **Email Notifications**: Sends HTML-formatted ticket emails to attendees
+- 🌐 **Multi-language Support**: Supports English and Portuguese
+- 📊 **Full Observability**: Integrated monitoring, logging, and tracing
+- 🔄 **Event-Driven Architecture**: Kafka-based messaging system
+- 🐳 **Containerized**: Docker and Docker Compose ready
 
-## Getting Started
+### Tech Stack
+
+- **Framework**: NestJS
+- **Database**: MongoDB with Mongoose
+- **Messaging**: Apache Kafka
+- **Email**: NodeMailer with NestJS Mailer
+- **Observability**:
+  - OpenTelemetry for tracing
+  - Prometheus for metrics
+  - Grafana for visualization
+  - Jaeger for distributed tracing
+  - Elastic Stack (ELK) for logging
+
+## Quick Start
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Node.js (for local development)
-- Kafka broker (Bitnami image used in docker-compose)
-- MongoDB
+- Docker and Docker Compose
+- Node.js 23+ (for local development)
 
-### Environment Variables
+### Environment Setup
 
-Copy `.env-example` to `.env` and fill in the required values.
-
-### Docker Compose
-
-Start dependencies (MongoDB, Kafka):
-
+1. Copy the environment template:
 ```bash
-docker-compose -f tickets/docker-compose.yaml up -d
+cp .env-example .env.production/.env
+## Configure your environment variables in `.env.production` or `.env`
 ```
 
-Make sure to set the MongoDB password in `tickets/.docker/secrets/mongodb_password.txt`.
 
-### Running the Service
+3. Set up Docker secrets:
+```bash
+mkdir -p .docker/secrets
+echo "root" > .docker/secrets/mongodb_password.txt
+echo "admin" > .docker/secrets/grafana_user.txt
+echo "your-grafana-password" > .docker/secrets/grafana_password.txt
+```
 
-Install dependencies:
+### Running with Docker Compose
 
 ```bash
-cd tickets
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f tickets_service
+
+# Stop services
+docker-compose down
+```
+
+## Usage
+
+### Sending Ticket Creation Messages
+
+The service listens to the `SEND_TICKET_TOPIC` Kafka topic. Send messages in this format:
+
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "eventId": "event-123",
+  "eventName": "Amazing Conference 2024",
+  "eventDescription": "The best tech conference of the year",
+  "eventImageUrl": "https://example.com/event-image.jpg",
+  "language": "en"
+}
+```
+
+### Example using Kafka CLI
+
+```bash
+# Access Kafka container
+docker exec -it kafka bash
+
+# Send a test message
+kafka-console-producer.sh --bootstrap-server localhost:9092 --topic SEND_TICKET_TOPIC
+# Paste the JSON above and press Enter
+```
+
+## Local Development
+
+### Setup
+
+```bash
+# Install dependencies
 npm install
+
+# Start local dependencies (MongoDB, Kafka, etc.)
+docker-compose up -d mongodb kafka kafka-init-topics
+
+# Set up local environment
+cp .env-example .env
+# Configure .env with local settings
 ```
 
-Start the service:
+### Running Locally
 
 ```bash
+# Development mode with hot reload
 npm run start:dev
-```
 
-Alternatively, you can run the service using Docker Compose:
-
-```bash
-docker compose -f tickets/docker-compose.yaml up --build -d
-```
-
-### Kafka Topic
-
-The service listens to the topic specified by `SEND_TICKET_TOPIC`. Example message:
-
-```txt
-{"messageId": "ab8e2d04-a375-40df-a9d1-1c4f7135283d","email": "email@email1.com","name": "test","eventId": "987","eventName": "Test Event","eventDescription": "Test Event","eventImageUrl": "https://example.com/image.jpg","language": "en"}
+# Production mode
+npm run build
+npm run start:prod
 ```
 
 ### Testing
 
-Run unit tests:
-
 ```bash
+# Unit tests
 npm run test
-```
-### Useful Commands
 
-- `npm run start:dev` - Start in development mode
-- `npm run test` - Run tests
+# Test coverage
+npm run test:cov
+
+# E2E tests
+npm run test:e2e
+```
+
+## Monitoring and Observability
+
+### Accessing Dashboards
+
+- **Grafana**: http://localhost:3001 (admin/your-password)
+- **Jaeger**: http://localhost:16686
+- **Kibana**: http://localhost:5601
+- **Prometheus**: http://localhost:9090
+
+## API Documentation
+
+### Message Patterns
+
+#### SEND_TICKET_TOPIC
+Creates a new ticket and sends email notification.
+
+**Payload:**
+```typescript
+{
+  name: string;           // Attendee name
+  email: string;          // Attendee email
+  eventId: string;        // Unique event identifier
+  eventName: string;      // Event display name
+  eventDescription: string; // Event description
+  eventImageUrl: string;  // Event image URL
+  language: string;       // 'en' | 'pt'
+}
+```

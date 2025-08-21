@@ -153,7 +153,6 @@ describe('LeadController', () => {
     it('should execute handleClientCreated with correct parameters', async () => {
       const message = {
         email: 'test@example.com',
-        messageId: 'message123',
       };
 
       const executeSpy = jest.spyOn(commandBus, 'execute');
@@ -163,7 +162,7 @@ describe('LeadController', () => {
       ).resolves.toBeUndefined();
 
       expect(executeSpy).toHaveBeenCalledWith(
-        new ProcessCreatedClientCommand(message.messageId, message.email),
+        new ProcessCreatedClientCommand(message.email),
       );
     });
   });

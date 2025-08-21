@@ -1,87 +1,133 @@
-# Event Tickets Payment Service
+# Payment Service
 
-## Overview
+A microservice for handling payments and transactions in an event ticketing system, built with Go and following Clean Architecture principles.
 
-This service is part of an event ticketing system, responsible for handling the payment processing workflow. Built using Go and following Domain-Driven Design principles, it manages the lifecycle of payments and transactions for event ticket purchases.
 
-## Architecture
+## 🚀 Features
 
-The application is structured using a clean architecture approach:
+- **Payment Processing**: Create and manage payment transactions
+- **Transaction Management**: Handle payment gateway interactions with simulation
+- **Event-Driven Architecture**: Kafka-based messaging for service communication
+- **Email Notifications**: Multi-language email support for payment status
+- **Observability**: Full observability stack with metrics, logs, and tracing
+- **Database**: PostgreSQL with connection pooling
+- **Testing**: Comprehensive unit tests with mocks
 
-- **Domain Layer**: Contains the core business logic and entities
-- **Application Layer**: Implements use cases through command handlers
-- **Interfaces Layer**: Handles external communication (HTTP API, messaging)
-- **Infrastructure Layer**: Provides implementations for external dependencies
+## 🛠️ Technology Stack
 
-## Key Features
+### Core Technologies
+- **Go 1.24**: Primary programming language
+- **Fiber v2**: Web framework for HTTP API
+- **PostgreSQL 14**: Primary database
+- **Kafka**: Message streaming platform
 
-- Payment processing for event tickets
-- Transaction management with status tracking
-- Asynchronous event-driven communication using Kafka
-- Email notifications for payment status changes
-- Support for internationalization (i18n) for user communications
+### Observability & Monitoring
+- **OpenTelemetry**: Distributed tracing and metrics
+- **Jaeger**: Distributed tracing UI
+- **Prometheus**: Metrics collection
+- **Grafana**: Metrics visualization
+- **Elasticsearch + Kibana**: Log aggregation and analysis
+- **Filebeat**: Log shipping
 
-## Technical Stack
+### Development & Deployment
+- **Docker & Docker Compose**: Containerization
+- **Testify**: Testing framework with mocks
 
-- **Language**: Go 1.24
-- **Web Framework**: Fiber
-- **Database**: PostgreSQL
-- **Messaging**: Kafka
-- **Email**: Mail service via SMTP
-- **Configuration**: Environment variables via godotenv
+## 📋 Prerequisites
 
-## Getting Started
-
-### Prerequisites
-
-- Go 1.24+
 - Docker and Docker Compose
-- PostgreSQL
-- Kafka
+- Go 1.24+ (for local development)
 
-### Environment Setup
+## 🚀 Quick Start
 
-1. Clone the repository
-2. Copy `.env_example` to `.env` and configure your environment variables
-3. Start the required services using Docker Compose:
+### 1. Clone and Setup
 
 ```bash
+git clone <repository-url>
+cd event-tickets/payments
+```
+
+### 2. Environment Configuration
+
+```bash
+# Copy environment template
+cp .env_example .env.production/.env
+
+# Configure your environment variables in .env.production or .env
+```
+
+### 3. Setup Secrets
+
+Create the required secret files:
+
+```bash
+# Database secrets
+echo "your_db_user" > .docker/secrets/postgres_user.txt
+echo "your_db_password" > .docker/secrets/postgres_password.txt
+
+# Grafana secrets
+echo "admin" > .docker/secrets/grafana_user.txt
+echo "your_grafana_password" > .docker/secrets/grafana_password.txt
+```
+
+### 4. Start Services
+
+```bash
+# Start all services
 docker-compose up -d
+
+# View logs
+docker-compose logs -f payments_service
 ```
 
-### Running the Application
+## 📡 API Endpoints
 
-```bash
-go run cmd/main.go
+### Create Payment
+```http
+POST /payments
+Content-Type: application/json
+
+{
+  "user_name": "John Doe",
+  "user_email": "john@example.com",
+  "event_id": "event-123",
+  "event_amount": 99.99,
+  "payment_token": "TOKEN123",
+  "event_name": "Concert 2024",
+  "event_description": "Amazing concert event",
+  "event_image_url": "https://example.com/image.jpg",
+  "user_language": "en"
+}
 ```
 
-## API Endpoints
+## 🔄 Event Flow
 
-- `POST /payments` - Create a new payment
+The service participates in the following event-driven flows:
 
-## Event Flow
+1. **Payment Creation Flow**:
+   - `POST /payments` → Creates payment → Publishes `PAYMENT_CREATED`
+   - Creates transaction → Publishes `TRANSACTION_CREATED`
+   - Processes transaction → Publishes `TRANSACTION_SUCCEEDED/FAILED`
+   - Updates payment → Publishes `PAYMENT_SUCCEEDED/FAILED`
+   - Sends notification email
 
-1. Payment is created via the API
-2. Payment creation event is published to Kafka
-3. Transaction service consumes the event and creates a transaction
-4. Transaction processing occurs (simulated gateway)
-5. Transaction result events are published (success/failure)
-6. Payment status is updated based on transaction result
-7. Email notifications are sent to users
+2. **Kafka Topics**:
+   - `PAYMENT_CREATED_TOPIC`
+   - `PAYMENT_SUCCEEDED_TOPIC`
+   - `TRANSACTION_CREATED_TOPIC`
+   - `TRANSACTION_FAILED_TOPIC`
+   - `TRANSACTION_SUCCEEDED_TOPIC`
 
-## Database Schema
+## 🧪 Testing
 
-The service uses two primary tables:
-
-- `payments` - Stores payment information
-- `transactions` - Stores transaction information linked to payments
-
-## Development
-
-### Testing
-
-Run the tests with:
-
+### Run Unit Tests
 ```bash
+# Run all tests
 go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run specific package tests
+go test ./internal/application/payment/command/...
 ```

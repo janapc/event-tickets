@@ -1,88 +1,115 @@
 # Clients Service
 
-The Clients Service is a microservice designed to manage client information and handle messaging related to client creation and ticket processing. It is built using Go and integrates with various tools and services for telemetry, logging, messaging, and database management.
+A microservice for managing clients in the event ticketing system, built with Go using Clean Architecture principles.
 
-## Features
+## 🚀 Features
 
-- **Client Management**: Create and retrieve client information.
-- **Kafka Integration**: Consume and produce messages for client creation and ticket processing.
-- **Telemetry**: OpenTelemetry integration for tracing and metrics.
-- **Logging**: Structured logging using Logrus.
-- **Database**: PostgreSQL for persistent storage.
-- **Health Checks**: Liveness and readiness endpoints.
-- **Swagger Documentation**: API documentation for easy integration.
+### Core Functionality
+- **Client Management**: Create and retrieve client information
+- **Event-Driven Architecture**: Kafka-based messaging for inter-service communication
+- **Payment Processing**: Handles payment success events and triggers ticket generation
 
-## Architecture
-
-The service follows a clean architecture pattern, separating the domain, application, and infrastructure layers. It uses the following technologies:
-
-- **Go**: The programming language for the service.
-- **PostgreSQL**: Database for storing client information.
-- **Kafka**: Messaging system for event-driven communication.
-- **OpenTelemetry**: For distributed tracing and metrics.
-- **Fiber**: Web framework for building the API.
-- **Swagger**: API documentation.
-
-## Endpoints
-
-### Health Check
-- **GET** `/clients/healthcheck/live`: Liveness endpoint.
-- **GET** `/clients/healthcheck/ready`: Readiness endpoint.
-
-### Client Management
-- **GET** `/clients`: Retrieve client information by email.
-- **POST** `/clients`: Create a new client.
+### Observability & Monitoring
+- **Distributed Tracing**: OpenTelemetry with Jaeger
+- **Metrics**: Prometheus with Grafana dashboards
+- **Centralized Logging**: ELK Stack (Elasticsearch, Kibana, Filebeat)
+- **Health Checks**: Liveness and readiness endpoints
 
 ### API Documentation
-- **GET** `/clients/docs/*`: Swagger documentation.
+- **Swagger/OpenAPI**: Auto-generated API documentation
 
-## Setup
+## 🛠️ Tech Stack
 
-### Prerequisites
-- Docker
-- Docker Compose
+- **Language**: Go 1.24.2
+- **Web Framework**: Fiber v2
+- **Database**: PostgreSQL 14.18
+- **Message Broker**: Apache Kafka
+- **Observability**: OpenTelemetry, Jaeger, Prometheus, Grafana
+- **Logging**: Logrus with ELK Stack
+- **Testing**: Testify, SQLMock
+- **Documentation**: Swagger
 
-### Steps
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/janapc/event-tickets.git
-   cd event-tickets/clients
-   ```
-2. Create a `.env` file based on `.env_example` and fill in the required values.
-3. Start the services using Docker Compose:
-   ```bash
-   docker-compose up --build
-   ```
-4. Access the service at `http://localhost:3004`.
+## 📋 Prerequisites
 
-## Telemetry and Monitoring
+- Docker and Docker Compose
+- Go 1.24+ (for local development)
 
-The service integrates with OpenTelemetry for tracing and metrics. It also includes monitoring tools like Prometheus, Grafana, Elasticsearch, and Kibana.
+## 🚀 Quick Start
 
-### Prometheus
-- Access Prometheus at `http://localhost:9090`.
+### Using Docker Compose (Recommended)
 
-### Grafana
-- Access Grafana at `http://localhost:3006`.
-- Default credentials:
-  - Username: `admin`
-  - Password: `admin`
-
-### Kibana
-- Access Kibana at `http://localhost:5601`.
-
-### Jaeger
-- Access Jaeger at `http://localhost:16686`.
-
-## Testing
-
-The service includes unit tests for the application and infrastructure layers. Run the tests using:
+1. **Clone the repository**
 ```bash
-go test ./...
+git clone <repository-url>
+cd event-tickets/clients
 ```
 
-## Documentation
+2. **Set up environment**
+```bash
+cp .env_example .env.production/.env
+# Edit .env.production or .env with your configuration
+```
 
-Swagger documentation is available at `http://localhost:3004/clients/docs`.
+3. **Create required secrets**
+```bash
+mkdir -p .docker/secrets
+echo "root" > .docker/secrets/postgres_user.txt
+echo "root" > .docker/secrets/postgres_password.txt
+echo "admin" > .docker/secrets/grafana_user.txt
+echo "admin" > .docker/secrets/grafana_password.txt
+```
 
+4. **Start all services**
+```bash
+docker-compose up -d
+```
+
+### Local Development
+
+1. **Install dependencies**
+```bash
+go mod tidy
+```
+
+2. **Set up environment**
+```bash
+cp .env_example .env
+# Edit .env with your local configuration
+```
+
+3. **Run the service**
+```bash
+go run cmd/main.go
+```
+
+## 🎯 Event-Driven Communication
+
+### Consumes Events
+- **PAYMENT_SUCCEEDED_TOPIC**: Processes successful payments and creates clients if needed
+
+### Produces Events
+- **CLIENT_CREATED_TOPIC**: Notifies when a new client is created
+- **SEND_TICKET_TOPIC**: Triggers ticket generation for clients
+
+## 📊 Monitoring & Observability
+
+### Access URLs (when running via docker-compose)
+- **Application**: http://localhost:3004
+- **Swagger API Docs**: http://localhost:3004/api/
+- **Grafana**: http://localhost:3006 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686
+- **Kibana**: http://localhost:5601
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run specific test
+go test ./internal/application -v
 ```
