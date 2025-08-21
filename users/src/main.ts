@@ -1,7 +1,7 @@
 import Telemetry from './infra/telemetry';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { RequestMethod, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { logger } from '@infra/logger';
@@ -13,7 +13,6 @@ async function bootstrap() {
     logger,
   });
   const configService = app.get(ConfigService);
-  const prefix = configService.get<string>('PREFIX');
   const port = configService.get<number>('PORT');
   app.useGlobalPipes(new ValidationPipe());
   const config = new DocumentBuilder()
@@ -22,11 +21,8 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup(prefix + '/api', app, documentFactory);
+  SwaggerModule.setup('api', app, documentFactory);
   app.enableCors();
-  app.setGlobalPrefix(prefix ?? '', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
-  });
   await app.listen(port ?? 3000);
 }
 bootstrap();
