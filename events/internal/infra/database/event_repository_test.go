@@ -17,7 +17,9 @@ func TestRegisterEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	query := regexp.QuoteMeta("INSERT INTO events(name, description, image_url, price, currency, event_date) VALUES($1,$2,$3,$4,$5,$6) RETURNING *")
 	eventDate := time.Now().Add(48 * time.Hour).Format(time.RFC3339)
 	params := domain.EventParams{
@@ -50,7 +52,9 @@ func TestUpdateEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	query := regexp.QuoteMeta("UPDATE events SET name = $1, description = $2, image_url = $3, price = $4, currency = $5, event_date = $6, updated_at = $7 WHERE id = $8")
 	eventDate := time.Now().Add(48 * time.Hour)
 	event := &domain.Event{
@@ -78,7 +82,9 @@ func TestRemoveEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	ctx := context.Background()
 	query := regexp.QuoteMeta("DELETE FROM events where id = $1")
 	id := int64(1)
@@ -96,7 +102,9 @@ func TestListEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	ctx := context.Background()
 	query := regexp.QuoteMeta("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events ORDER BY created_at DESC LIMIT $1 OFFSET $2")
 	now := time.Now()
@@ -124,7 +132,9 @@ func TestGetOneEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	id := int64(1)
 	ctx := context.Background()
 	query := regexp.QuoteMeta("SELECT id, name, description, image_url, price, currency, event_date, created_at, updated_at FROM events WHERE id = $1")
