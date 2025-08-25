@@ -45,7 +45,7 @@ jobs:
 
       # Step 4: Lint
       - name: Run lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           working-directory: ${{ github.event.inputs.golang_project }}
