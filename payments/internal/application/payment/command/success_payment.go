@@ -37,7 +37,10 @@ func (h *SuccessPaymentHandler) Handle(ctx context.Context, cmd SuccessPaymentCo
 		return err
 	}
 	p.MarkSuccess()
-	h.PaymentRepo.Update(ctx, p)
+	err = h.PaymentRepo.Update(ctx, p)
+	if err != nil {
+		return err
+	}
 	h.Bus.Publish(payment.NewSucceededEvent(payment.SucceededEventPayload{
 		UserName:         cmd.UserName,
 		UserEmail:        cmd.UserEmail,

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	domainTransaction "github.com/janapc/event-tickets/payments/internal/domain/transaction"
+	"github.com/janapc/event-tickets/payments/internal/infra/logger"
 )
 
 type TransactionRepository struct {
@@ -23,7 +24,11 @@ func (t *TransactionRepository) Save(ctx context.Context, transaction *domainTra
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx, transaction.ID, transaction.PaymentID, transaction.Status, transaction.Reason)
 	if err != nil {
 		return err
@@ -36,7 +41,11 @@ func (t *TransactionRepository) FindByID(ctx context.Context, ID string) (*domai
 	if err != nil {
 		return &domainTransaction.Transaction{}, err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	var transaction domainTransaction.Transaction
 	err = stmt.QueryRowContext(ctx, ID).Scan(&transaction.ID, &transaction.PaymentID, &transaction.Status, &transaction.Reason)
 	if err != nil {
@@ -50,7 +59,11 @@ func (t *TransactionRepository) Update(ctx context.Context, transaction *domainT
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx, transaction.Status, transaction.Reason, time.Now().UTC(), transaction.ID)
 	if err != nil {
 		return err

@@ -33,7 +33,10 @@ func (h *FailPaymentHandler) Handle(ctx context.Context, cmd FailPaymentCommand)
 		return err
 	}
 	p.MarkFailed()
-	h.PaymentRepo.Update(ctx, p)
+	err = h.PaymentRepo.Update(ctx, p)
+	if err != nil {
+		return err
+	}
 	h.Bus.Publish(payment.NewFailedEvent(payment.FailedEventPayload{
 		UserName:     cmd.UserName,
 		UserLanguage: cmd.UserLanguage,
