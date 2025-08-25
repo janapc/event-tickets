@@ -24,24 +24,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 1: Detect which folder changed
-      - name: Set project folder
-        id: set-dir
-        run: |
-          if git diff --name-only ${{ github.sha }} ${{ github.sha }}^ | grep -q "^folder-one/"; then
-            echo "PROJECT_DIR=folder-one" >> $GITHUB_ENV
-            echo "IMAGE_NAME=myuser/folder-one-app" >> $GITHUB_ENV
-          elif git diff --name-only ${{ github.sha }} ${{ github.sha }}^ | grep -q "^folder-two/"; then
-            echo "PROJECT_DIR=folder-two" >> $GITHUB_ENV
-            echo "IMAGE_NAME=myuser/folder-two-app" >> $GITHUB_ENV
-          elif git diff --name-only ${{ github.sha }} ${{ github.sha }}^ | grep -q "^folder-three/"; then
-            echo "PROJECT_DIR=folder-three" >> $GITHUB_ENV
-            echo "IMAGE_NAME=myuser/folder-three-app" >> $GITHUB_ENV
-          else
-            echo "No relevant changes"
-            exit 0
-          fi
-
       # Step 2: Setup Go
       - name: Set up Go
         uses: actions/setup-go@v5
