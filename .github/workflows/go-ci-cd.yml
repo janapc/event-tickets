@@ -1,7 +1,5 @@
 name: GO CI/CD
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
     inputs:
       golang_project:
@@ -53,7 +51,7 @@ jobs:
 
       # Step 6: Build binary
       - name: Build app
-        run: go build -o app .
+        run: go build -o app ./cmd/main.go
         working-directory: ${{ github.event.inputs.golang_project }}
 
       # Step 7: Upload artifact
