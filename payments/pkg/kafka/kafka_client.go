@@ -104,7 +104,6 @@ func (k *Client) Consumer(handlers []HandlerConfig) {
 
 				ctx, span := tracer.Start(ctx, "consume-kafka-message")
 				span.SetAttributes(attribute.String("kafka.topic", m.Topic))
-				defer span.End()
 				log.Printf("Received message from topic %s: %s", m.Topic, string(m.Key))
 				entry.Handle(ctx, m.Value)
 			}
