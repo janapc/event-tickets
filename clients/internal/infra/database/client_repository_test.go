@@ -17,7 +17,9 @@ func TestSaveClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	query := regexp.QuoteMeta("INSERT INTO clients(name, email) VALUES($1,$2) RETURNING *")
 	input, _ := domain.NewClient(domain.ClientParams{
 		Name:  "Test Client",
@@ -45,8 +47,10 @@ func TestGetOneClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	email := "test@test.com"
-	defer db.Close()
 	query := regexp.QuoteMeta("SELECT id, name, email, created_at FROM clients WHERE email = $1")
 	now := time.Now()
 	rows := sqlmock.NewRows([]string{

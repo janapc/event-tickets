@@ -89,7 +89,6 @@ func (k *KafkaClient) Consumer(topic, groupID string, handler func(context.Conte
 
 			ctx, span := tracer.Start(ctx, "consume-kafka-message")
 			span.SetAttributes(attribute.String("kafka.topic", msg.Topic))
-			defer span.End()
 
 			logger.Logger.WithContext(ctx).Infof("Received message topic %s key %s", topic, string(msg.Key))
 			if err := handler(ctx, string(msg.Value)); err != nil {

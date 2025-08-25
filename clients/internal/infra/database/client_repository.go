@@ -22,7 +22,9 @@ func (p *ClientRepository) Save(ctx context.Context, client *domain.Client) (*do
 	if err != nil {
 		return &domain.Client{}, err
 	}
-	defer stmt.Close()
+	defer func() {
+		_ = stmt.Close()
+	}()
 	var newClient domain.Client
 	err = stmt.QueryRowContext(ctx, client.Name, client.Email).Scan(&newClient.ID, &newClient.Name, &newClient.Email, &newClient.CreatedAt)
 	if err != nil {
@@ -38,7 +40,9 @@ func (p *ClientRepository) GetByEmail(ctx context.Context, email string) (*domai
 	if err != nil {
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		_ = stmt.Close()
+	}()
 	var client domain.Client
 	err = stmt.QueryRowContext(ctx, email).Scan(&client.ID, &client.Name, &client.Email, &client.CreatedAt)
 	if err != nil {
