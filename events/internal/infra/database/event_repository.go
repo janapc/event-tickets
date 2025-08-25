@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/janapc/event-tickets/events/internal/domain"
+	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/janapc/event-tickets/events/pkg/pagination"
 )
 
@@ -23,7 +24,11 @@ func (e *EventRepository) Register(ctx context.Context, event *domain.Event) (*d
 	if err != nil {
 		return &domain.Event{}, err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	var newEvent domain.Event
 	err = stmt.QueryRowContext(ctx, event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate).Scan(&newEvent.ID, &newEvent.Name, &newEvent.Description, &newEvent.ImageUrl, &newEvent.Price, &newEvent.Currency, &newEvent.EventDate, &newEvent.CreatedAt, &newEvent.UpdatedAt)
 	if err != nil {
@@ -37,7 +42,11 @@ func (e *EventRepository) Update(ctx context.Context, event *domain.Event) error
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx, event.Name, event.Description, event.ImageUrl, event.Price, event.Currency, event.EventDate, event.UpdatedAt, event.ID)
 	if err != nil {
 		return err
@@ -50,7 +59,11 @@ func (e *EventRepository) Remove(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		return err
@@ -64,7 +77,11 @@ func (e *EventRepository) List(ctx context.Context, page, size int) ([]domain.Ev
 	if err != nil {
 		return nil, pagination.Pagination{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	var events []domain.Event
 	for rows.Next() {
 		event := domain.Event{}
@@ -89,7 +106,11 @@ func (e *EventRepository) FindByID(ctx context.Context, id int64) (*domain.Event
 	if err != nil {
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			logger.Logger.WithContext(ctx).Errorf("Error closing statement: %v", err)
+		}
+	}()
 	var event domain.Event
 	err = stmt.QueryRowContext(ctx, id).Scan(&event.ID, &event.Name, &event.Description, &event.ImageUrl, &event.Price, &event.Currency, &event.EventDate, &event.CreatedAt, &event.UpdatedAt)
 	if err != nil {

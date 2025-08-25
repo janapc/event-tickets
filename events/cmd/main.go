@@ -11,8 +11,6 @@ import (
 	"github.com/janapc/event-tickets/events/internal/infra/logger"
 	"github.com/janapc/event-tickets/events/internal/infra/telemetry"
 	"github.com/joho/godotenv"
-
-	_ "github.com/janapc/event-tickets/events/internal/infra/docs"
 )
 
 func init() {
