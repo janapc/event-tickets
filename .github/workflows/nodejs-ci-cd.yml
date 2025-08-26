@@ -1,0 +1,49 @@
+name: Node.js CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      nodejs_project:
+        description: "Select the Nodejs project to run the workflow on"
+        required: true
+        type: choice
+        options:
+          - "marketing"
+          - "tickets"
+          - "users"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ github.event.inputs.nodejs_project }}
+
+      - name: Run lint
+        run: npm run lint
+        working-directory: ${{ github.event.inputs.nodejs_project }}
+
+      - name: Run tests
+        run: npm test -- --coverage
+        working-directory: ${{ github.event.inputs.nodejs_project }}
+
+      - name: Build project
+        run: npm run build
+        working-directory: ${{ github.event.inputs.nodejs_project }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-build
+          path: ${{ github.event.inputs.nodejs_project }}/dist
