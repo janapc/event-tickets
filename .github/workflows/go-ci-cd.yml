@@ -34,6 +34,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: latest
+          working-directory: ${{ github.event.inputs.golang_project }}
 
       - name: Run tests
         run: go test ./... -v -coverprofile=coverage.out
