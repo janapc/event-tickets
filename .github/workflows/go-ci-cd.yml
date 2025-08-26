@@ -25,14 +25,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('${{ github.event.inputs.golang_project }}/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          cache-dependency-path: "**/go.sum"
 
       - name: Install dependencies
         run: go mod download
