@@ -11,14 +11,16 @@ on:
           - "events"
           - "payments"
 jobs:
-  build-test-deploy:
+  build-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.event.inputs.golang_project }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Go
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -32,29 +34,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: go mod download
-        working-directory: ${{ github.event.inputs.golang_project }}
 
-      # Step 4: Lint
       - name: Run lint
         uses: golangci/golangci-lint-action@v8
         with:
           version: latest
-          working-directory: ${{ github.event.inputs.golang_project }}
 
-      # Step 5: Run tests
       - name: Run tests
         run: go test ./... -v -coverprofile=coverage.out
-        working-directory: ${{ github.event.inputs.golang_project }}
 
-      # Step 6: Build binary
       - name: Build app
         run: go build -o app ./cmd/main.go
-        working-directory: ${{ github.event.inputs.golang_project }}
 
-      # Step 7: Upload artifact
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
