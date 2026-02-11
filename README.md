@@ -84,6 +84,8 @@ graph TB
     class SMTPServer external
 
 ```
+![Jeager](https://github.com/user-attachments/assets/2c1fb812-f194-450c-91b5-4f3a2e0d47d1)
+![ElasticStack](https://github.com/user-attachments/assets/11edfd0c-fbb6-4e76-a57f-f62838ec9955)
 
 
 ## 📋 Service Overview
